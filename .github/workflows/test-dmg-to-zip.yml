@@ -12,12 +12,12 @@ jobs:
     - name: setup 
       id: setup
       run: |     
-        echo dmg_path="${GITHUB_WORKSPACE}/example.dmg" >> ${GITHUB_OUTPUT}
-        echo zip_path="${GITHUB_WORKSPACE}/example.zip" >> ${GITHUB_OUTPUT}
+        echo dmg_path="${GITHUB_WORKSPACE}/testing.dmg" >> ${GITHUB_OUTPUT}
+        echo zip_path="${GITHUB_WORKSPACE}/testing.zip" >> ${GITHUB_OUTPUT}
    
     - name: download dmg   
       run: |     
-        curl "https://github.com/miyako/4d-template-component-cicd/releases/download/patch-0.0.2/example.dmg" -o "${dmg_path}" -sL
+        curl "https://github.com/miyako/4d-template-component-cicd/releases/download/patch-0.0.2/testing.dmg" -o "${dmg_path}" -sL
       env:
         dmg_path: ${{ steps.setup.outputs.dmg_path }}
 

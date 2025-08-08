@@ -15,7 +15,7 @@ jobs:
       - name: setup  
         id: setup
         run: |
-          echo "project_path=${GITHUB_WORKSPACE}/example/Project/example.4DProject" >> $GITHUB_OUTPUT
+          echo "project_path=${GITHUB_WORKSPACE}/testing/Project/testing.4DProject" >> $GITHUB_OUTPUT
           KEYCHAIN_PATH="${RUNNER_TEMP}/temp.keychain-db"
           CERTIFICATE_PATH="${RUNNER_TEMP}/Developer ID Application.p12"
           echo "KEYCHAIN_PATH=${KEYCHAIN_PATH}" >> $GITHUB_OUTPUT

@@ -15,7 +15,7 @@ jobs:
       - name: setup  
         id: setup
         run: |
-          echo "project_path=${GITHUB_WORKSPACE}/example/Project/example.4DProject" >> $GITHUB_OUTPUT
+          echo "project_path=${GITHUB_WORKSPACE}/testing/Project/testing.4DProject" >> $GITHUB_OUTPUT
 
       - name: get tool version
         id: tool

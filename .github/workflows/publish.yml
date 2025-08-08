@@ -21,7 +21,7 @@ on:
           required: true
 
 env: 
-  project_path: example/Project/example.4DProject
+  project_path: testing/Project/testing.4DProject
   
 jobs:
 
