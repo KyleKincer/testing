@@ -36,17 +36,23 @@ Function test_string_comparison($t : cs.Testing)
 ### 2. Run Tests
 
 ```bash
-# Human-readable output
+# Human-readable output (terse by default)
 tool4d --project YourProject.4DProject --startup-method "test"
 
-# JSON output for CI/CD
+# Verbose human-readable output
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "verbose=true"
+
+# JSON output for CI/CD (terse by default)
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json"
+
+# Verbose JSON output
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json verbose=true"
 
 # Run specific tests by pattern
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "test=ExampleTest"
 
 # Combine multiple parameters
-tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json test=ExampleTest"
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json test=ExampleTest verbose=true"
 ```
 
 ## Writing Tests
@@ -107,8 +113,22 @@ Function test_calculations($t : cs.Testing)
 
 ## Output Formats
 
-### Human-Readable Output (Default)
+The framework provides terse output by default for cleaner results, with verbose mode available when more detail is needed.
 
+### Human-Readable Output
+
+**Terse (Default):**
+```
+  ✓ test_areEqual_pass
+  ✓ test_isTrue_pass
+  ✓ test_isFalse_pass
+  ✓ test_isNull_pass
+  ✓ test_isNotNull_pass
+
+5 tests passed
+```
+
+**Verbose (`verbose=true`):**
 ```
 === 4D Unit Testing Framework ===
 Running tests...
@@ -131,8 +151,32 @@ All tests passed! 🎉
 
 ### JSON Output
 
-Enable with `--user-param "format=json"`:
+**Terse (Default with `format=json`):**
+```json
+{
+  "totalTests": 5,
+  "passed": 5,
+  "failed": 0,
+  "duration": 45,
+  "passRate": 100,
+  "status": "success",
+  "suites": [
+    {
+      "name": "ExampleTest",
+      "passed": 5,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "test_areEqual_pass",
+          "passed": true
+        }
+      ]
+    }
+  ]
+}
+```
 
+**Verbose (`format=json verbose=true`):**
 ```json
 {
   "totalTests": 5,
@@ -153,7 +197,9 @@ Enable with `--user-param "format=json"`:
           "passed": true,
           "failed": false,
           "duration": 1,
-          "suite": "ExampleTest"
+          "suite": "ExampleTest",
+          "runtimeErrors": [],
+          "logMessages": []
         }
       ],
       "passed": 5,
@@ -220,6 +266,7 @@ The framework uses a standardized key=value parameter format:
 ### Available Parameters
 - **`format`**: Output format (`json` or `human`)
 - **`test`**: Test filtering patterns
+- **`verbose`**: Enable verbose output (`true` or `1`)
 
 
 ### Pattern Matching Rules

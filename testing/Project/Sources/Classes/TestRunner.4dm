@@ -2,6 +2,7 @@ property classStore : 4D:C1709.Object  // Class store from the calling project
 property testSuites : Collection  // Collection of cs.TestSuite
 property results : Object  // Test results summary
 property outputFormat : Text  // "human" or "json"
+property verboseOutput : Boolean  // Whether to include detailed information
 property testPatterns : Collection  // Collection of test patterns to match
 
 Class constructor($cs : 4D:C1709.Object)
@@ -42,7 +43,7 @@ Function run()
 		ON ERR CALL:C155($previousErrorHandler)
 	Else 
 		ON ERR CALL:C155("")
-	End if
+	End if 
 	
 Function discoverTests()
 	var $class : 4D:C1709.Class
@@ -58,17 +59,33 @@ Function discoverTests()
 	
 Function _getTestClasses()->$classes : Collection
 	// Returns collection of 4D.Class
+	var $classStore : Object
+	$classStore:=This:C1470._getClassStore()
+	
+	return This:C1470._filterTestClasses($classStore)
+	
+Function _getClassStore() : Object
+	// Extracted method to make testing easier - can be mocked
+	return This:C1470.classStore
+	
+Function _filterTestClasses($classStore : Object) : Collection
+	var $classes : Collection
 	$classes:=[]
 	var $className : Text
-	For each ($className; This:C1470.classStore)
+	For each ($className; $classStore)
+		// Skip classes without superclass property (malformed classes)
+		If ($classStore[$className].superclass=Null:C1517)
+			continue
+		End if 
+		
 		// Skip Dataclasses for now
-		If (This:C1470.classStore[$className].superclass.name="DataClass")
+		If ($classStore[$className].superclass.name="DataClass")
 			continue
 		End if 
 		
 		// Test classes end with "Test", e.g. "MyClassTest"
 		If ($className="@Test")
-			$classes.push(This:C1470.classStore[$className])
+			$classes.push($classStore[$className])
 		End if 
 	End for each 
 	
@@ -193,9 +210,59 @@ Function _generateJSONReport()
 	End if 
 	
 	var $jsonReport : Object
-	$jsonReport:=OB Copy:C1225(This:C1470.results)
-	$jsonReport.passRate:=$passRate
-	$jsonReport.status:=(This:C1470.results.failed=0) ? "success" : "failure"
+	
+	If (This:C1470.verboseOutput)
+		// Verbose mode: include all details (original format)
+		$jsonReport:=OB Copy:C1225(This:C1470.results)
+		$jsonReport.passRate:=$passRate
+		$jsonReport.status:=(This:C1470.results.failed=0) ? "success" : "failure"
+	Else 
+		// Terse mode: minimal information
+		$jsonReport:=New object:C1471(\
+			"tests"; This:C1470.results.totalTests; \
+			"passed"; This:C1470.results.passed; \
+			"failed"; This:C1470.results.failed; \
+			"rate"; Round:C94($passRate; 1); \
+			"duration"; This:C1470.results.duration; \
+			"status"; (This:C1470.results.failed=0) ? "ok" : "fail"\
+		)
+		
+		// Only include failed tests if there are any
+		If (This:C1470.results.failed>0)
+			var $failedTests : Collection
+			$failedTests:=[]
+			var $failedTest : Object
+			For each ($failedTest; This:C1470.results.failedTests)
+				var $terseFailure : Object
+				$terseFailure:=New object:C1471("test"; $failedTest.name; "suite"; $failedTest.suite)
+				// Only include error details if they exist and are different
+				If ($failedTest.runtimeErrors.length>0)
+					$terseFailure.error:=$failedTest.runtimeErrors[0].text
+				Else 
+					If ($failedTest.logMessages.length>0)
+						$terseFailure.reason:=$failedTest.logMessages[0]
+					End if 
+				End if 
+				$failedTests.push($terseFailure)
+			End for each 
+			$jsonReport.failures:=$failedTests
+		End if 
+		
+		// Only include suite summary if there are multiple suites
+		If (This:C1470.results.suites.length>1)
+			var $suiteSummary : Collection
+			$suiteSummary:=[]
+			var $suite : Object
+			For each ($suite; This:C1470.results.suites)
+				$suiteSummary.push(New object:C1471(\
+					"name"; $suite.name; \
+					"passed"; $suite.passed; \
+					"failed"; $suite.failed\
+				))
+			End for each 
+			$jsonReport.suites:=$suiteSummary
+		End if 
+	End if 
 	
 	var $jsonString : Text
 	$jsonString:=JSON Stringify:C1217($jsonReport; *)
@@ -222,7 +289,10 @@ Function _determineOutputFormat()
 		This:C1470.outputFormat:="json"
 	Else 
 		This:C1470.outputFormat:="human"
-	End if 
+	End if
+	
+	// Check for verbose flag
+	This:C1470.verboseOutput:=($params.verbose="true") 
 	
 Function _parseTestPatterns()
 	var $params : Object
@@ -303,13 +373,22 @@ Function _matchesPattern($text : Text; $pattern : Text) : Boolean
 		return True:C214
 	End if 
 	
-	return False:C215 
+	return False:C215
 	
 Function _parseUserParams() : Object
 	var $userParam : Text
+	$userParam:=This:C1470._getUserParam()
+	
+	return This:C1470._parseParamString($userParam)
+	
+Function _getUserParam() : Text
+	// Extracted method to make testing easier - can be mocked
+	var $userParam : Text
 	var $real : Real
 	$real:=Get database parameter:C643(User param value:K37:94; $userParam)
+	return $userParam
 	
+Function _parseParamString($userParam : Text) : Object
 	var $params : Object
 	$params:=New object:C1471
 	
@@ -330,7 +409,7 @@ Function _parseUserParams() : Object
 				If ($keyValue.length=2)
 					$params[$keyValue[0]]:=$keyValue[1]
 				End if 
-			// Try : separator as alternative
+				// Try : separator as alternative
 			Else 
 				If (Position:C15(":"; $part)>0)
 					$keyValue:=Split string:C1554($part; ":")
