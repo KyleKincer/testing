@@ -10,6 +10,11 @@ Class constructor($cs : 4D:C1709.Object)
 	This:C1470._determineOutputFormat()
 	
 Function run()
+	// Set up global error handler for the test run
+	var $previousErrorHandler : Text
+	$previousErrorHandler:=Method called on error:C704
+	ON ERR CALL:C155("TestErrorHandler")
+	
 	This:C1470._initializeResults()
 	This:C1470.testSuites:=[]
 	This:C1470.discoverTests()
@@ -29,6 +34,13 @@ Function run()
 	This:C1470.results.endTime:=Milliseconds:C459
 	This:C1470.results.duration:=This:C1470.results.endTime-This:C1470.results.startTime
 	This:C1470._generateReport()
+	
+	// Restore previous error handler
+	If ($previousErrorHandler#"")
+		ON ERR CALL:C155($previousErrorHandler)
+	Else 
+		ON ERR CALL:C155("")
+	End if
 	
 Function discoverTests()
 	var $class : 4D:C1709.Class
@@ -100,7 +112,16 @@ Function _collectSuiteResults($testSuite : cs:C1710.TestSuite)
 			$suiteResult.failed+=1
 			This:C1470.results.failedTests.push($testResult)
 			If (This:C1470.outputFormat="human")
-				LOG EVENT:C667(Into system standard outputs:K38:9; "  ✗ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)\r\n"; Error message:K38:3)
+				var $errorDetails : Text
+				$errorDetails:=""
+				If ($testResult.runtimeErrors.length>0)
+					$errorDetails:=" [Runtime Error: "+$testResult.runtimeErrors[0].text+"]"
+				Else 
+					If ($testResult.logMessages.length>0)
+						$errorDetails:=" ["+$testResult.logMessages[0]+"]"
+					End if 
+				End if 
+				LOG EVENT:C667(Into system standard outputs:K38:9; "  ✗ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)"+$errorDetails+"\r\n"; Error message:K38:3)
 			End if 
 		End if 
 		
@@ -138,7 +159,18 @@ Function _generateHumanReport()
 		
 		var $failedTest : Object
 		For each ($failedTest; This:C1470.results.failedTests)
-			LOG EVENT:C667(Into system standard outputs:K38:9; "- "+$failedTest.name+"\r\n"; Error message:K38:3)
+			var $failureReason : Text
+			$failureReason:=""
+			
+			If ($failedTest.runtimeErrors.length>0)
+				$failureReason:=" (Runtime Error: "+$failedTest.runtimeErrors[0].text+")"
+			Else 
+				If ($failedTest.logMessages.length>0)
+					$failureReason:=" ("+$failedTest.logMessages[0]+")"
+				End if 
+			End if 
+			
+			LOG EVENT:C667(Into system standard outputs:K38:9; "- "+$failedTest.name+$failureReason+"\r\n"; Error message:K38:3)
 		End for each 
 	End if 
 	

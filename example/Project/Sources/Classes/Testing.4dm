@@ -2,13 +2,15 @@
 
 property failed : Boolean
 property done : Boolean
+property logMessages : Collection
 
 Class constructor()
 	This:C1470.failed:=False:C215
 	This:C1470.done:=False:C215
+	This:C1470.logMessages:=[]
 	
 Function log($message : Text)
-	LOG EVENT:C667(Into system standard outputs:K38:9; $message; Error message:K38:3)
+	This:C1470.logMessages.push($message)
 	
 Function fail()
 	This:C1470.failed:=True:C214
