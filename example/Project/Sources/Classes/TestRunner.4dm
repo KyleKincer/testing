@@ -33,7 +33,7 @@ Function run()
 Function discoverTests()
 	var $class : 4D:C1709.Class
 	For each ($class; This:C1470._getTestClasses())
-		This:C1470.testSuites.push(cs:C1710.TestSuite.new($class))
+		This:C1470.testSuites.push(cs:C1710.TestSuite.new($class; This:C1470.outputFormat))
 	End for each 
 	
 Function _getTestClasses()->$classes : Collection
@@ -176,7 +176,8 @@ Function getResults() : Object
 	
 Function _determineOutputFormat()
 	var $userParam : Text
-	Get database parameter:C643(User param value:K37:94; $userParam)
+	var $real : Real
+	$real:=Get database parameter:C643(User param value:K37:94; $userParam)
 	
 	If ($userParam="@--json@") || ($userParam="@output=json@") || ($userParam="json")
 		This:C1470.outputFormat:="json"

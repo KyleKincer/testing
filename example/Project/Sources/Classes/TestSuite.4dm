@@ -1,19 +1,27 @@
 property class : 4D:C1709.Class
 property classInstance : 4D:C1709.Object
 property testFunctions : Collection  // Collection of cs.TestFunction
+property outputFormat : Text  // "human" or "json"
 
-Class constructor($class : 4D:C1709.Class)
+Class constructor($class : 4D:C1709.Class; $outputFormat : Text)
 	This:C1470.class:=$class
 	This:C1470.classInstance:=This:C1470.class.new()
 	This:C1470.testFunctions:=[]
+	This:C1470.outputFormat:=$outputFormat || "human"
 	
 	This:C1470.discoverTests()
 	
 Function run()
+	This:C1470._callSetup()
+	
 	var $testFunction : cs:C1710.TestFunction
 	For each ($testFunction; This:C1470.testFunctions)
+		This:C1470._callBeforeEach()
 		$testFunction.run()
+		This:C1470._callAfterEach()
 	End for each 
+	
+	This:C1470._callTeardown() 
 	
 Function discoverTests()
 	var $testFunctions : Collection
@@ -99,3 +107,26 @@ Function _stripFunctionParametersFromLines($lines : Collection) : Collection
 		Position:C15("("; $1.value)=-1 ? Length:C16($1.value) : Position:C15("("; $1.value)-1\
 		)\
 		))
+
+Function _callSetup()
+	If (This:C1470._hasMethod("setup"))
+		This:C1470.classInstance.setup()
+	End if 
+
+Function _callTeardown()
+	If (This:C1470._hasMethod("teardown"))
+		This:C1470.classInstance.teardown()
+	End if 
+
+Function _callBeforeEach()
+	If (This:C1470._hasMethod("beforeEach"))
+		This:C1470.classInstance.beforeEach()
+	End if 
+
+Function _callAfterEach()
+	If (This:C1470._hasMethod("afterEach"))
+		This:C1470.classInstance.afterEach()
+	End if 
+
+Function _hasMethod($methodName : Text) : Boolean
+	return (This:C1470.classInstance[$methodName]#Null:C1517) && (OB Instance of:C1731(This:C1470.classInstance[$methodName]; 4D:C1709.Function))
