@@ -1,9 +1,9 @@
 {
-  "name": "example",
-  "description": "An example 4D component",
-  "author": "Keisuke Miyako <keisuke.miyako@4d.com>",
+  "name": "testing",
+  "description": "A 4D unit testing framework",
+  "author": "Kyle Kincer <kyle_kincer@sweetwater.com>",
   "license": "MIT",
-  "repository": "https://github.com/miyako/4d-template-component-cicd",
+  "repository": "https://github.com/KyleKincer/testing",
   "version": "0.0.13",
   "tool": {
     "platform": "macos",
