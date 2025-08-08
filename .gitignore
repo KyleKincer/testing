@@ -1,7 +1,8 @@
-example/Data/*
-example/Project/DerivedData/*
-example/userPreferences.*
-example/Settings/buildApp.4DSettings
-example/Libraries/lib4d-arm64.dylib
+testing/Data/*
+testing/Project/DerivedData/*
+testing/userPreferences.*
+testing/Settings/buildApp.4DSettings
+testing/Libraries/lib4d-arm64.dylib
 example_Build/*
+testing_Build/*
 actions-runner/*

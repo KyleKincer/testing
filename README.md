@@ -194,7 +194,7 @@ jobs:
       
       - name: Run 4D Tests
         run: |
-          tool4d --project example/Project/testing.4DProject \
+          tool4d --project testing/Project/testing.4DProject \
                  --skip-onstartup --dataless \
                  --startup-method "test" \
                  --user-param "json" > test-results.json
