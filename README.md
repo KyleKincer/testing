@@ -1,113 +1,264 @@
-A template repository for 4D component developement.
+# 4D Unit Testing Framework
 
-# About
+A comprehensive unit testing framework for the 4D 4GL platform with enhanced reporting, JSON output, and CI/CD integration.
 
-This repository is configured to enable CI/CD of [4D components](https://developer.4d.com/docs/Concepts/components) using a chain of [GitHub Actions](https://docs.github.com/en/actions).
+## Features
 
-You may clone it to get started with your own 4D component development on GitHub.
+- **Auto Test Discovery**: Automatically finds test classes ending with "Test" and test methods starting with "test_"
+- **Rich Assertions**: Built-in assertion library with helpful error messages
+- **Enhanced Reporting**: Detailed test results with execution times and pass rates
+- **JSON Output**: Structured output for CI/CD integration and automated processing
+- **Mock Support**: Built-in mocking utilities for isolated unit testing
+- **CI/CD Ready**: GitHub Actions integration for automated testing
 
-**Note**: If you rename the project, you should modify `env.project_path` in your [`publish.yml`](https://github.com/miyako/4d-template-component-cicd/blob/main/.github/workflows/publish.yml).
+## Quick Start
 
-See also [`test-build-component.yml`](https://github.com/miyako/4d-template-component-cicd/blob/main/.github/workflows/test-build-component.yml#L18), [`run-tests.yml`](https://github.com/miyako/4d-template-component-cicd/blob/main/.github/workflows/run-tests.yml#L15).
+### 1. Create a Test Class
 
-The build destination path is `${PWD}`. See [`miyako/4D/.github/actions/build-component`](https://github.com/miyako/4D/blob/v1/.github/actions/build-component/action.yml#L36) 
+Test classes must end with "Test":
 
-```yml
-env: 
-  project_path: example/Project/example.4DProject
+```4d
+// ExampleTest.4dm
+Class constructor()
+
+Function test_addition_works($t : cs.Testing)
+    var $assert : cs.Assert
+    $assert:=cs.Assert.new()
+    $assert.areEqual($t; 5; 2+3; "Addition should work correctly")
+
+Function test_string_comparison($t : cs.Testing)
+    var $assert : cs.Assert
+    $assert:=cs.Assert.new()
+    $assert.areEqual($t; "hello"; "hello"; "Strings should be equal")
 ```
 
-### Development
+### 2. Run Tests
 
-Whenever you push changes to your `main` branch, the default workflow is automatically triggered in `patch` mode.
+```bash
+# Human-readable output
+tool4d --project YourProject.4DProject --startup-method "test"
 
-```yml
-on:
-  push:
-    branches:
-    - main
-    paths:
-      - '*/Project/Sources/**/*.4dm'
-      - '*/Project/Sources/*/*.4DForm'
-      - '*/Project/Sources/*.4DCatalog'
-      - '*/Project/Resources/**'
+# JSON output for CI/CD
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "json"
 ```
 
-### Deployment
+## Writing Tests
 
-You can manually dispatch the default workflow for any branch, in either `patch` `minor` `major` mode.
+### Test Class Requirements
 
-<img src="https://github.com/miyako/4d-template-component-cicd/assets/1725068/552b0968-5672-42d8-a1b9-a94711b8bfb8" style="height:240px;width:auto;" />
+- Class name must end with "Test" (e.g., `UserServiceTest`, `ExampleTest`)
+- Test methods must start with "test_" (e.g., `test_user_creation`, `test_validation`)
+- Test methods receive a `$t : cs.Testing` parameter
 
-## Workflow
+### Basic Example
 
-The workflow does the following:
+```4d
+Class constructor()
 
-1. The project is compiled on a GitHub hosted runner (`macos-latest`) using `tool4d`.
-1. The project is built as a component for ARM/Apple Silicon and AMD/Intel processors.
-1. The component is signed with your **Apple Developer ID Application** certificate.
-1. The component is submitted to Apple for notarisation.
-1. The component is published under Releases (.zip and .dmg format).
+Function test_user_validation($t : cs.Testing)
+    var $assert : cs.Assert
+    $assert:=cs.Assert.new()
+    
+    var $user : Object
+    $user:=New object("name"; "John"; "email"; "john@example.com")
+    
+    $assert.isNotNull($t; $user.name; "User should have a name")
+    $assert.areEqual($t; "John"; $user.name; "User name should be correct")
+    $assert.isTrue($t; $user.email#""; "User should have an email")
+```
 
-# Prerequisites
+## Assertion Library
 
-The repository must have [`package.json`](https://github.com/miyako/4d-template-component-cicd/blob/main/package.json) file  at the root level. 
+The `cs.Assert` class provides comprehensive assertion methods:
 
-**Note**: The format is obviously inspired by, but not necessarily relate to, `npm`. In future versions, 4D may roll out its own way of managing dependencies.
+### Basic Assertions
+- `areEqual($t; $expected; $actual; $message)` - Values must be equal
+- `isTrue($t; $value; $message)` - Value must be true
+- `isFalse($t; $value; $message)` - Value must be false
+- `isNull($t; $value; $message)` - Value must be null
+- `isNotNull($t; $value; $message)` - Value must not be null
+- `fail($t; $message)` - Force test failure
 
-In addition to arbitrary meta properties, you should provide the following build parameters:
+### Usage Example
+```4d
+Function test_calculations($t : cs.Testing)
+    var $assert : cs.Assert
+    $assert:=cs.Assert.new()
+    
+    // Test equality
+    $assert.areEqual($t; 10; 5*2; "Multiplication should work")
+    
+    // Test boolean conditions
+    $assert.isTrue($t; (10>5); "10 should be greater than 5")
+    $assert.isFalse($t; (5>10); "5 should not be greater than 10")
+    
+    // Test null checks
+    var $result : Object
+    $result:=someFunction()
+    $assert.isNotNull($t; $result; "Function should return a result")
+```
 
-|Path|Type|Description
-|:-|:-:|:-|
-|version|Text|[semantic versioning 2.0.0](https://semver.org)|
-|tool.platform|Text|always `macos`|
-|tool.branch|Text|default=`20.x`|
-|tool.version|Text|default=`20.2`|
-|tool.build|Text|default=`latest`|
-|tool.arch|Text|`x86` or `arm`|
+## Output Formats
 
-**Note**: ~~Free GitHub hosted macOS runners are running on Intel. If you have a subscription, you can select [ARM hosted runners](https://docs.github.com/en/actions/using-github-hosted-runners/about-larger-runners/about-larger-runners)~~. ARM macOS runners are now [available](https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners). 
+### Human-Readable Output (Default)
 
-* For Feature Releases, the space should be URL encoded, e.g. `20%20Rx` `20%20R6`.
-* The `latest` keyword can't be used while a Feature Release is in beta.
+```
+=== 4D Unit Testing Framework ===
+Running tests...
 
-Your Apple Developer credentials should be stored in [GitHub Actions secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions).
+  ✓ test_areEqual_pass (1ms)
+  ✓ test_isTrue_pass (0ms)
+  ✓ test_isFalse_pass (1ms)
+  ✓ test_isNull_pass (0ms)
+  ✓ test_isNotNull_pass (1ms)
 
-From Xcode or Keychain, [export signing certificate](https://help.apple.com/xcode/mac/current/#/dev154b28f09). You will be asked to set a password.
+=== Test Results Summary ===
+Total Tests: 5
+Passed: 5
+Failed: 0
+Pass Rate: 100.0%
+Duration: 45ms
 
-<img src="https://github.com/miyako/4d-template-component-cicd/assets/1725068/f5a70c38-ace0-424b-a62a-40c058ea1667" width="auto" height="300px" />
+All tests passed! 🎉
+```
 
-|Secret|Description
-|:-|:-|
-|`APPLE_DEVELOPER_ID_CERTIFICATE`|base64 encoded|
-|`APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD`|password to read the certificate|
-|`KEYCHAIN_PASSWORD`|an arbitrary password (used to access temporary keychain)|
-|`NOTARYTOOL_APPLE_ID`|`xcrun notarytool submit` parameter|
-|`NOTARYTOOL_TEAM_ID`|`xcrun notarytool submit` parameter|
-|`NOTARYTOOL_PASSWORD`|`xcrun notarytool submit` parameter|
-|`CODESIGN_APPLE_ID`|`codesign`parameter|
+### JSON Output
 
-# Reusable Workflow Actions
+Enable with `--user-param "json"`:
 
-The following actions are used by the default workflow. If your repository is not allowed to execute [external workflows](https://docs.github.com/en/enterprise-cloud@latest/actions/using-workflows/reusing-workflows), clone them.
+```json
+{
+  "totalTests": 5,
+  "passed": 5,
+  "failed": 0,
+  "skipped": 0,
+  "startTime": 1641916800000,
+  "endTime": 1641916800045,
+  "duration": 45,
+  "passRate": 100.0,
+  "status": "success",
+  "suites": [
+    {
+      "name": "ExampleTest",
+      "tests": [
+        {
+          "name": "test_areEqual_pass",
+          "passed": true,
+          "failed": false,
+          "duration": 1,
+          "suite": "ExampleTest"
+        }
+      ],
+      "passed": 5,
+      "failed": 0
+    }
+  ],
+  "failedTests": []
+}
+```
 
-* [`miyako/4D/.github/actions/package-set-version@v1`](https://github.com/miyako/4D/blob/v1/.github/actions/package-set-version/action.yml) - update 
-`package.json`
-* [`miyako/4D/.github/actions/tool4d-get-version@v1`](https://github.com/miyako/4D/blob/v1/.github/actions/tool4d-get-version/action.yml) - parse `package.json`
-* [`miyako/4D/.github/actions/tool4d-download@v1`](https://github.com/miyako/4D/blob/v1/.github/actions/tool4d-download/action.yml) - download `tool4d`
-* [`miyako/4D/.github/actions/build-component@v1`](https://github.com/miyako/4D/blob/v1/.github/actions/build-component/action.yml) - build component with `tool4d`
-* [`miyako/4D/.github/actions/deployment-setup-keychain@v1`](https://github.com/miyako/4D/blob/v1/.github/actions/deployment-setup-keychain/action.yml) -setup keychain with secrets
-* [`miyako/4D/.github/actions/deployment-codesign-product@v1`](https://github.com/miyako/4D/blob/v1/.github/actions/deployment-codesign-product/action.yml) - codesign and notarise component
-* [`miyako/4D/.github/actions/deployment-create-zip@v1`](https://github.com/miyako/4D/blob/v1/.github/actions/deployment-create-zip/action.yml) - create .zip from .dmg
-* [`miyako/4D/.github/actions/deployment-release-assets@v1`](https://github.com/miyako/4D/blob/v1/.github/actions/deployment-release-assets/action.yml) - upload .zip and .dmg
+## Mocking and Test Utilities
 
-In addition, the following GitHub workflow actions are used internally.
+### UnitStatsTracker
 
-* [`actions/upload-release-asset@v1`](https://github.com/actions/upload-release-asset) 
-* [`actions/create-release@v1`](https://github.com/actions/actions/create-release)
+Track function calls and parameters for mocking:
 
-# References
+```4d
+var $tracker : cs.UnitStatsTracker
+$tracker:=cs.UnitStatsTracker.new()
 
-[Installing an Apple certificate on macOS runners for Xcode development](https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development)
+// Mock a function call
+var $result : Variant
+$result:=$tracker.mock("getUserData"; ["user123"]; New object("name"; "John"))
 
-c.f. https://localazy.com/blog/how-to-automatically-sign-macos-apps-using-github-actions
+// Verify the call was made
+var $stat : cs.UnitStatsDetail
+$stat:=$tracker.getStat("getUserData")
+$assert.areEqual($t; 1; $stat.getNumberOfCalls(); "Function should be called once")
+$assert.areEqual($t; "user123"; $stat.getXCallYParameter(1; 1); "First parameter should be user123")
+```
+
+## CI/CD Integration
+
+### GitHub Actions Example
+
+```yml
+name: Run Tests
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run 4D Tests
+        run: |
+          tool4d --project example/Project/testing.4DProject \
+                 --skip-onstartup --dataless \
+                 --startup-method "test" \
+                 --user-param "json" > test-results.json
+          
+      - name: Check Test Results
+        run: |
+          if jq -e '.status == "failure"' test-results.json > /dev/null; then
+            echo "Tests failed"
+            exit 1
+          fi
+```
+
+## Framework Architecture
+
+### Core Classes
+
+- **`cs.TestRunner`**: Discovers and executes test suites
+- **`cs.TestSuite`**: Manages tests within a single test class  
+- **`cs.TestFunction`**: Executes individual test methods
+- **`cs.Testing`**: Test context passed to each test method
+- **`cs.Assert`**: Assertion library for test validation
+- **`cs.UnitStatsTracker`**: Mock function call tracking
+- **`cs.UnitStatsDetail`**: Detailed call statistics
+
+### Test Discovery
+
+The framework automatically discovers:
+1. Classes ending with "Test"
+2. Methods starting with "test_" within those classes
+3. Skips DataClass subclasses
+
+### Execution Flow
+
+1. `TestRunner` discovers all test classes
+2. For each class, creates a `TestSuite`
+3. `TestSuite` discovers test methods and creates `TestFunction` instances
+4. Each `TestFunction` executes with timing and result tracking
+5. Results are collected and reported in chosen format
+
+## Best Practices
+
+### Test Organization
+- One test class per logical unit (e.g., `UserServiceTest`, `OrderProcessingTest`)
+- Group related tests in the same class
+- Use descriptive test method names: `test_user_creation_with_valid_data`
+
+### Assertion Messages
+- Always provide descriptive assertion messages
+- Include expected vs actual values in messages
+- Make failures easy to debug
+
+```4d
+// Good
+$assert.areEqual($t; "active"; $user.status; "User status should be active after registration")
+
+// Less helpful
+$assert.areEqual($t; "active"; $user.status; "Status check failed")
+```
+
+### Test Independence
+- Each test should be independent and not rely on other tests
+- Use setup/teardown for test data preparation
+- Avoid shared state between tests
+
+## License
+
+MIT License - see LICENSE file for details.
