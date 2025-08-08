@@ -215,40 +215,22 @@ Function getResults() : Object
 	return This:C1470.results
 	
 Function _determineOutputFormat()
-	var $userParam : Text
-	var $real : Real
-	$real:=Get database parameter:C643(User param value:K37:94; $userParam)
+	var $params : Object
+	$params:=This:C1470._parseUserParams()
 	
-	If ($userParam="@--json@") || ($userParam="@output=json@") || ($userParam="json") || ($userParam="@json@")
+	If ($params.format="json")
 		This:C1470.outputFormat:="json"
 	Else 
 		This:C1470.outputFormat:="human"
 	End if 
 	
 Function _parseTestPatterns()
-	var $userParam : Text
-	var $real : Real
-	$real:=Get database parameter:C643(User param value:K37:94; $userParam)
+	var $params : Object
+	$params:=This:C1470._parseUserParams()
 	This:C1470.testPatterns:=[]
 	
- 
-	
-	// Look for test= parameter
 	var $testParam : Text
-	$testParam:=""
-	
-	If ($userParam="@test=@")
-		var $startPos : Integer
-		var $endPos : Integer
-		$startPos:=Position:C15("test="; $userParam)+5
-		$endPos:=Position:C15(" "; $userParam; $startPos)
-		If ($endPos=0)
-			$endPos:=Length:C16($userParam)+1
-		End if 
-		$testParam:=Substring:C12($userParam; $startPos; $endPos-$startPos)
-		
- 
-	End if 
+	$testParam:=$params.test || ""
 	
 	// Split by commas for multiple patterns
 	If ($testParam#"")
@@ -323,3 +305,41 @@ Function _matchesPattern($text : Text; $pattern : Text) : Boolean
 	
 	return False:C215 
 	
+Function _parseUserParams() : Object
+	var $userParam : Text
+	var $real : Real
+	$real:=Get database parameter:C643(User param value:K37:94; $userParam)
+	
+	var $params : Object
+	$params:=New object:C1471
+	
+	// Parse space-separated key=value pairs
+	// Format: "format=json test=ExampleTest" or "format:json test:ExampleTest"
+	var $parts : Collection
+	$parts:=Split string:C1554($userParam; " ")
+	
+	var $part : Text
+	For each ($part; $parts)
+		$part:=Replace string:C233($part; " "; "")  // Remove any extra spaces
+		If ($part#"")
+			var $keyValue : Collection
+			
+			// Try = separator first
+			If (Position:C15("="; $part)>0)
+				$keyValue:=Split string:C1554($part; "=")
+				If ($keyValue.length=2)
+					$params[$keyValue[0]]:=$keyValue[1]
+				End if 
+			// Try : separator as alternative
+			Else 
+				If (Position:C15(":"; $part)>0)
+					$keyValue:=Split string:C1554($part; ":")
+					If ($keyValue.length=2)
+						$params[$keyValue[0]]:=$keyValue[1]
+					End if 
+				End if 
+			End if 
+		End if 
+	End for each 
+	
+	return $params

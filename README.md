@@ -5,6 +5,7 @@ A comprehensive unit testing framework for the 4D 4GL platform with enhanced rep
 ## Features
 
 - **Auto Test Discovery**: Automatically finds test classes ending with "Test" and test methods starting with "test_"
+- **Test Filtering**: Run specific tests by name/pattern with wildcard support
 - **Rich Assertions**: Built-in assertion library with helpful error messages
 - **Enhanced Reporting**: Detailed test results with execution times and pass rates
 - **JSON Output**: Structured output for CI/CD integration and automated processing
@@ -39,7 +40,13 @@ Function test_string_comparison($t : cs.Testing)
 tool4d --project YourProject.4DProject --startup-method "test"
 
 # JSON output for CI/CD
-tool4d --project YourProject.4DProject --startup-method "test" --user-param "json"
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json"
+
+# Run specific tests by pattern
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "test=ExampleTest"
+
+# Combine multiple parameters
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json test=ExampleTest"
 ```
 
 ## Writing Tests
@@ -124,7 +131,7 @@ All tests passed! 🎉
 
 ### JSON Output
 
-Enable with `--user-param "json"`:
+Enable with `--user-param "format=json"`:
 
 ```json
 {
@@ -156,6 +163,72 @@ Enable with `--user-param "json"`:
   "failedTests": []
 }
 ```
+
+## Test Filtering
+
+Run specific tests by name or pattern using the `test=` parameter:
+
+### Filter by Test Suite
+
+```bash
+# Run all tests in ExampleTest suite
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "test=ExampleTest"
+
+# Run all tests in multiple suites
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "test=ExampleTest,ErrorHandlingTest"
+```
+
+### Filter by Specific Test Method
+
+```bash
+# Run specific test method
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "test=ExampleTest.test_areEqual_pass"
+
+# Run multiple specific methods
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "test=ExampleTest.test_areEqual_pass,ErrorHandlingTest.test_error_handler_initialization"
+```
+
+### Wildcard Filtering
+
+```bash
+# Run all test suites containing "Error" in the name
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "test=*Error*"
+
+# Run all test methods starting with "test_setup"
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "test=*test_setup*"
+```
+
+### Combine with JSON Output
+
+```bash
+# Filter tests and get JSON output
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json test=ExampleTest"
+```
+
+## Parameter Format
+
+The framework uses a standardized key=value parameter format:
+
+```bash
+# Use space-separated key=value pairs
+--user-param "format=json test=ExampleTest"
+
+# Alternative: use colon separators
+--user-param "format:json test:ExampleTest"
+```
+
+### Available Parameters
+- **`format`**: Output format (`json` or `human`)
+- **`test`**: Test filtering patterns
+
+
+### Pattern Matching Rules
+
+- **Exact match**: `ExampleTest` runs all tests in the ExampleTest suite
+- **Method-specific**: `ExampleTest.test_areEqual_pass` runs only that specific method
+- **Wildcards**: Use `*` for pattern matching (e.g., `*Error*` matches anything containing "Error")
+- **Multiple patterns**: Separate with commas: `ExampleTest,*Error*`
+- **Case-sensitive**: Pattern matching is case-sensitive
 
 ## Mocking and Test Utilities
 
@@ -197,7 +270,7 @@ jobs:
           tool4d --project testing/Project/testing.4DProject \
                  --skip-onstartup --dataless \
                  --startup-method "test" \
-                 --user-param "json" > test-results.json
+                 --user-param "format=json" > test-results.json
           
       - name: Check Test Results
         run: |
