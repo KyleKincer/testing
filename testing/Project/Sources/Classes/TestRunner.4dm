@@ -2,12 +2,14 @@ property classStore : 4D:C1709.Object  // Class store from the calling project
 property testSuites : Collection  // Collection of cs.TestSuite
 property results : Object  // Test results summary
 property outputFormat : Text  // "human" or "json"
+property testPatterns : Collection  // Collection of test patterns to match
 
 Class constructor($cs : 4D:C1709.Object)
 	This:C1470.classStore:=$cs || cs:C1710
 	This:C1470.testSuites:=[]
 	This:C1470._initializeResults()
 	This:C1470._determineOutputFormat()
+	This:C1470._parseTestPatterns()
 	
 Function run()
 	// Set up global error handler for the test run
@@ -45,7 +47,13 @@ Function run()
 Function discoverTests()
 	var $class : 4D:C1709.Class
 	For each ($class; This:C1470._getTestClasses())
-		This:C1470.testSuites.push(cs:C1710.TestSuite.new($class; This:C1470.outputFormat))
+		var $testSuite : cs:C1710.TestSuite
+		$testSuite:=cs:C1710.TestSuite.new($class; This:C1470.outputFormat; This:C1470.testPatterns)
+		
+		// Filter test suite based on patterns
+		If (This:C1470._shouldIncludeTestSuite($testSuite))
+			This:C1470.testSuites.push($testSuite)
+		End if 
 	End for each 
 	
 Function _getTestClasses()->$classes : Collection
@@ -211,9 +219,107 @@ Function _determineOutputFormat()
 	var $real : Real
 	$real:=Get database parameter:C643(User param value:K37:94; $userParam)
 	
-	If ($userParam="@--json@") || ($userParam="@output=json@") || ($userParam="json")
+	If ($userParam="@--json@") || ($userParam="@output=json@") || ($userParam="json") || ($userParam="@json@")
 		This:C1470.outputFormat:="json"
 	Else 
 		This:C1470.outputFormat:="human"
 	End if 
+	
+Function _parseTestPatterns()
+	var $userParam : Text
+	var $real : Real
+	$real:=Get database parameter:C643(User param value:K37:94; $userParam)
+	This:C1470.testPatterns:=[]
+	
+ 
+	
+	// Look for test= parameter
+	var $testParam : Text
+	$testParam:=""
+	
+	If ($userParam="@test=@")
+		var $startPos : Integer
+		var $endPos : Integer
+		$startPos:=Position:C15("test="; $userParam)+5
+		$endPos:=Position:C15(" "; $userParam; $startPos)
+		If ($endPos=0)
+			$endPos:=Length:C16($userParam)+1
+		End if 
+		$testParam:=Substring:C12($userParam; $startPos; $endPos-$startPos)
+		
+ 
+	End if 
+	
+	// Split by commas for multiple patterns
+	If ($testParam#"")
+		var $patterns : Collection
+		$patterns:=Split string:C1554($testParam; ",")
+		var $pattern : Text
+		For each ($pattern; $patterns)
+			$pattern:=Replace string:C233($pattern; " "; "")  // Remove spaces
+			If ($pattern#"")
+				This:C1470.testPatterns.push($pattern)
+			End if 
+		End for each 
+	End if 
+	
+Function _shouldIncludeTestSuite($testSuite : cs:C1710.TestSuite) : Boolean
+	// If no patterns specified, include all tests
+	If (This:C1470.testPatterns.length=0)
+		return True:C214
+	End if 
+	
+	var $suiteName : Text
+	$suiteName:=$testSuite.class.name
+	
+	// Check each pattern
+	var $pattern : Text
+	For each ($pattern; This:C1470.testPatterns)
+		// Check if pattern matches suite name
+		If (This:C1470._matchesPattern($suiteName; $pattern))
+			return True:C214
+		End if 
+		
+		// Check if pattern matches any test method in this suite
+		If (This:C1470._patternMatchesAnyTestInSuite($testSuite; $pattern))
+			return True:C214
+		End if 
+	End for each 
+	
+	return False:C215
+	
+Function _patternMatchesAnyTestInSuite($testSuite : cs:C1710.TestSuite; $pattern : Text) : Boolean
+	var $testFunction : cs:C1710.TestFunction
+	For each ($testFunction; $testSuite.testFunctions)
+		var $fullTestName : Text
+		$fullTestName:=$testSuite.class.name+"."+$testFunction.functionName
+		
+		If (This:C1470._matchesPattern($fullTestName; $pattern)) || (This:C1470._matchesPattern($testFunction.functionName; $pattern))
+			return True:C214
+		End if 
+	End for each 
+	
+	return False:C215
+	
+Function _matchesPattern($text : Text; $pattern : Text) : Boolean
+	// Simple pattern matching with * wildcards
+	If ($pattern="*")
+		return True:C214
+	End if 
+	
+	// Exact match
+	If ($text=$pattern)
+		return True:C214
+	End if 
+	
+	// Replace * with @ for 4D wildcard matching
+	var $fourDPattern : Text
+	$fourDPattern:=Replace string:C233($pattern; "*"; "@")
+	
+	// Wildcard matching using 4D's @ operator
+	If ($text=$fourDPattern)
+		return True:C214
+	End if 
+	
+	return False:C215 
 	
