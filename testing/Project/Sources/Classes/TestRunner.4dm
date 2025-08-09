@@ -4,6 +4,9 @@ property results : Object  // Test results summary
 property outputFormat : Text  // "human" or "json"
 property verboseOutput : Boolean  // Whether to include detailed information
 property testPatterns : Collection  // Collection of test patterns to match
+property includeTags : Collection  // Tags to include (OR logic)
+property excludeTags : Collection  // Tags to exclude
+property requireAllTags : Collection  // Tags that must all be present (AND logic)
 
 Class constructor($cs : 4D:C1709.Object)
 	This:C1470.classStore:=$cs || cs:C1710
@@ -11,6 +14,7 @@ Class constructor($cs : 4D:C1709.Object)
 	This:C1470._initializeResults()
 	This:C1470._determineOutputFormat()
 	This:C1470._parseTestPatterns()
+	This:C1470._parseTagFilters()
 	
 Function run()
 	// Set up global error handler for the test run
@@ -49,7 +53,7 @@ Function discoverTests()
 	var $class : 4D:C1709.Class
 	For each ($class; This:C1470._getTestClasses())
 		var $testSuite : cs:C1710.TestSuite
-		$testSuite:=cs:C1710.TestSuite.new($class; This:C1470.outputFormat; This:C1470.testPatterns)
+		$testSuite:=cs:C1710.TestSuite.new($class; This:C1470.outputFormat; This:C1470.testPatterns; This:C1470)
 		
 		// Filter test suite based on patterns
 		If (This:C1470._shouldIncludeTestSuite($testSuite))
@@ -422,3 +426,61 @@ Function _parseParamString($userParam : Text) : Object
 	End for each 
 	
 	return $params
+
+Function _parseTagFilters()
+	// Parse tag filters from user parameters
+	var $params : Object
+	$params:=This:C1470._parseUserParams()
+	
+	This:C1470.includeTags:=This:C1470._parseTagList($params.tags)
+	This:C1470.excludeTags:=This:C1470._parseTagList($params.excludeTags)
+	This:C1470.requireAllTags:=This:C1470._parseTagList($params.requireTags)
+
+Function _parseTagList($tagString : Text) : Collection
+	// Parse comma-separated tag list
+	var $tags : Collection
+	$tags:=[]
+	
+	If ($tagString#Null:C1517) && ($tagString#"")
+		var $tagParts : Collection
+		$tagParts:=Split string:C1554($tagString; ",")
+		var $tag : Text
+		For each ($tag; $tagParts)
+			$tag:=Replace string:C233($tag; " "; "")  // Remove spaces
+			If ($tag#"")
+				$tags.push($tag)
+			End if 
+		End for each 
+	End if 
+	
+	return $tags
+
+Function _shouldIncludeTestByTags($testFunction : cs:C1710.TestFunction) : Boolean
+	// Apply tag filtering logic to determine if test should be included
+	
+	// If no tag filters specified, include all tests
+	If (This:C1470.includeTags.length=0) && (This:C1470.excludeTags.length=0) && (This:C1470.requireAllTags.length=0)
+		return True:C214
+	End if 
+	
+	// Check exclude tags first (highest priority)
+	If (This:C1470.excludeTags.length>0)
+		If ($testFunction.hasTags(This:C1470.excludeTags))
+			return False:C215
+		End if 
+	End if 
+	
+	// Check require all tags (must have ALL specified tags)
+	If (This:C1470.requireAllTags.length>0)
+		If (Not:C34($testFunction.hasAllTags(This:C1470.requireAllTags)))
+			return False:C215
+		End if 
+	End if 
+	
+	// Check include tags (must have at least ONE of the specified tags)
+	If (This:C1470.includeTags.length>0)
+		return $testFunction.hasTags(This:C1470.includeTags)
+	End if 
+	
+	// If we have exclude or require filters but no include filters, default to true
+	return True:C214

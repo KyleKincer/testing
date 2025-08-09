@@ -16,7 +16,7 @@ Function test_null_class_handling($t : cs:C1710.Testing)
 	$assert.isNotNull($t; $validClass; "Valid class should not be null")
 	
 	var $suite : cs:C1710.TestSuite
-	$suite:=cs:C1710.TestSuite.new($validClass; "human"; [])
+	$suite:=cs:C1710.TestSuite.new($validClass; "human"; []; Null:C1517)
 	
 	$assert.isNotNull($t; $suite; "TestSuite should handle valid class")
 	$assert.areEqual($t; "ExampleTest"; $suite.class.name; "Should store class correctly")
@@ -34,7 +34,7 @@ Function test_empty_test_class($t : cs:C1710.Testing)
 	$runner.testPatterns:=["nonexistent_pattern"]
 	
 	var $suite : cs:C1710.TestSuite
-	$suite:=cs:C1710.TestSuite.new(cs:C1710.ExampleTest; "human"; ["nonexistent_pattern"])
+	$suite:=cs:C1710.TestSuite.new(cs:C1710.ExampleTest; "human"; ["nonexistent_pattern"]; Null:C1517)
 	
 	$assert.areEqual($t; 0; $suite.testFunctions.length; "Should have no test functions when pattern doesn't match")
 
@@ -44,7 +44,7 @@ Function test_malformed_test_methods($t : cs:C1710.Testing)
 	
 	// Test that test discovery handles methods that don't follow the pattern
 	var $suite : cs:C1710.TestSuite
-	$suite:=cs:C1710.TestSuite.new(cs:C1710.ExampleTest; "human"; [])
+	$suite:=cs:C1710.TestSuite.new(cs:C1710.ExampleTest; "human"; []; Null:C1517)
 	
 	// All discovered methods should start with "test_"
 	var $testFunction : cs:C1710.TestFunction
@@ -179,7 +179,7 @@ Function test_timing_precision($t : cs:C1710.Testing)
 	$testMethod:=$classInstance.test_areEqual_pass
 	
 	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
+	$testFunction:=cs:C1710.TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass"; "")
 	$testFunction.run()
 	
 	var $result : Object

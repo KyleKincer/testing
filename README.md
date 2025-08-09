@@ -6,6 +6,7 @@ A comprehensive unit testing framework for the 4D 4GL platform with enhanced rep
 
 - **Auto Test Discovery**: Automatically finds test classes ending with "Test" and test methods starting with "test_"
 - **Test Filtering**: Run specific tests by name/pattern with wildcard support
+- **Test Tagging**: Organize and filter tests using comment-based tags
 - **Rich Assertions**: Built-in assertion library with helpful error messages
 - **Enhanced Reporting**: Detailed test results with execution times and pass rates
 - **JSON Output**: Structured output for CI/CD integration and automated processing
@@ -22,11 +23,13 @@ Test classes must end with "Test":
 // ExampleTest.4dm
 Class constructor()
 
+// #tags: unit, math
 Function test_addition_works($t : cs.Testing)
     var $assert : cs.Assert
     $assert:=cs.Assert.new()
     $assert.areEqual($t; 5; 2+3; "Addition should work correctly")
 
+// #tags: unit, string
 Function test_string_comparison($t : cs.Testing)
     var $assert : cs.Assert
     $assert:=cs.Assert.new()
@@ -51,8 +54,14 @@ tool4d --project YourProject.4DProject --startup-method "test" --user-param "for
 # Run specific tests by pattern
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "test=ExampleTest"
 
+# Run tests by tags
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "tags=unit"
+
+# Exclude slow tests
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "excludeTags=slow"
+
 # Combine multiple parameters
-tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json test=ExampleTest verbose=true"
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json tags=unit,integration verbose=true"
 ```
 
 ## Writing Tests
@@ -267,6 +276,9 @@ The framework uses a standardized key=value parameter format:
 - **`format`**: Output format (`json` or `human`)
 - **`test`**: Test filtering patterns
 - **`verbose`**: Enable verbose output (`true` or `1`)
+- **`tags`**: Include tests with any of these tags (comma-separated)
+- **`excludeTags`**: Exclude tests with any of these tags (comma-separated)
+- **`requireTags`**: Include only tests with ALL of these tags (comma-separated)
 
 
 ### Pattern Matching Rules
@@ -276,6 +288,190 @@ The framework uses a standardized key=value parameter format:
 - **Wildcards**: Use `*` for pattern matching (e.g., `*Error*` matches anything containing "Error")
 - **Multiple patterns**: Separate with commas: `ExampleTest,*Error*`
 - **Case-sensitive**: Pattern matching is case-sensitive
+
+## Test Tagging
+
+The framework supports organizing and filtering tests using comment-based tags. Tags allow you to categorize tests and run specific subsets based on their characteristics.
+
+### Defining Tags
+
+Add tags to test methods using `#tags:` comments immediately before the function declaration:
+
+```4d
+Class constructor()
+
+// #tags: unit, fast
+Function test_basic_addition($t : cs.Testing)
+    var $assert : cs.Assert
+    $assert:=cs.Assert.new()
+    $assert.areEqual($t; 4; 2+2; "Addition should work")
+
+// #tags: integration, slow
+Function test_database_connection($t : cs.Testing)
+    var $assert : cs.Assert
+    $assert:=cs.Assert.new()
+    
+    // Simulate slow database operation
+    DELAY PROCESS(Current process; 10)
+    $assert.isTrue($t; True; "Database connection test")
+
+// #tags: unit, edge-case
+Function test_empty_string_handling($t : cs.Testing)
+    var $assert : cs.Assert
+    $assert:=cs.Assert.new()
+    
+    var $result : Text
+    $result:=""+"test"
+    $assert.areEqual($t; "test"; $result; "Empty string concatenation")
+
+// #tags: integration, performance, external
+Function test_file_system_access($t : cs.Testing)
+    var $assert : cs.Assert
+    $assert:=cs.Assert.new()
+    
+    var $folder : 4D.Folder
+    $folder:=Folder(fk desktop folder)
+    $assert.isNotNull($t; $folder; "Should access desktop folder")
+```
+
+### Tag Syntax Rules
+
+- Use `// #tags:` followed by comma-separated tag names
+- Tags can contain letters, numbers, hyphens, and underscores
+- Whitespace around tags is automatically trimmed
+- Tests without explicit tags automatically receive the "unit" tag
+
+### Tag Filtering Commands
+
+#### Include Tags (OR Logic)
+Run tests that have **any** of the specified tags:
+
+```bash
+# Run all fast tests
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "tags=fast"
+
+# Run tests tagged as either unit OR integration
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "tags=unit,integration"
+
+# JSON output with tag filtering
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json tags=performance"
+```
+
+#### Exclude Tags (Highest Priority)
+Exclude tests that have **any** of the specified tags:
+
+```bash
+# Run all tests EXCEPT slow ones
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "excludeTags=slow"
+
+# Exclude both slow and external tests
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "excludeTags=slow,external"
+
+# Combine with JSON output
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json excludeTags=integration"
+```
+
+#### Require All Tags (AND Logic)
+Run tests that have **all** of the specified tags:
+
+```bash
+# Run tests that are BOTH integration AND performance
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "requireTags=integration,performance"
+
+# Run tests that are unit, fast, AND edge-case
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "requireTags=unit,fast,edge-case"
+```
+
+#### Combined Tag Filtering
+You can combine multiple tag filtering options. **Exclude tags have the highest priority**:
+
+```bash
+# Run unit tests but exclude slow ones
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "tags=unit excludeTags=slow"
+
+# Run integration tests that are also performance tests, but exclude external ones
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "tags=integration requireTags=performance excludeTags=external"
+
+# Complex filtering with JSON output
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json tags=unit,integration excludeTags=slow requireTags=fast"
+```
+
+### Common Tagging Strategies
+
+#### By Test Type
+```4d
+// #tags: unit
+Function test_calculation_logic($t : cs.Testing)
+
+// #tags: integration
+Function test_api_integration($t : cs.Testing)
+
+// #tags: e2e
+Function test_complete_user_workflow($t : cs.Testing)
+```
+
+#### By Speed/Performance
+```4d
+// #tags: fast
+Function test_quick_validation($t : cs.Testing)
+
+// #tags: slow
+Function test_large_dataset_processing($t : cs.Testing)
+
+// #tags: performance
+Function test_response_time_requirements($t : cs.Testing)
+```
+
+#### By Dependencies
+```4d
+// #tags: database
+Function test_user_repository($t : cs.Testing)
+
+// #tags: external, network
+Function test_api_service($t : cs.Testing)
+
+// #tags: filesystem
+Function test_file_operations($t : cs.Testing)
+```
+
+#### By Feature/Component
+```4d
+// #tags: auth, security
+Function test_login_validation($t : cs.Testing)
+
+// #tags: billing, finance
+Function test_payment_processing($t : cs.Testing)
+
+// #tags: reporting, analytics
+Function test_report_generation($t : cs.Testing)
+```
+
+### CI/CD Integration with Tags
+
+Use tags to run different test suites in different CI/CD scenarios:
+
+```yml
+# Run only fast unit tests for PR validation
+- name: Quick Tests
+  run: tool4d --project testing.4DProject --startup-method "test" --user-param "format=json tags=unit,fast excludeTags=slow"
+
+# Run integration tests separately
+- name: Integration Tests  
+  run: tool4d --project testing.4DProject --startup-method "test" --user-param "format=json tags=integration"
+
+# Run performance tests on nightly builds
+- name: Performance Tests
+  run: tool4d --project testing.4DProject --startup-method "test" --user-param "format=json tags=performance"
+```
+
+### Tag Filtering Precedence
+
+When multiple tag filters are specified, they are applied in this order:
+
+1. **Exclude tags** (highest priority) - Tests with excluded tags are removed first
+2. **Require all tags** - Tests must have ALL specified tags
+3. **Include tags** - Tests must have at least ONE of the specified tags
+4. **Default behavior** - If no tag filters are specified, all tests run
 
 ## Mocking and Test Utilities
 

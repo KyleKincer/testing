@@ -3,13 +3,15 @@ property classInstance : 4D:C1709.Object
 property testFunctions : Collection  // Collection of cs.TestFunction
 property outputFormat : Text  // "human" or "json"
 property testPatterns : Collection  // Collection of test patterns for filtering
+property testRunner : cs:C1710.TestRunner  // Reference to test runner for tag filtering
 
-Class constructor($class : 4D:C1709.Class; $outputFormat : Text; $testPatterns : Collection)
+Class constructor($class : 4D:C1709.Class; $outputFormat : Text; $testPatterns : Collection; $testRunner : cs:C1710.TestRunner)
 	This:C1470.class:=$class
 	This:C1470.classInstance:=This:C1470.class.new()
 	This:C1470.testFunctions:=[]
 	This:C1470.outputFormat:=$outputFormat || "human"
 	This:C1470.testPatterns:=$testPatterns || []
+	This:C1470.testRunner:=$testRunner
 	
 	This:C1470.discoverTests()
 	
@@ -29,11 +31,26 @@ Function discoverTests()
 	var $testFunctions : Collection
 	$testFunctions:=This:C1470._getTestClassFunctions()
 	
+	// Get class source code once for all functions
+	var $classCode : Text
+	$classCode:=This:C1470._getClassCode()
+	
 	var $function : Object
 	For each ($function; $testFunctions)
 		// Filter individual test methods based on patterns
 		If (This:C1470._shouldIncludeTestMethod($function.name))
-			This:C1470.testFunctions.push(cs:C1710.TestFunction.new(This:C1470.class; This:C1470.classInstance; $function.function; $function.name))
+			var $testFunction : cs:C1710.TestFunction
+			$testFunction:=cs:C1710.TestFunction.new(This:C1470.class; This:C1470.classInstance; $function.function; $function.name; $classCode)
+			
+			// Apply tag filtering if TestRunner is available
+			If (This:C1470.testRunner#Null:C1517)
+				If (This:C1470.testRunner._shouldIncludeTestByTags($testFunction))
+					This:C1470.testFunctions.push($testFunction)
+				End if 
+			Else 
+				// If no TestRunner reference, include all tests that pass pattern filtering
+				This:C1470.testFunctions.push($testFunction)
+			End if 
 		End if 
 	End for each 
 	

@@ -104,7 +104,7 @@ Function test_parameter_validation($t : cs:C1710.Testing)
 	
 	// Should handle empty test patterns gracefully
 	var $exampleSuite : cs:C1710.TestSuite
-	$exampleSuite:=cs:C1710.TestSuite.new(cs:C1710.ExampleTest; "human"; [])
+	$exampleSuite:=cs:C1710.TestSuite.new(cs:C1710.ExampleTest; "human"; []; Null:C1517)
 	
 	$assert.isTrue($t; $runner._shouldIncludeTestSuite($exampleSuite); "Should include suite when no patterns specified")
 
@@ -119,10 +119,10 @@ Function test_suite_filtering_logic($t : cs:C1710.Testing)
 	$runner.testPatterns:=["ExampleTest"]
 	
 	var $exampleSuite : cs:C1710.TestSuite
-	$exampleSuite:=cs:C1710.TestSuite.new(cs:C1710.ExampleTest; "human"; ["ExampleTest"])
+	$exampleSuite:=cs:C1710.TestSuite.new(cs:C1710.ExampleTest; "human"; ["ExampleTest"]; Null:C1517)
 	
 	var $errorSuite : cs:C1710.TestSuite
-	$errorSuite:=cs:C1710.TestSuite.new(cs:C1710.ErrorHandlingTest; "human"; ["ExampleTest"])
+	$errorSuite:=cs:C1710.TestSuite.new(cs:C1710.ErrorHandlingTest; "human"; ["ExampleTest"]; Null:C1517)
 	
 	$assert.isTrue($t; $runner._shouldIncludeTestSuite($exampleSuite); "Should include matching suite")
 	$assert.isFalse($t; $runner._shouldIncludeTestSuite($errorSuite); "Should exclude non-matching suite")
@@ -138,10 +138,10 @@ Function test_wildcard_suite_filtering($t : cs:C1710.Testing)
 	$runner.testPatterns:=["*Error*"]
 	
 	var $errorSuite : cs:C1710.TestSuite
-	$errorSuite:=cs:C1710.TestSuite.new(cs:C1710.ErrorHandlingTest; "human"; ["*Error*"])
+	$errorSuite:=cs:C1710.TestSuite.new(cs:C1710.ErrorHandlingTest; "human"; ["*Error*"]; Null:C1517)
 	
 	var $exampleSuite : cs:C1710.TestSuite
-	$exampleSuite:=cs:C1710.TestSuite.new(cs:C1710.ExampleTest; "human"; ["*Error*"])
+	$exampleSuite:=cs:C1710.TestSuite.new(cs:C1710.ExampleTest; "human"; ["*Error*"]; Null:C1517)
 	
 	$assert.isTrue($t; $runner._shouldIncludeTestSuite($errorSuite); "Should include suite matching wildcard")
 	$assert.isFalse($t; $runner._shouldIncludeTestSuite($exampleSuite); "Should exclude suite not matching wildcard")
