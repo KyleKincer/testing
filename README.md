@@ -25,15 +25,11 @@ Class constructor()
 
 // #tags: unit, math
 Function test_addition_works($t : cs.Testing)
-    var $assert : cs.Assert
-    $assert:=cs.Assert.new()
-    $assert.areEqual($t; 5; 2+3; "Addition should work correctly")
+    $t.assert.areEqual($t; 5; 2+3; "Addition should work correctly")
 
 // #tags: unit, string
 Function test_string_comparison($t : cs.Testing)
-    var $assert : cs.Assert
-    $assert:=cs.Assert.new()
-    $assert.areEqual($t; "hello"; "hello"; "Strings should be equal")
+    $t.assert.areEqual($t; "hello"; "hello"; "Strings should be equal")
 ```
 
 ### 2. Run Tests
@@ -78,46 +74,40 @@ tool4d --project YourProject.4DProject --startup-method "test" --user-param "for
 Class constructor()
 
 Function test_user_validation($t : cs.Testing)
-    var $assert : cs.Assert
-    $assert:=cs.Assert.new()
-    
     var $user : Object
     $user:=New object("name"; "John"; "email"; "john@example.com")
     
-    $assert.isNotNull($t; $user.name; "User should have a name")
-    $assert.areEqual($t; "John"; $user.name; "User name should be correct")
-    $assert.isTrue($t; $user.email#""; "User should have an email")
+    $t.assert.isNotNull($t; $user.name; "User should have a name")
+    $t.assert.areEqual($t; "John"; $user.name; "User name should be correct")
+    $t.assert.isTrue($t; $user.email#""; "User should have an email")
 ```
 
 ## Assertion Library
 
-The `cs.Assert` class provides comprehensive assertion methods:
+The framework includes built-in assertion methods accessible through `$t.assert`:
 
 ### Basic Assertions
-- `areEqual($t; $expected; $actual; $message)` - Values must be equal
-- `isTrue($t; $value; $message)` - Value must be true
-- `isFalse($t; $value; $message)` - Value must be false
-- `isNull($t; $value; $message)` - Value must be null
-- `isNotNull($t; $value; $message)` - Value must not be null
-- `fail($t; $message)` - Force test failure
+- `$t.assert.areEqual($t; $expected; $actual; $message)` - Values must be equal
+- `$t.assert.isTrue($t; $value; $message)` - Value must be true
+- `$t.assert.isFalse($t; $value; $message)` - Value must be false
+- `$t.assert.isNull($t; $value; $message)` - Value must be null
+- `$t.assert.isNotNull($t; $value; $message)` - Value must not be null
+- `$t.assert.fail($t; $message)` - Force test failure
 
 ### Usage Example
 ```4d
 Function test_calculations($t : cs.Testing)
-    var $assert : cs.Assert
-    $assert:=cs.Assert.new()
-    
     // Test equality
-    $assert.areEqual($t; 10; 5*2; "Multiplication should work")
+    $t.assert.areEqual($t; 10; 5*2; "Multiplication should work")
     
     // Test boolean conditions
-    $assert.isTrue($t; (10>5); "10 should be greater than 5")
-    $assert.isFalse($t; (5>10); "5 should not be greater than 10")
+    $t.assert.isTrue($t; (10>5); "10 should be greater than 5")
+    $t.assert.isFalse($t; (5>10); "5 should not be greater than 10")
     
     // Test null checks
     var $result : Object
     $result:=someFunction()
-    $assert.isNotNull($t; $result; "Function should return a result")
+    $t.assert.isNotNull($t; $result; "Function should return a result")
 ```
 
 ## Output Formats
@@ -302,36 +292,25 @@ Class constructor()
 
 // #tags: unit, fast
 Function test_basic_addition($t : cs.Testing)
-    var $assert : cs.Assert
-    $assert:=cs.Assert.new()
-    $assert.areEqual($t; 4; 2+2; "Addition should work")
+    $t.assert.areEqual($t; 4; 2+2; "Addition should work")
 
 // #tags: integration, slow
 Function test_database_connection($t : cs.Testing)
-    var $assert : cs.Assert
-    $assert:=cs.Assert.new()
-    
     // Simulate slow database operation
     DELAY PROCESS(Current process; 10)
-    $assert.isTrue($t; True; "Database connection test")
+    $t.assert.isTrue($t; True; "Database connection test")
 
 // #tags: unit, edge-case
 Function test_empty_string_handling($t : cs.Testing)
-    var $assert : cs.Assert
-    $assert:=cs.Assert.new()
-    
     var $result : Text
     $result:=""+"test"
-    $assert.areEqual($t; "test"; $result; "Empty string concatenation")
+    $t.assert.areEqual($t; "test"; $result; "Empty string concatenation")
 
 // #tags: integration, performance, external
 Function test_file_system_access($t : cs.Testing)
-    var $assert : cs.Assert
-    $assert:=cs.Assert.new()
-    
     var $folder : 4D.Folder
     $folder:=Folder(fk desktop folder)
-    $assert.isNotNull($t; $folder; "Should access desktop folder")
+    $t.assert.isNotNull($t; $folder; "Should access desktop folder")
 ```
 
 ### Tag Syntax Rules
@@ -475,23 +454,38 @@ When multiple tag filters are specified, they are applied in this order:
 
 ## Mocking and Test Utilities
 
-### UnitStatsTracker
+### Built-in Stats Tracker
 
-Track function calls and parameters for mocking:
+The framework includes built-in mocking capabilities accessible through `$t.stats`:
 
 ```4d
-var $tracker : cs.UnitStatsTracker
-$tracker:=cs.UnitStatsTracker.new()
+Function test_mock_example($t : cs.Testing)
+    // Mock a function call
+    var $result : Variant
+    $result:=$t.stats.mock("getUserData"; ["user123"]; New object("name"; "John"))
+    
+    // Verify the call was made
+    var $stat : cs.UnitStatsDetail
+    $stat:=$t.stats.getStat("getUserData")
+    $t.assert.areEqual($t; 1; $stat.getNumberOfCalls(); "Function should be called once")
+    $t.assert.areEqual($t; "user123"; $stat.getXCallYParameter(1; 1); "First parameter should be user123")
+```
 
-// Mock a function call
-var $result : Variant
-$result:=$tracker.mock("getUserData"; ["user123"]; New object("name"; "John"))
+### Advanced Mocking Example
 
-// Verify the call was made
-var $stat : cs.UnitStatsDetail
-$stat:=$tracker.getStat("getUserData")
-$assert.areEqual($t; 1; $stat.getNumberOfCalls(); "Function should be called once")
-$assert.areEqual($t; "user123"; $stat.getXCallYParameter(1; 1); "First parameter should be user123")
+```4d
+Function test_multiple_mock_calls($t : cs.Testing)
+    // Make multiple calls to the same mock
+    $t.stats.mock("validateUser"; ["admin"]; True)
+    $t.stats.mock("validateUser"; ["guest"]; False)
+    
+    // Verify both calls were tracked
+    var $stat : cs.UnitStatsDetail
+    $stat:=$t.stats.getStat("validateUser")
+    
+    $t.assert.areEqual($t; 2; $stat.getNumberOfCalls(); "Should be called twice")
+    $t.assert.areEqual($t; "admin"; $stat.getXCallYParameter(1; 1); "First call should be admin")
+    $t.assert.areEqual($t; "guest"; $stat.getXCallYParameter(2; 1); "Second call should be guest")
 ```
 
 ## CI/CD Integration
@@ -530,9 +524,11 @@ jobs:
 - **`cs.TestRunner`**: Discovers and executes test suites
 - **`cs.TestSuite`**: Manages tests within a single test class  
 - **`cs.TestFunction`**: Executes individual test methods
-- **`cs.Testing`**: Test context passed to each test method
-- **`cs.Assert`**: Assertion library for test validation
-- **`cs.UnitStatsTracker`**: Mock function call tracking
+- **`cs.Testing`**: Test context with built-in assertion and mocking utilities
+  - **`$t.assert`**: Built-in assertion library for test validation
+  - **`$t.stats`**: Built-in mock function call tracking
+- **`cs.Assert`**: Assertion implementation class
+- **`cs.UnitStatsTracker`**: Mock tracking implementation class
 - **`cs.UnitStatsDetail`**: Detailed call statistics
 
 ### Test Discovery
@@ -564,10 +560,10 @@ The framework automatically discovers:
 
 ```4d
 // Good
-$assert.areEqual($t; "active"; $user.status; "User status should be active after registration")
+$t.assert.areEqual($t; "active"; $user.status; "User status should be active after registration")
 
 // Less helpful
-$assert.areEqual($t; "active"; $user.status; "Status check failed")
+$t.assert.areEqual($t; "active"; $user.status; "Status check failed")
 ```
 
 ### Test Independence

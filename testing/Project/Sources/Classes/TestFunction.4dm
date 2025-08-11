@@ -20,6 +20,9 @@ Class constructor($class : 4D:C1709.Class; $classInstance : 4D:C1709.Object; $fu
 Function run()
 	This:C1470.startTime:=Milliseconds:C459
 	
+	// Reset the testing context for this test
+	This:C1470.t.resetForNewTest()
+	
 	// Clear any existing test errors
 	If (Storage:C1525.testErrors#Null:C1517)
 		Use (Storage:C1525)
