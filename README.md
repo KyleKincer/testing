@@ -2,6 +2,21 @@
 
 A comprehensive unit testing framework for the 4D 4GL platform with enhanced reporting, JSON output, and CI/CD integration.
 
+## Table of Contents
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Writing Tests](#writing-tests)
+- [Assertion Library](#assertion-library)
+- [Output Formats](#output-formats)
+- [Test Filtering](#test-filtering)
+- [Test Tagging](#test-tagging)
+- [Mocking and Test Utilities](#mocking-and-test-utilities)
+- [CI/CD Integration](#cicd-integration)
+- [Framework Architecture](#framework-architecture)
+- [Best Practices](#best-practices)
+- [License](#license)
+
 ## Features
 
 - **Auto Test Discovery**: Automatically finds test classes ending with "Test" and test methods starting with "test_"
