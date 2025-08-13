@@ -14,17 +14,48 @@ This project provides a complete testing framework for 4D applications featuring
 
 ## Running Tests
 
-### Basic Test Execution
+### Quick Start with Makefile
+
+```bash
+# Run all tests
+make test
+
+# Pass parameters directly to test command
+make test format=json
+make test tags=unit
+make test format=json tags=unit excludeTags=slow
+make test test=ExampleTest
+
+# Alternative named commands
+make test-json              # Run all tests with JSON output
+make test-class CLASS=ExampleTest
+make test-tags TAGS=unit
+make test-tags TAGS=integration,performance
+make test-exclude-tags TAGS=slow
+make test-require-tags TAGS=unit,fast
+
+# Convenience shortcuts  
+make test-unit              # Run only unit tests
+make test-integration       # Run only integration tests
+make test-unit-json         # Run unit tests with JSON output
+
+# Show all available commands
+make help
+```
+
+### Manual Test Execution (Advanced)
+
+If you need more control or the Makefile doesn't meet your needs:
 
 ```bash
 # Run all tests with human output
-/Applications/tool4d.app/Contents/MacOS/tool4d --project /Users/kyle_kincer/src/testing-4d/testing/Project/testing.4DProject --skip-onstartup --dataless --startup-method "test"
+/Applications/tool4d.app/Contents/MacOS/tool4d --project $(PWD)/testing/Project/testing.4DProject --skip-onstartup --dataless --startup-method "test"
 
 # Run all tests with JSON output  
-/Applications/tool4d.app/Contents/MacOS/tool4d --project /Users/kyle_kincer/src/testing-4d/testing/Project/testing.4DProject --skip-onstartup --dataless --startup-method "test" --user-param "format=json"
+/Applications/tool4d.app/Contents/MacOS/tool4d --project $(PWD)/testing/Project/testing.4DProject --skip-onstartup --dataless --startup-method "test" --user-param "format=json"
 ```
 
-### Test Filtering Examples
+### Test Filtering Parameters
 
 ```bash
 # Run specific test class
