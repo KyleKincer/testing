@@ -42,7 +42,7 @@ Function startTransaction() : Boolean
 Function validateTransaction() : Boolean
 	// Validate the current transaction
 	VALIDATE TRANSACTION:C240
-	return (OK:C209=1)
+	return (OK=1)
 
 Function cancelTransaction()
 	// Cancel the current transaction
@@ -110,7 +110,7 @@ Function withTransactionValidate($operation : 4D:C1709.Function) : Boolean
 	// Validate transaction if test succeeded
 	If (Not:C34(This:C1470.failed))
 		VALIDATE TRANSACTION:C240
-		$success:=(OK:C209=1)
+		$success:=(OK=1)
 	Else 
 		CANCEL TRANSACTION:C241
 		$success:=False
