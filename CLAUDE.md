@@ -11,6 +11,8 @@ This project provides a complete testing framework for 4D applications featuring
 - **Flexible filtering** - Run specific test subsets by name, pattern, or tags
 - **Multiple output formats** - Human-readable and JSON output with terse/verbose modes
 - **CI/CD ready** - Structured JSON output for automated testing pipelines
+- **Automatic transaction management** - Test isolation with automatic rollback
+- **Manual transaction control** - Full transaction lifecycle management for advanced scenarios
 
 ## Running Tests
 
@@ -93,3 +95,75 @@ testing/Project/Sources/Classes/
 ```
 
 The framework automatically discovers and runs any class ending with "Test" that contains methods starting with "test_".
+
+## Transaction Management
+
+The framework provides automatic transaction management for test isolation and manual transaction control for advanced scenarios.
+
+### Automatic Transaction Management
+
+By default, each test runs in its own transaction that is automatically rolled back after completion, ensuring:
+- **Test Isolation**: Tests cannot interfere with each other's data
+- **Clean Environment**: Database state is restored after each test
+- **No Side Effects**: Failed tests don't leave partial data
+
+### Controlling Transaction Behavior
+
+Use comment-based annotations to control transaction behavior:
+
+```4d
+Function test_withTransactions($t : cs:C1710.Testing)
+    // Automatic transactions enabled (default)
+    // Test data changes will be rolled back
+    
+Function test_withoutTransactions($t : cs:C1710.Testing)  
+    // #transaction: false
+    // Disables automatic transaction management
+```
+
+### Manual Transaction Control
+
+The Testing context provides methods for manual transaction management:
+
+```4d
+Function test_manualTransactions($t : cs:C1710.Testing)
+    // #transaction: false
+    
+    // Start transaction manually
+    $t.startTransaction()
+    
+    // Check transaction status
+    If ($t.inTransaction())
+        // Perform database operations
+    End if
+    
+    // Validate or cancel transaction
+    If ($success)
+        $t.validateTransaction()
+    Else
+        $t.cancelTransaction()  
+    End if
+
+Function test_transactionWrapper($t : cs:C1710.Testing)
+    // #transaction: false
+    
+    // Execute operation within transaction (auto-rollback)
+    var $success : Boolean
+    $success:=$t.withTransaction(Formula(
+        // Database operations here
+        // Will be rolled back automatically
+    ))
+    
+    // Execute operation with validation (persists data)
+    $success:=$t.withTransactionValidate(Formula(
+        // Database operations here  
+        // Will be validated if test succeeds
+    ))
+```
+
+### Transaction Control Comments
+
+| Comment | Effect |
+|---------|--------|
+| `// #transaction: false` | Disables automatic transactions |
+| No comment | Enables automatic transactions (default) |
