@@ -3,6 +3,7 @@
 Function test_basicTransaction($t : cs:C1710.Testing)
 	// Test basic automatic transaction functionality
 	$t.log("Testing basic transaction support")
+	$t.assert.isTrue($t; $t.inTransaction(); "Auto-transaction should be active by default")
 	$t.assert.isTrue($t; True; "Basic test passes")
 
 Function test_disableTransaction($t : cs:C1710.Testing)
