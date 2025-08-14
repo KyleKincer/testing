@@ -4,6 +4,11 @@ Function test_basicInTransaction($t : cs:C1710.Testing)
 	// #transaction: false
 	$t.log("Testing inTransaction method")
 	
+	// Cancel any existing transaction to ensure clean state
+	If ($t.inTransaction())
+		$t.cancelTransaction()
+	End if
+	
 	var $result : Boolean
 	$result:=$t.inTransaction()
 	$t.log("inTransaction result: "+String:C10($result))

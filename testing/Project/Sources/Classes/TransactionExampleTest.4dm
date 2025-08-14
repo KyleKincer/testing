@@ -31,6 +31,11 @@ Function test_manualTransactionControl($t : cs:C1710.Testing)
 	
 	$t.log("Testing manual transaction control")
 	
+	// Clean up any existing transactions first
+	While ($t.inTransaction())
+		$t.cancelTransaction()
+	End while
+	
 	// Start a manual transaction
 	var $started : Boolean
 	$started:=$t.startTransaction()
@@ -63,10 +68,21 @@ Function test_transactionErrorHandling($t : cs:C1710.Testing)
 	
 	$t.log("Testing transaction error handling")
 	
+	// Reset the failed state first to ensure clean test
+	var $oldFailed : Boolean
+	$oldFailed:=$t.failed
+	$t.failed:=False
+	
 	// This operation should fail and trigger automatic rollback
 	var $success : Boolean
 	$success:=$t.withTransaction(Formula:C1597($t.fail()))
 	
+	$t.log("withTransaction returned: "+String:C10($success))
+	
+	// The test itself should not fail from this operation - reset the failed state
+	$t.failed:=$oldFailed
+	
+	// withTransaction should return false when the inner operation fails
 	$t.assert.isFalse($t; $success; "Transaction was cancelled due to test failure")
 
 Function test_nestedTransactionExample($t : cs:C1710.Testing)
@@ -75,6 +91,11 @@ Function test_nestedTransactionExample($t : cs:C1710.Testing)
 	// This test demonstrates nested transaction handling
 	
 	$t.log("Testing nested transactions")
+	
+	// Clean up any existing transactions first
+	While ($t.inTransaction())
+		$t.cancelTransaction()
+	End while
 	
 	$t.startTransaction()
 	$t.assert.isTrue($t; $t.inTransaction(); "Main transaction started")
