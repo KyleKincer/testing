@@ -1,5 +1,5 @@
 property classStore : 4D:C1709.Object  // Class store from the calling project
-property testSuites : Collection  // Collection of cs.TestSuite
+property testSuites : Collection  // Collection of cs._TestSuite
 property results : Object  // Test results summary
 property outputFormat : Text  // "human" or "json"
 property verboseOutput : Boolean  // Whether to include detailed information
@@ -32,7 +32,7 @@ Function run()
 		This:C1470._logHeader()
 	End if 
 	
-	var $testSuite : cs:C1710.TestSuite
+	var $testSuite : cs:C1710._TestSuite
 	For each ($testSuite; This:C1470.testSuites)
 		$testSuite.run()
 		This:C1470._collectSuiteResults($testSuite)
@@ -52,8 +52,8 @@ Function run()
 Function discoverTests()
 	var $class : 4D:C1709.Class
 	For each ($class; This:C1470._getTestClasses())
-		var $testSuite : cs:C1710.TestSuite
-		$testSuite:=cs:C1710.TestSuite.new($class; This:C1470.outputFormat; This:C1470.testPatterns; This:C1470)
+		var $testSuite : cs:C1710._TestSuite
+		$testSuite:=cs:C1710._TestSuite.new($class; This:C1470.outputFormat; This:C1470.testPatterns; This:C1470)
 		
 		// Filter test suite based on patterns
 		If (This:C1470._shouldIncludeTestSuite($testSuite))
@@ -114,7 +114,7 @@ Function _logHeader()
 	LOG EVENT:C667(Into system standard outputs:K38:9; "Running tests...\r\n"; Information message:K38:1)
 	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
 	
-Function _collectSuiteResults($testSuite : cs:C1710.TestSuite)
+Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
 	var $suiteResult : Object
 	$suiteResult:=New object:C1471(\
 		"name"; $testSuite.class.name; \
@@ -123,7 +123,7 @@ Function _collectSuiteResults($testSuite : cs:C1710.TestSuite)
 		"failed"; 0\
 		)
 	
-	var $testFunction : cs:C1710.TestFunction
+	var $testFunction : cs:C1710._TestFunction
 	For each ($testFunction; $testSuite.testFunctions)
 		var $testResult : Object
 		$testResult:=$testFunction.getResult()
@@ -319,7 +319,7 @@ Function _parseTestPatterns()
 		End for each 
 	End if 
 	
-Function _shouldIncludeTestSuite($testSuite : cs:C1710.TestSuite) : Boolean
+Function _shouldIncludeTestSuite($testSuite : cs:C1710._TestSuite) : Boolean
 	// If no patterns specified, include all tests
 	If (This:C1470.testPatterns.length=0)
 		return True:C214
@@ -344,8 +344,8 @@ Function _shouldIncludeTestSuite($testSuite : cs:C1710.TestSuite) : Boolean
 	
 	return False:C215
 	
-Function _patternMatchesAnyTestInSuite($testSuite : cs:C1710.TestSuite; $pattern : Text) : Boolean
-	var $testFunction : cs:C1710.TestFunction
+Function _patternMatchesAnyTestInSuite($testSuite : cs:C1710._TestSuite; $pattern : Text) : Boolean
+	var $testFunction : cs:C1710._TestFunction
 	For each ($testFunction; $testSuite.testFunctions)
 		var $fullTestName : Text
 		$fullTestName:=$testSuite.class.name+"."+$testFunction.functionName
@@ -455,7 +455,7 @@ Function _parseTagList($tagString : Text) : Collection
 	
 	return $tags
 
-Function _shouldIncludeTestByTags($testFunction : cs:C1710.TestFunction) : Boolean
+Function _shouldIncludeTestByTags($testFunction : cs:C1710._TestFunction) : Boolean
 	// Apply tag filtering logic to determine if test should be included
 	
 	// If no tag filters specified, include all tests

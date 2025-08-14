@@ -14,20 +14,20 @@ Function test_tag_filtering_include($t : cs:C1710.Testing)
 	
 	// Create a test function with tags from source code
 	var $testClass : 4D:C1709.Class
-	$testClass:=cs:C1710.TaggingExampleTest
-	var $classInstance : cs:C1710.TaggingExampleTest
-	$classInstance:=cs:C1710.TaggingExampleTest.new()
+	$testClass:=cs:C1710._TaggingExampleTest
+	var $classInstance : cs:C1710._TaggingExampleTest
+	$classInstance:=cs:C1710._TaggingExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_basic_addition
 	
 	// Get actual class code for proper tag parsing
-	var $testSuite : cs:C1710.TestSuite  
-	$testSuite:=cs:C1710.TestSuite.new($testClass; "human"; []; Null:C1517)
+	var $testSuite : cs:C1710._TestSuite  
+	$testSuite:=cs:C1710._TestSuite.new($testClass; "human"; []; Null:C1517)
 	var $classCode : Text
 	$classCode:=$testSuite._getClassCode()
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($testClass; $classInstance; $testMethod; "test_basic_addition"; $classCode)
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($testClass; $classInstance; $testMethod; "test_basic_addition"; $classCode)
 	
 	// The test should be included because test_basic_addition has "fast" tag in comment
 	var $shouldInclude : Boolean
@@ -46,20 +46,20 @@ Function test_tag_filtering_exclude($t : cs:C1710.Testing)
 	
 	// Create a test function with tags from source code
 	var $testClass : 4D:C1709.Class
-	$testClass:=cs:C1710.TaggingExampleTest
-	var $classInstance : cs:C1710.TaggingExampleTest
-	$classInstance:=cs:C1710.TaggingExampleTest.new()
+	$testClass:=cs:C1710._TaggingExampleTest
+	var $classInstance : cs:C1710._TaggingExampleTest
+	$classInstance:=cs:C1710._TaggingExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_database_connection
 	
 	// Get actual class code for proper tag parsing
-	var $testSuite : cs:C1710.TestSuite  
-	$testSuite:=cs:C1710.TestSuite.new($testClass; "human"; []; Null:C1517)
+	var $testSuite : cs:C1710._TestSuite  
+	$testSuite:=cs:C1710._TestSuite.new($testClass; "human"; []; Null:C1517)
 	var $classCode : Text
 	$classCode:=$testSuite._getClassCode()
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($testClass; $classInstance; $testMethod; "test_database_connection"; $classCode)
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($testClass; $classInstance; $testMethod; "test_database_connection"; $classCode)
 	
 	// The test should be excluded because test_database_connection has "slow" tag in comment
 	var $shouldInclude : Boolean
@@ -70,20 +70,20 @@ Function test_tag_parsing_from_comments($t : cs:C1710.Testing)
 	
 	// Test that tags are correctly parsed from comments
 	var $testClass : 4D:C1709.Class
-	$testClass:=cs:C1710.TaggingExampleTest
-	var $classInstance : cs:C1710.TaggingExampleTest
-	$classInstance:=cs:C1710.TaggingExampleTest.new()
+	$testClass:=cs:C1710._TaggingExampleTest
+	var $classInstance : cs:C1710._TaggingExampleTest
+	$classInstance:=cs:C1710._TaggingExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_basic_addition
 	
 	// Get actual class code for proper tag parsing
-	var $testSuite : cs:C1710.TestSuite  
-	$testSuite:=cs:C1710.TestSuite.new($testClass; "human"; []; Null:C1517)
+	var $testSuite : cs:C1710._TestSuite  
+	$testSuite:=cs:C1710._TestSuite.new($testClass; "human"; []; Null:C1517)
 	var $classCode : Text
 	$classCode:=$testSuite._getClassCode()
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($testClass; $classInstance; $testMethod; "test_basic_addition"; $classCode)
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($testClass; $classInstance; $testMethod; "test_basic_addition"; $classCode)
 	
 	// Should have "unit" and "fast" tags from comment
 	$t.assert.isTrue($t; $testFunction.hasTags(["unit"]); "Should detect unit tag from comment")
@@ -94,20 +94,20 @@ Function test_default_unit_tag($t : cs:C1710.Testing)
 	
 	// Test that functions without tag comments get default "unit" tag
 	var $testClass : 4D:C1709.Class
-	$testClass:=cs:C1710.ExampleTest
-	var $classInstance : cs:C1710.ExampleTest
-	$classInstance:=cs:C1710.ExampleTest.new()
+	$testClass:=cs:C1710._ExampleTest
+	var $classInstance : cs:C1710._ExampleTest
+	$classInstance:=cs:C1710._ExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_areEqual_pass
 	
 	// Get actual class code for proper tag parsing
-	var $testSuite : cs:C1710.TestSuite  
-	$testSuite:=cs:C1710.TestSuite.new($testClass; "human"; []; Null:C1517)
+	var $testSuite : cs:C1710._TestSuite  
+	$testSuite:=cs:C1710._TestSuite.new($testClass; "human"; []; Null:C1517)
 	var $classCode : Text
 	$classCode:=$testSuite._getClassCode()
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($testClass; $classInstance; $testMethod; "test_areEqual_pass"; $classCode)
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($testClass; $classInstance; $testMethod; "test_areEqual_pass"; $classCode)
 	
 	$t.assert.isTrue($t; $testFunction.hasTags(["unit"]); "Should have default unit tag")
 	$t.assert.areEqual($t; 1; $testFunction.tags.length; "Should have exactly one tag")
@@ -145,14 +145,14 @@ Function test_tag_filtering_no_filters($t : cs:C1710.Testing)
 	$runner.requireAllTags:=[]
 	
 	var $testClass : 4D:C1709.Class
-	$testClass:=cs:C1710.ExampleTest
-	var $classInstance : cs:C1710.ExampleTest
-	$classInstance:=cs:C1710.ExampleTest.new()
+	$testClass:=cs:C1710._ExampleTest
+	var $classInstance : cs:C1710._ExampleTest
+	$classInstance:=cs:C1710._ExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_areEqual_pass
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($testClass; $classInstance; $testMethod; "test_areEqual_pass"; "")
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($testClass; $classInstance; $testMethod; "test_areEqual_pass"; "")
 	
 	var $shouldInclude : Boolean
 	$shouldInclude:=$runner._shouldIncludeTestByTags($testFunction)
@@ -162,20 +162,20 @@ Function test_multiple_tags_in_comment($t : cs:C1710.Testing)
 	
 	// Test a function with multiple tags in comment
 	var $testClass : 4D:C1709.Class
-	$testClass:=cs:C1710.TaggingExampleTest
-	var $classInstance : cs:C1710.TaggingExampleTest
-	$classInstance:=cs:C1710.TaggingExampleTest.new()
+	$testClass:=cs:C1710._TaggingExampleTest
+	var $classInstance : cs:C1710._TaggingExampleTest
+	$classInstance:=cs:C1710._TaggingExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_large_collection_processing  // Has "integration, performance" tags
 	
 	// Get actual class code for proper tag parsing
-	var $testSuite : cs:C1710.TestSuite  
-	$testSuite:=cs:C1710.TestSuite.new($testClass; "human"; []; Null:C1517)
+	var $testSuite : cs:C1710._TestSuite  
+	$testSuite:=cs:C1710._TestSuite.new($testClass; "human"; []; Null:C1517)
 	var $classCode : Text
 	$classCode:=$testSuite._getClassCode()
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($testClass; $classInstance; $testMethod; "test_large_collection_processing"; $classCode)
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($testClass; $classInstance; $testMethod; "test_large_collection_processing"; $classCode)
 	
 	// Should have both integration and performance tags
 	$t.assert.isTrue($t; $testFunction.hasTags(["integration"]); "Should detect integration tag")

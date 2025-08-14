@@ -14,7 +14,7 @@ Function resetStatistics()
 	If (This:C1470._statsMap=Null:C1517)
 		return 
 	End if 
-	var $statistic : cs:C1710.UnitStatsDetail
+	var $statistic : cs:C1710._UnitStatsDetail
 	For each ($statistic; OB Values:C1718(This:C1470._statsMap))
 		If (OB Instance of:C1731($statistic.reset; 4D:C1709.Function))
 			$statistic.reset()
@@ -26,14 +26,14 @@ Function createStatistic($name : Text) : cs:C1710.UnitStatsTracker
 $name - text - the name of the statistic to create
 returns - cs.UnitStatsTracker - This object to chain call
 */
-	This:C1470._statsMap[$name]:=cs:C1710.UnitStatsDetail.new()
+	This:C1470._statsMap[$name]:=cs:C1710._UnitStatsDetail.new()
 	return This:C1470
 	
-Function getStat($name : Text) : cs:C1710.UnitStatsDetail
+Function getStat($name : Text) : cs:C1710._UnitStatsDetail
 /* Gets a statistic. If one does not exist, a new statistic will
 be created an returned.
 $name - text - the name of the statistic to return
-returns - cs.UnitStatsDetail - a statistic
+returns - cs._UnitStatsDetail - a statistic
 */
 	If (Not:C34(This:C1470._doesStatisticExist($name)))
 		This:C1470.createStatistic($name)
@@ -47,7 +47,7 @@ $functionName - text - the name of the statistic to update
 $parameters - collection - the collection of parameters to push onto the related statistic
 $returnValue - variant - value this method will return
 */
-	var $statistic : cs:C1710.UnitStatsDetail
+	var $statistic : cs:C1710._UnitStatsDetail
 	$statistic:=This:C1470.getStat($functionName)
 	If ($statistic#Null:C1517)
 		$statistic.appendCalledParameters((($parameters#Null:C1517) ? $parameters : []))

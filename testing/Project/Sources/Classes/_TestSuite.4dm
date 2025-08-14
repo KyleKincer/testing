@@ -1,6 +1,6 @@
 property class : 4D:C1709.Class
 property classInstance : 4D:C1709.Object
-property testFunctions : Collection  // Collection of cs.TestFunction
+property testFunctions : Collection  // Collection of cs._TestFunction
 property outputFormat : Text  // "human" or "json"
 property testPatterns : Collection  // Collection of test patterns for filtering
 property testRunner : cs:C1710.TestRunner  // Reference to test runner for tag filtering
@@ -18,7 +18,7 @@ Class constructor($class : 4D:C1709.Class; $outputFormat : Text; $testPatterns :
 Function run()
 	This:C1470._callSetup()
 	
-	var $testFunction : cs:C1710.TestFunction
+	var $testFunction : cs:C1710._TestFunction
 	For each ($testFunction; This:C1470.testFunctions)
 		This:C1470._callBeforeEach()
 		$testFunction.run()
@@ -39,8 +39,8 @@ Function discoverTests()
 	For each ($function; $testFunctions)
 		// Filter individual test methods based on patterns
 		If (This:C1470._shouldIncludeTestMethod($function.name))
-			var $testFunction : cs:C1710.TestFunction
-			$testFunction:=cs:C1710.TestFunction.new(This:C1470.class; This:C1470.classInstance; $function.function; $function.name; $classCode)
+			var $testFunction : cs:C1710._TestFunction
+			$testFunction:=cs:C1710._TestFunction.new(This:C1470.class; This:C1470.classInstance; $function.function; $function.name; $classCode)
 			
 			// Apply tag filtering if TestRunner is available
 			If (This:C1470.testRunner#Null:C1517)

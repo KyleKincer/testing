@@ -5,14 +5,14 @@ Function test_test_function_initialization($t : cs:C1710.Testing)
 	
 	// Create a TestFunction for a specific test method
 	var $exampleClass : 4D:C1709.Class
-	$exampleClass:=cs:C1710.ExampleTest
-	var $classInstance : cs:C1710.ExampleTest
-	$classInstance:=cs:C1710.ExampleTest.new()
+	$exampleClass:=cs:C1710._ExampleTest
+	var $classInstance : cs:C1710._ExampleTest
+	$classInstance:=cs:C1710._ExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_areEqual_pass
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
 	
 	$t.assert.isNotNull($t; $testFunction; "TestFunction should initialize")
 	$t.assert.areEqual($t; "test_areEqual_pass"; $testFunction.functionName; "Should store function name")
@@ -24,14 +24,14 @@ Function test_test_function_execution($t : cs:C1710.Testing)
 	
 	// Create and run a test function
 	var $exampleClass : 4D:C1709.Class
-	$exampleClass:=cs:C1710.ExampleTest
-	var $classInstance : cs:C1710.ExampleTest
-	$classInstance:=cs:C1710.ExampleTest.new()
+	$exampleClass:=cs:C1710._ExampleTest
+	var $classInstance : cs:C1710._ExampleTest
+	$classInstance:=cs:C1710._ExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_areEqual_pass
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
 	
 	// Run the test
 	$testFunction.run()
@@ -44,14 +44,14 @@ Function test_test_function_execution($t : cs:C1710.Testing)
 Function test_test_result_object_creation($t : cs:C1710.Testing)
 	
 	var $exampleClass : 4D:C1709.Class
-	$exampleClass:=cs:C1710.ExampleTest
-	var $classInstance : cs:C1710.ExampleTest
-	$classInstance:=cs:C1710.ExampleTest.new()
+	$exampleClass:=cs:C1710._ExampleTest
+	var $classInstance : cs:C1710._ExampleTest
+	$classInstance:=cs:C1710._ExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_areEqual_pass
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
 	$testFunction.run()
 	
 	var $result : Object
@@ -59,7 +59,7 @@ Function test_test_result_object_creation($t : cs:C1710.Testing)
 	
 	$t.assert.isNotNull($t; $result; "Should return result object")
 	$t.assert.areEqual($t; "test_areEqual_pass"; $result.name; "Should include test name")
-	$t.assert.areEqual($t; "ExampleTest"; $result.suite; "Should include suite name")
+	$t.assert.areEqual($t; "_ExampleTest"; $result.suite; "Should include suite name")
 	$t.assert.isNotNull($t; $result.passed; "Should include passed status")
 	$t.assert.isNotNull($t; $result.failed; "Should include failed status")
 	$t.assert.isNotNull($t; $result.duration; "Should include duration")
@@ -69,14 +69,14 @@ Function test_test_result_object_creation($t : cs:C1710.Testing)
 Function test_successful_test_result($t : cs:C1710.Testing)
 	
 	var $exampleClass : 4D:C1709.Class
-	$exampleClass:=cs:C1710.ExampleTest
-	var $classInstance : cs:C1710.ExampleTest
-	$classInstance:=cs:C1710.ExampleTest.new()
+	$exampleClass:=cs:C1710._ExampleTest
+	var $classInstance : cs:C1710._ExampleTest
+	$classInstance:=cs:C1710._ExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_areEqual_pass
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
 	$testFunction.run()
 	
 	var $result : Object
@@ -89,14 +89,14 @@ Function test_successful_test_result($t : cs:C1710.Testing)
 Function test_duration_calculation($t : cs:C1710.Testing)
 	
 	var $exampleClass : 4D:C1709.Class
-	$exampleClass:=cs:C1710.ExampleTest
-	var $classInstance : cs:C1710.ExampleTest
-	$classInstance:=cs:C1710.ExampleTest.new()
+	$exampleClass:=cs:C1710._ExampleTest
+	var $classInstance : cs:C1710._ExampleTest
+	$classInstance:=cs:C1710._ExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_areEqual_pass
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
 	$testFunction.run()
 	
 	var $result : Object
@@ -110,14 +110,14 @@ Function test_runtime_error_storage($t : cs:C1710.Testing)
 	// Test that runtime errors are properly stored
 	// Create a proper TestFunction with valid parameters
 	var $exampleClass : 4D:C1709.Class
-	$exampleClass:=cs:C1710.ExampleTest
-	var $classInstance : cs:C1710.ExampleTest
-	$classInstance:=cs:C1710.ExampleTest.new()
+	$exampleClass:=cs:C1710._ExampleTest
+	var $classInstance : cs:C1710._ExampleTest
+	$classInstance:=cs:C1710._ExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_areEqual_pass
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($exampleClass; $classInstance; $testMethod; "test_example")
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($exampleClass; $classInstance; $testMethod; "test_example")
 	
 	// Run the test first to initialize timing properties
 	$testFunction.run()
@@ -136,14 +136,14 @@ Function test_runtime_error_storage($t : cs:C1710.Testing)
 Function test_testing_context_integration($t : cs:C1710.Testing)
 	
 	var $exampleClass : 4D:C1709.Class
-	$exampleClass:=cs:C1710.ExampleTest
-	var $classInstance : cs:C1710.ExampleTest
-	$classInstance:=cs:C1710.ExampleTest.new()
+	$exampleClass:=cs:C1710._ExampleTest
+	var $classInstance : cs:C1710._ExampleTest
+	$classInstance:=cs:C1710._ExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_areEqual_pass
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
 	
 	// Test that Testing context is properly initialized
 	$t.assert.isFalse($t; $testFunction.t.failed; "Testing context should start as not failed")

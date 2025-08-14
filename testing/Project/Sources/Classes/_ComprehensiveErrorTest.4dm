@@ -9,15 +9,15 @@ Function test_null_class_handling($t : cs:C1710.Testing)
 	// We can't easily test with actual null class without causing errors,
 	// but we can test with valid classes to ensure the structure works
 	var $validClass : 4D:C1709.Class
-	$validClass:=cs:C1710.ExampleTest
+	$validClass:=cs:C1710._ExampleTest
 	
 	$t.assert.isNotNull($t; $validClass; "Valid class should not be null")
 	
-	var $suite : cs:C1710.TestSuite
-	$suite:=cs:C1710.TestSuite.new($validClass; "human"; []; Null:C1517)
+	var $suite : cs:C1710._TestSuite
+	$suite:=cs:C1710._TestSuite.new($validClass; "human"; []; Null:C1517)
 	
 	$t.assert.isNotNull($t; $suite; "TestSuite should handle valid class")
-	$t.assert.areEqual($t; "ExampleTest"; $suite.class.name; "Should store class correctly")
+	$t.assert.areEqual($t; "_ExampleTest"; $suite.class.name; "Should store class correctly")
 
 Function test_empty_test_class($t : cs:C1710.Testing)
 	
@@ -29,19 +29,19 @@ Function test_empty_test_class($t : cs:C1710.Testing)
 	$runner:=cs:C1710.TestRunner.new()
 	$runner.testPatterns:=["nonexistent_pattern"]
 	
-	var $suite : cs:C1710.TestSuite
-	$suite:=cs:C1710.TestSuite.new(cs:C1710.ExampleTest; "human"; ["nonexistent_pattern"]; Null:C1517)
+	var $suite : cs:C1710._TestSuite
+	$suite:=cs:C1710._TestSuite.new(cs:C1710._ExampleTest; "human"; ["nonexistent_pattern"]; Null:C1517)
 	
 	$t.assert.areEqual($t; 0; $suite.testFunctions.length; "Should have no test functions when pattern doesn't match")
 
 Function test_malformed_test_methods($t : cs:C1710.Testing)
 	
 	// Test that test discovery handles methods that don't follow the pattern
-	var $suite : cs:C1710.TestSuite
-	$suite:=cs:C1710.TestSuite.new(cs:C1710.ExampleTest; "human"; []; Null:C1517)
+	var $suite : cs:C1710._TestSuite
+	$suite:=cs:C1710._TestSuite.new(cs:C1710._ExampleTest; "human"; []; Null:C1517)
 	
 	// All discovered methods should start with "test_"
-	var $testFunction : cs:C1710.TestFunction
+	var $testFunction : cs:C1710._TestFunction
 	For each ($testFunction; $suite.testFunctions)
 		$t.assert.isTrue($t; $testFunction.functionName="test_@"; "All discovered methods should start with test_, found: "+$testFunction.functionName)
 	End for each 
@@ -152,14 +152,14 @@ Function test_timing_precision($t : cs:C1710.Testing)
 	
 	// Test that timing works correctly even for very fast tests
 	var $exampleClass : 4D:C1709.Class
-	$exampleClass:=cs:C1710.ExampleTest
-	var $classInstance : cs:C1710.ExampleTest
-	$classInstance:=cs:C1710.ExampleTest.new()
+	$exampleClass:=cs:C1710._ExampleTest
+	var $classInstance : cs:C1710._ExampleTest
+	$classInstance:=cs:C1710._ExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_areEqual_pass
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass"; "")
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass"; "")
 	$testFunction.run()
 	
 	var $result : Object
@@ -202,7 +202,7 @@ Function test_memory_and_cleanup($t : cs:C1710.Testing)
 	$t.assert.isTrue($t; $runner.testSuites.length>$initialSuites; "Should discover test suites")
 	
 	// Verify each suite has proper structure
-	var $suite : cs:C1710.TestSuite
+	var $suite : cs:C1710._TestSuite
 	For each ($suite; $runner.testSuites)
 		$t.assert.isNotNull($t; $suite.class; "Suite should have class reference")
 		$t.assert.isNotNull($t; $suite.classInstance; "Suite should have class instance")
