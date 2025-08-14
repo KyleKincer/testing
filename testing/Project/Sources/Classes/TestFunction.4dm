@@ -30,15 +30,6 @@ Function run()
 		End use 
 	End if 
 	
-	// Check if test should run with transaction isolation (default: yes)
-	var $useTransaction : Boolean
-	$useTransaction:=Not:C34(This:C1470.tags.indexOf("notransaction")>=0)
-	
-	// Start transaction for database isolation if enabled
-	If ($useTransaction)
-		START TRANSACTION:C239
-	End if 
-	
 	// Set up error handler to capture runtime errors
 	var $previousErrorHandler : Text
 	$previousErrorHandler:=Method called on error:C704
@@ -51,11 +42,6 @@ Function run()
 		ON ERR CALL:C155($previousErrorHandler)
 	Else 
 		ON ERR CALL:C155("")
-	End if 
-	
-	// Roll back transaction to restore database state if transaction was used
-	If ($useTransaction)
-		CANCEL TRANSACTION:C241
 	End if 
 	
 	// Capture any runtime errors that occurred
