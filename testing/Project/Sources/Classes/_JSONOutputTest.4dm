@@ -62,14 +62,14 @@ Function test_test_result_object_structure($t : cs:C1710.Testing)
 	
 	// Create a test function result to examine its structure
 	var $exampleClass : 4D:C1709.Class
-	$exampleClass:=cs:C1710.ExampleTest
-	var $classInstance : cs:C1710.ExampleTest
-	$classInstance:=cs:C1710.ExampleTest.new()
+	$exampleClass:=cs:C1710._ExampleTest
+	var $classInstance : cs:C1710._ExampleTest
+	$classInstance:=cs:C1710._ExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_areEqual_pass
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
 	$testFunction.run()
 	
 	var $result : Object
@@ -181,14 +181,14 @@ Function test_timing_data_integrity($t : cs:C1710.Testing)
 	
 	// Test that timing data makes sense
 	var $exampleClass : 4D:C1709.Class
-	$exampleClass:=cs:C1710.ExampleTest
-	var $classInstance : cs:C1710.ExampleTest
-	$classInstance:=cs:C1710.ExampleTest.new()
+	$exampleClass:=cs:C1710._ExampleTest
+	var $classInstance : cs:C1710._ExampleTest
+	$classInstance:=cs:C1710._ExampleTest.new()
 	var $testMethod : 4D:C1709.Function
 	$testMethod:=$classInstance.test_areEqual_pass
 	
-	var $testFunction : cs:C1710.TestFunction
-	$testFunction:=cs:C1710.TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
+	var $testFunction : cs:C1710._TestFunction
+	$testFunction:=cs:C1710._TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
 	
 	var $beforeRun : Integer
 	$beforeRun:=Milliseconds:C459

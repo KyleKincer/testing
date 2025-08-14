@@ -87,8 +87,8 @@ Function test_parameter_validation($t : cs:C1710.Testing)
 	$t.assert.isNotNull($t; $runner.testPatterns; "Test patterns should be initialized")
 	
 	// Should handle empty test patterns gracefully
-	var $exampleSuite : cs:C1710.TestSuite
-	$exampleSuite:=cs:C1710.TestSuite.new(cs:C1710.ExampleTest; "human"; []; Null:C1517)
+	var $exampleSuite : cs:C1710._TestSuite
+	$exampleSuite:=cs:C1710._TestSuite.new(cs:C1710._ExampleTest; "human"; []; Null:C1517)
 	
 	$t.assert.isTrue($t; $runner._shouldIncludeTestSuite($exampleSuite); "Should include suite when no patterns specified")
 
@@ -98,13 +98,13 @@ Function test_suite_filtering_logic($t : cs:C1710.Testing)
 	$runner:=cs:C1710.TestRunner.new()
 	
 	// Manually set test patterns to test filtering logic
-	$runner.testPatterns:=["ExampleTest"]
+	$runner.testPatterns:=["_ExampleTest"]
 	
-	var $exampleSuite : cs:C1710.TestSuite
-	$exampleSuite:=cs:C1710.TestSuite.new(cs:C1710.ExampleTest; "human"; ["ExampleTest"]; Null:C1517)
+	var $exampleSuite : cs:C1710._TestSuite
+	$exampleSuite:=cs:C1710._TestSuite.new(cs:C1710._ExampleTest; "human"; ["_ExampleTest"]; Null:C1517)
 	
-	var $errorSuite : cs:C1710.TestSuite
-	$errorSuite:=cs:C1710.TestSuite.new(cs:C1710.ErrorHandlingTest; "human"; ["ExampleTest"]; Null:C1517)
+	var $errorSuite : cs:C1710._TestSuite
+	$errorSuite:=cs:C1710._TestSuite.new(cs:C1710._ErrorHandlingTest; "human"; ["_ExampleTest"]; Null:C1517)
 	
 	$t.assert.isTrue($t; $runner._shouldIncludeTestSuite($exampleSuite); "Should include matching suite")
 	$t.assert.isFalse($t; $runner._shouldIncludeTestSuite($errorSuite); "Should exclude non-matching suite")
@@ -117,11 +117,11 @@ Function test_wildcard_suite_filtering($t : cs:C1710.Testing)
 	// Test wildcard filtering
 	$runner.testPatterns:=["*Error*"]
 	
-	var $errorSuite : cs:C1710.TestSuite
-	$errorSuite:=cs:C1710.TestSuite.new(cs:C1710.ErrorHandlingTest; "human"; ["*Error*"]; Null:C1517)
+	var $errorSuite : cs:C1710._TestSuite
+	$errorSuite:=cs:C1710._TestSuite.new(cs:C1710._ErrorHandlingTest; "human"; ["*Error*"]; Null:C1517)
 	
-	var $exampleSuite : cs:C1710.TestSuite
-	$exampleSuite:=cs:C1710.TestSuite.new(cs:C1710.ExampleTest; "human"; ["*Error*"]; Null:C1517)
+	var $exampleSuite : cs:C1710._TestSuite
+	$exampleSuite:=cs:C1710._TestSuite.new(cs:C1710._ExampleTest; "human"; ["*Error*"]; Null:C1517)
 	
 	$t.assert.isTrue($t; $runner._shouldIncludeTestSuite($errorSuite); "Should include suite matching wildcard")
 	$t.assert.isFalse($t; $runner._shouldIncludeTestSuite($exampleSuite); "Should exclude suite not matching wildcard")
