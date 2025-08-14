@@ -2,8 +2,6 @@
 Class constructor()
 
 Function test_error_handler_initialization($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	// Verify that Storage.testErrors exists and can be initialized
 	If (Storage:C1525.testErrors=Null:C1517)
@@ -12,12 +10,10 @@ Function test_error_handler_initialization($t : cs:C1710.Testing)
 		End use 
 	End if 
 	
-	$assert.isNotNull($t; Storage:C1525.testErrors; "Error storage should be initialized")
-	$assert.areEqual($t; Is collection:K8:32; Value type:C1509(Storage:C1525.testErrors); "Error storage should be a collection")
+	$t.assert.isNotNull($t; Storage:C1525.testErrors; "Error storage should be initialized")
+	$t.assert.areEqual($t; Is collection:K8:32; Value type:C1509(Storage:C1525.testErrors); "Error storage should be a collection")
 
 Function test_error_information_structure($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	// Create a mock error info structure like the error handler would
 	var $errorInfo : Object
@@ -34,58 +30,52 @@ Function test_error_information_structure($t : cs:C1710.Testing)
 		)
 	
 	// Verify the error structure has all required fields
-	$assert.isNotNull($t; $errorInfo.code; "Error should have code field")
-	$assert.isNotNull($t; $errorInfo.text; "Error should have text field")
-	$assert.isNotNull($t; $errorInfo.method; "Error should have method field")
-	$assert.isNotNull($t; $errorInfo.line; "Error should have line field")
-	$assert.isNotNull($t; $errorInfo.timestamp; "Error should have timestamp field")
+	$t.assert.isNotNull($t; $errorInfo.code; "Error should have code field")
+	$t.assert.isNotNull($t; $errorInfo.text; "Error should have text field")
+	$t.assert.isNotNull($t; $errorInfo.method; "Error should have method field")
+	$t.assert.isNotNull($t; $errorInfo.line; "Error should have line field")
+	$t.assert.isNotNull($t; $errorInfo.timestamp; "Error should have timestamp field")
 	
 	// Verify data types - 4D may store integers as reals in objects
-	$assert.areEqual($t; Is real:K8:4; Value type:C1509($errorInfo.code); "Error code should be real")
-	$assert.areEqual($t; Is text:K8:3; Value type:C1509($errorInfo.text); "Error text should be text")
-	$assert.areEqual($t; Is real:K8:4; Value type:C1509($errorInfo.line); "Error line should be real")
+	$t.assert.areEqual($t; Is real:K8:4; Value type:C1509($errorInfo.code); "Error code should be real")
+	$t.assert.areEqual($t; Is text:K8:3; Value type:C1509($errorInfo.text); "Error text should be text")
+	$t.assert.areEqual($t; Is real:K8:4; Value type:C1509($errorInfo.line); "Error line should be real")
 
 Function test_method_called_on_error_setup($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	// Verify that Method called on error can be queried
 	var $currentHandler : Text
 	$currentHandler:=Method called on error:C704
 	
 	// The current handler should be either empty or "TestErrorHandler"
-	$assert.isTrue($t; ($currentHandler="") || ($currentHandler="TestErrorHandler"); "Method called on error should be manageable")
+	$t.assert.isTrue($t; ($currentHandler="") || ($currentHandler="TestErrorHandler"); "Method called on error should be manageable")
 
 Function test_testing_context_properties($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	// Verify the testing context has expected properties
-	$assert.isNotNull($t; $t; "Test context should exist")
-	$assert.areEqual($t; Is boolean:K8:9; Value type:C1509($t.failed); "Test context should have failed boolean")
-	$assert.areEqual($t; Is boolean:K8:9; Value type:C1509($t.done); "Test context should have done boolean")
-	$assert.areEqual($t; Is collection:K8:32; Value type:C1509($t.logMessages); "Test context should have logMessages collection")
+	$t.assert.isNotNull($t; $t; "Test context should exist")
+	$t.assert.areEqual($t; Is boolean:K8:9; Value type:C1509($t.failed); "Test context should have failed boolean")
+	$t.assert.areEqual($t; Is boolean:K8:9; Value type:C1509($t.done); "Test context should have done boolean")
+	$t.assert.areEqual($t; Is collection:K8:32; Value type:C1509($t.logMessages); "Test context should have logMessages collection")
 	
 	// Initially the test should not be failed
-	$assert.isFalse($t; $t.failed; "Test should not be failed initially")
+	$t.assert.isFalse($t; $t.failed; "Test should not be failed initially")
 
 Function test_assertion_failure_handling($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	// Create a separate testing context to test failure handling
 	var $mockTest : cs:C1710.Testing
 	$mockTest:=cs:C1710.Testing.new()
 	
 	// Verify initial state
-	$assert.isFalse($t; $mockTest.failed; "Mock test should start as not failed")
-	$assert.areEqual($t; 0; $mockTest.logMessages.length; "Mock test should start with no log messages")
+	$t.assert.isFalse($t; $mockTest.failed; "Mock test should start as not failed")
+	$t.assert.areEqual($t; 0; $mockTest.logMessages.length; "Mock test should start with no log messages")
 	
 	// Trigger a failure
 	$mockTest.fail()
-	$assert.isTrue($t; $mockTest.failed; "Mock test should be marked as failed after fail() call")
+	$t.assert.isTrue($t; $mockTest.failed; "Mock test should be marked as failed after fail() call")
 	
 	// Test logging
 	$mockTest.log("Test failure message")
-	$assert.areEqual($t; 1; $mockTest.logMessages.length; "Mock test should have one log message")
-	$assert.areEqual($t; "Test failure message"; $mockTest.logMessages[0]; "Log message should be stored correctly")
+	$t.assert.areEqual($t; 1; $mockTest.logMessages.length; "Mock test should have one log message")
+	$t.assert.areEqual($t; "Test failure message"; $mockTest.logMessages[0]; "Log message should be stored correctly")

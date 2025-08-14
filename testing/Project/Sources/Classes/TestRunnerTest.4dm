@@ -2,21 +2,17 @@
 Class constructor()
 	
 Function test_parameter_parsing_with_equals($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	// Create a TestRunner instance to test parameter parsing
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
 	
 	// Test basic initialization
-	$assert.isNotNull($t; $runner; "TestRunner should initialize")
-	$assert.isNotNull($t; $runner.testSuites; "TestRunner should have testSuites collection")
-	$assert.areEqual($t; 0; $runner.testSuites.length; "TestSuites should be empty initially")
+	$t.assert.isNotNull($t; $runner; "TestRunner should initialize")
+	$t.assert.isNotNull($t; $runner.testSuites; "TestRunner should have testSuites collection")
+	$t.assert.areEqual($t; 0; $runner.testSuites.length; "TestSuites should be empty initially")
 	
 Function test_parse_param_string_with_equals($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
@@ -25,12 +21,10 @@ Function test_parse_param_string_with_equals($t : cs:C1710.Testing)
 	var $params : Object
 	$params:=$runner._parseParamString("format=json test=ExampleTest")
 	
-	$assert.areEqual($t; "json"; $params.format; "Should parse format parameter")
-	$assert.areEqual($t; "ExampleTest"; $params.test; "Should parse test parameter")
+	$t.assert.areEqual($t; "json"; $params.format; "Should parse format parameter")
+	$t.assert.areEqual($t; "ExampleTest"; $params.test; "Should parse test parameter")
 	
 Function test_parse_param_string_with_colons($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
@@ -39,12 +33,10 @@ Function test_parse_param_string_with_colons($t : cs:C1710.Testing)
 	var $params : Object
 	$params:=$runner._parseParamString("format:json test:*Error*")
 	
-	$assert.areEqual($t; "json"; $params.format; "Should parse format parameter with colon")
-	$assert.areEqual($t; "*Error*"; $params.test; "Should parse test parameter with colon")
+	$t.assert.areEqual($t; "json"; $params.format; "Should parse format parameter with colon")
+	$t.assert.areEqual($t; "*Error*"; $params.test; "Should parse test parameter with colon")
 	
 Function test_parse_param_string_empty($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
@@ -53,13 +45,11 @@ Function test_parse_param_string_empty($t : cs:C1710.Testing)
 	var $params : Object
 	$params:=$runner._parseParamString("")
 	
-	$assert.isNotNull($t; $params; "Should return object for empty string")
-	$assert.areEqual($t; Null:C1517; $params.format; "Should have no format parameter")
-	$assert.areEqual($t; Null:C1517; $params.test; "Should have no test parameter")
+	$t.assert.isNotNull($t; $params; "Should return object for empty string")
+	$t.assert.areEqual($t; Null:C1517; $params.format; "Should have no format parameter")
+	$t.assert.areEqual($t; Null:C1517; $params.test; "Should have no test parameter")
 	
 Function test_parse_param_string_malformed($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
@@ -68,11 +58,9 @@ Function test_parse_param_string_malformed($t : cs:C1710.Testing)
 	var $params : Object
 	$params:=$runner._parseParamString("format= test")
 	
-	$assert.isNotNull($t; $params; "Should handle malformed parameters gracefully")
+	$t.assert.isNotNull($t; $params; "Should handle malformed parameters gracefully")
 	
 Function test_filter_test_classes($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
@@ -97,24 +85,20 @@ Function test_filter_test_classes($t : cs:C1710.Testing)
 		$foundNames.push($class.name)
 	End for each 
 	
-	$assert.areEqual($t; 2; $testClasses.length; "Should find exactly 2 test classes from mock, found: "+JSON Stringify:C1217($foundNames))
-	$assert.isTrue($t; $foundNames.indexOf("ExampleTest")>=0; "Should include ExampleTest")
-	$assert.isTrue($t; $foundNames.indexOf("ErrorHandlingTest")>=0; "Should include ErrorHandlingTest")
+	$t.assert.areEqual($t; 2; $testClasses.length; "Should find exactly 2 test classes from mock, found: "+JSON Stringify:C1217($foundNames))
+	$t.assert.isTrue($t; $foundNames.indexOf("ExampleTest")>=0; "Should include ExampleTest")
+	$t.assert.isTrue($t; $foundNames.indexOf("ErrorHandlingTest")>=0; "Should include ErrorHandlingTest")
 	
 Function test_output_format_defaults_to_human($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
 	
 	// Note: Output format depends on current user parameters when running tests
 	// This test verifies the outputFormat property exists and has a valid value
-	$assert.isTrue($t; ($runner.outputFormat="human") || ($runner.outputFormat="json"); "Output format should be either human or json")
+	$t.assert.isTrue($t; ($runner.outputFormat="human") || ($runner.outputFormat="json"); "Output format should be either human or json")
 	
 Function test_test_class_discovery($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
@@ -123,54 +107,46 @@ Function test_test_class_discovery($t : cs:C1710.Testing)
 	var $testClasses : Collection
 	$testClasses:=$runner._getTestClasses()
 	
-	$assert.isNotNull($t; $testClasses; "Should return a collection of test classes")
-	$assert.isTrue($t; $testClasses.length>0; "Should find at least one test class")
+	$t.assert.isNotNull($t; $testClasses; "Should return a collection of test classes")
+	$t.assert.isTrue($t; $testClasses.length>0; "Should find at least one test class")
 	
 	// Verify that all returned classes have names ending with "Test"
 	var $class : 4D:C1709.Class
 	For each ($class; $testClasses)
-		$assert.isTrue($t; $class.name="@Test"; "All discovered classes should end with 'Test', found: "+$class.name)
+		$t.assert.isTrue($t; $class.name="@Test"; "All discovered classes should end with 'Test', found: "+$class.name)
 	End for each 
 	
 Function test_pattern_matching_exact($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
 	
 	// Test exact pattern matching
-	$assert.isTrue($t; $runner._matchesPattern("ExampleTest"; "ExampleTest"); "Should match exactly")
-	$assert.isFalse($t; $runner._matchesPattern("ExampleTest"; "ErrorHandlingTest"); "Should not match different text")
+	$t.assert.isTrue($t; $runner._matchesPattern("ExampleTest"; "ExampleTest"); "Should match exactly")
+	$t.assert.isFalse($t; $runner._matchesPattern("ExampleTest"; "ErrorHandlingTest"); "Should not match different text")
 	
 Function test_pattern_matching_wildcards($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
 	
 	// Test wildcard pattern matching
-	$assert.isTrue($t; $runner._matchesPattern("ExampleTest"; "*Example*"); "Should match with wildcards")
-	$assert.isTrue($t; $runner._matchesPattern("ErrorHandlingTest"; "*Error*"); "Should match with wildcards")
-	$assert.isTrue($t; $runner._matchesPattern("TestRunner"; "*Runner"); "Should match with trailing wildcard")
-	$assert.isTrue($t; $runner._matchesPattern("TestRunner"; "Test*"); "Should match with leading wildcard")
-	$assert.isFalse($t; $runner._matchesPattern("ExampleTest"; "*Error*"); "Should not match incorrect wildcards")
+	$t.assert.isTrue($t; $runner._matchesPattern("ExampleTest"; "*Example*"); "Should match with wildcards")
+	$t.assert.isTrue($t; $runner._matchesPattern("ErrorHandlingTest"; "*Error*"); "Should match with wildcards")
+	$t.assert.isTrue($t; $runner._matchesPattern("TestRunner"; "*Runner"); "Should match with trailing wildcard")
+	$t.assert.isTrue($t; $runner._matchesPattern("TestRunner"; "Test*"); "Should match with leading wildcard")
+	$t.assert.isFalse($t; $runner._matchesPattern("ExampleTest"; "*Error*"); "Should not match incorrect wildcards")
 	
 Function test_pattern_matching_universal($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
 	
 	// Test universal pattern
-	$assert.isTrue($t; $runner._matchesPattern("anything"; "*"); "Universal pattern should match anything")
-	$assert.isTrue($t; $runner._matchesPattern(""; "*"); "Universal pattern should match empty string")
+	$t.assert.isTrue($t; $runner._matchesPattern("anything"; "*"); "Universal pattern should match anything")
+	$t.assert.isTrue($t; $runner._matchesPattern(""; "*"); "Universal pattern should match empty string")
 	
 Function test_results_initialization($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
@@ -178,29 +154,25 @@ Function test_results_initialization($t : cs:C1710.Testing)
 	var $results : Object
 	$results:=$runner.getResults()
 	
-	$assert.isNotNull($t; $results; "Results should be initialized")
-	$assert.areEqual($t; 0; $results.totalTests; "Total tests should start at 0")
-	$assert.areEqual($t; 0; $results.passed; "Passed should start at 0")
-	$assert.areEqual($t; 0; $results.failed; "Failed should start at 0")
-	$assert.areEqual($t; 0; $results.skipped; "Skipped should start at 0")
-	$assert.isNotNull($t; $results.suites; "Suites should be initialized")
-	$assert.isNotNull($t; $results.failedTests; "FailedTests should be initialized")
+	$t.assert.isNotNull($t; $results; "Results should be initialized")
+	$t.assert.areEqual($t; 0; $results.totalTests; "Total tests should start at 0")
+	$t.assert.areEqual($t; 0; $results.passed; "Passed should start at 0")
+	$t.assert.areEqual($t; 0; $results.failed; "Failed should start at 0")
+	$t.assert.areEqual($t; 0; $results.skipped; "Skipped should start at 0")
+	$t.assert.isNotNull($t; $results.suites; "Suites should be initialized")
+	$t.assert.isNotNull($t; $results.failedTests; "FailedTests should be initialized")
 	
 Function test_test_patterns_initialization($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
 	
-	$assert.isNotNull($t; $runner.testPatterns; "Test patterns should be initialized")
+	$t.assert.isNotNull($t; $runner.testPatterns; "Test patterns should be initialized")
 	// Note: Test patterns may be populated from user parameters during testing
 	// So we check that it's initialized as a Collection rather than being empty
-	$assert.isTrue($t; Value type:C1509($runner.testPatterns)=Is collection:K8:32; "Test patterns should be a Collection")
+	$t.assert.isTrue($t; Value type:C1509($runner.testPatterns)=Is collection:K8:32; "Test patterns should be a Collection")
 	
 Function test_getUserParam_basic_functionality($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
@@ -211,12 +183,10 @@ Function test_getUserParam_basic_functionality($t : cs:C1710.Testing)
 	$userParam:=$runner._getUserParam()
 	
 	// The method should return a Text value (even if empty)
-	$assert.isNotNull($t; $userParam; "Should return user parameter string")
+	$t.assert.isNotNull($t; $userParam; "Should return user parameter string")
 	// Note: The actual content depends on the current user parameters when running tests
 	
 Function test_parseParamString_comprehensive($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
@@ -226,18 +196,16 @@ Function test_parseParamString_comprehensive($t : cs:C1710.Testing)
 	
 	// Test multiple key=value pairs
 	$params:=$runner._parseParamString("format=json test=*Example* debug=true")
-	$assert.areEqual($t; "json"; $params.format; "Should parse format parameter")
-	$assert.areEqual($t; "*Example*"; $params.test; "Should parse test parameter")
-	$assert.areEqual($t; "true"; $params.debug; "Should parse debug parameter")
+	$t.assert.areEqual($t; "json"; $params.format; "Should parse format parameter")
+	$t.assert.areEqual($t; "*Example*"; $params.test; "Should parse test parameter")
+	$t.assert.areEqual($t; "true"; $params.debug; "Should parse debug parameter")
 	
 	// Test mixed separators
 	$params:=$runner._parseParamString("format:json test=ErrorTest")
-	$assert.areEqual($t; "json"; $params.format; "Should handle colon separator")
-	$assert.areEqual($t; "ErrorTest"; $params.test; "Should handle equals separator in same string")
+	$t.assert.areEqual($t; "json"; $params.format; "Should handle colon separator")
+	$t.assert.areEqual($t; "ErrorTest"; $params.test; "Should handle equals separator in same string")
 	
 Function test_getClassStore_basic_functionality($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
@@ -246,14 +214,12 @@ Function test_getClassStore_basic_functionality($t : cs:C1710.Testing)
 	var $classStore : Object
 	$classStore:=$runner._getClassStore()
 	
-	$assert.isNotNull($t; $classStore; "Should return class store object")
+	$t.assert.isNotNull($t; $classStore; "Should return class store object")
 	// Note: We can't use areEqual with objects due to 4D comparison limitations
 	// Instead, verify it has expected properties of a class store
-	$assert.isTrue($t; Value type:C1509($classStore)=Is object:K8:27; "Should return an object")
+	$t.assert.isTrue($t; Value type:C1509($classStore)=Is object:K8:27; "Should return an object")
 	
 Function test_filterTestClasses_comprehensive($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
@@ -275,7 +241,7 @@ Function test_filterTestClasses_comprehensive($t : cs:C1710.Testing)
 	$testClasses:=$runner._filterTestClasses($mockClassStore)
 	
 	// Should find all test classes (ExampleTest, ErrorHandlingTest, TestRunnerTest, ComprehensiveErrorTest)
-	$assert.isTrue($t; $testClasses.length>=4; "Should find at least 4 test classes")
+	$t.assert.isTrue($t; $testClasses.length>=4; "Should find at least 4 test classes")
 	
 	// Verify all found classes are test classes
 	var $foundTestClasses : Collection
@@ -285,21 +251,19 @@ Function test_filterTestClasses_comprehensive($t : cs:C1710.Testing)
 		$foundTestClasses.push($class.name)
 	End for each 
 	
-	$assert.isTrue($t; $foundTestClasses.indexOf("ExampleTest")>=0; "Should include ExampleTest")
-	$assert.isTrue($t; $foundTestClasses.indexOf("ErrorHandlingTest")>=0; "Should include ErrorHandlingTest")
-	$assert.isTrue($t; $foundTestClasses.indexOf("TestRunnerTest")>=0; "Should include TestRunnerTest")
-	$assert.isTrue($t; $foundTestClasses.indexOf("ComprehensiveErrorTest")>=0; "Should include ComprehensiveErrorTest")
+	$t.assert.isTrue($t; $foundTestClasses.indexOf("ExampleTest")>=0; "Should include ExampleTest")
+	$t.assert.isTrue($t; $foundTestClasses.indexOf("ErrorHandlingTest")>=0; "Should include ErrorHandlingTest")
+	$t.assert.isTrue($t; $foundTestClasses.indexOf("TestRunnerTest")>=0; "Should include TestRunnerTest")
+	$t.assert.isTrue($t; $foundTestClasses.indexOf("ComprehensiveErrorTest")>=0; "Should include ComprehensiveErrorTest")
 	
 	// Verify DataClasses are excluded
 	var $class : Object
 	For each ($class; $testClasses)
-		$assert.isTrue($t; $class.superclass.name#"DataClass"; "Should not include DataClass instances: "+$class.name)
-		$assert.isTrue($t; $class.name="@Test"; "All classes should end with 'Test': "+$class.name)
+		$t.assert.isTrue($t; $class.superclass.name#"DataClass"; "Should not include DataClass instances: "+$class.name)
+		$t.assert.isTrue($t; $class.name="@Test"; "All classes should end with 'Test': "+$class.name)
 	End for each 
 	
 Function test_dependency_injection_pattern($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	// Test that we can successfully test the dependency extraction pattern
 	var $runner : cs:C1710.TestRunner
@@ -308,22 +272,20 @@ Function test_dependency_injection_pattern($t : cs:C1710.Testing)
 	// Verify that extracted methods are independently testable
 	var $emptyParams : Object
 	$emptyParams:=$runner._parseParamString("")
-	$assert.isNotNull($t; $emptyParams; "Empty param parsing should work independently")
+	$t.assert.isNotNull($t; $emptyParams; "Empty param parsing should work independently")
 	
 	var $classStore : Object
 	$classStore:=$runner._getClassStore()
-	$assert.isNotNull($t; $classStore; "Class store access should work independently")
+	$t.assert.isNotNull($t; $classStore; "Class store access should work independently")
 	
 	// Test filtered classes with empty mock store
 	var $emptyStore : Object
 	$emptyStore:=New object:C1471
 	var $noClasses : Collection
 	$noClasses:=$runner._filterTestClasses($emptyStore)
-	$assert.areEqual($t; 0; $noClasses.length; "Should handle empty class store")
+	$t.assert.areEqual($t; 0; $noClasses.length; "Should handle empty class store")
 	
 Function test_pattern_matching_with_dependency_extraction($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
@@ -331,17 +293,15 @@ Function test_pattern_matching_with_dependency_extraction($t : cs:C1710.Testing)
 	// Test that pattern matching works independently of parameter parsing
 	var $matches : Boolean
 	$matches:=$runner._matchesPattern("TestRunnerTest"; "*Runner*")
-	$assert.isTrue($t; $matches; "Pattern matching should work independently")
+	$t.assert.isTrue($t; $matches; "Pattern matching should work independently")
 	
 	$matches:=$runner._matchesPattern("ComprehensiveErrorTest"; "*Error*")
-	$assert.isTrue($t; $matches; "Should match error pattern")
+	$t.assert.isTrue($t; $matches; "Should match error pattern")
 	
 	$matches:=$runner._matchesPattern("ExampleTest"; "*NonExistent*")
-	$assert.isFalse($t; $matches; "Should not match non-existent pattern")
+	$t.assert.isFalse($t; $matches; "Should not match non-existent pattern")
 	
 Function test_error_handling_in_extracted_methods($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $runner : cs:C1710.TestRunner
 	$runner:=cs:C1710.TestRunner.new()
@@ -349,11 +309,11 @@ Function test_error_handling_in_extracted_methods($t : cs:C1710.Testing)
 	// Test that extracted methods handle edge cases gracefully
 	var $result : Object
 	$result:=$runner._parseParamString("malformed=")
-	$assert.isNotNull($t; $result; "Should handle malformed parameters")
+	$t.assert.isNotNull($t; $result; "Should handle malformed parameters")
 	
 	var $emptyResult : Object
 	$emptyResult:=$runner._parseParamString("   ")
-	$assert.isNotNull($t; $emptyResult; "Should handle whitespace-only parameters")
+	$t.assert.isNotNull($t; $emptyResult; "Should handle whitespace-only parameters")
 	
 	// Test class filtering with malformed class store
 	var $malformedStore : Object
@@ -364,5 +324,5 @@ Function test_error_handling_in_extracted_methods($t : cs:C1710.Testing)
 	var $filteredClasses : Collection
 	$filteredClasses:=$runner._filterTestClasses($malformedStore)
 	// Should find ValidTest but skip InvalidTest (missing superclass)
-	$assert.areEqual($t; 1; $filteredClasses.length; "Should handle classes without superclass gracefully")
-	$assert.areEqual($t; "ValidTest"; $filteredClasses[0].name; "Should include ValidTest")
+	$t.assert.areEqual($t; 1; $filteredClasses.length; "Should handle classes without superclass gracefully")
+	$t.assert.areEqual($t; "ValidTest"; $filteredClasses[0].name; "Should include ValidTest")

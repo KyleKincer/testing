@@ -33,19 +33,13 @@ Function afterEach()
 	This:C1470.testData.currentTest:=""
 
 Function test_setup_was_called($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
-	$assert.isTrue($t; This:C1470.setupCalled; "Setup should have been called")
-	$assert.isNotNull($t; This:C1470.testData.connection; "Setup should have initialized connection")
+	$t.assert.isTrue($t; This:C1470.setupCalled; "Setup should have been called")
+	$t.assert.isNotNull($t; This:C1470.testData.connection; "Setup should have initialized connection")
 
 Function test_beforeEach_was_called($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
-	$assert.isTrue($t; This:C1470.beforeEachCount>0; "BeforeEach should have been called")
-	$assert.areEqual($t; "test_"+String:C10(This:C1470.beforeEachCount); This:C1470.testData.currentTest; "BeforeEach should set current test")
+	$t.assert.isTrue($t; This:C1470.beforeEachCount>0; "BeforeEach should have been called")
+	$t.assert.areEqual($t; "test_"+String:C10(This:C1470.beforeEachCount); This:C1470.testData.currentTest; "BeforeEach should set current test")
 
 Function test_data_is_available($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
-	$assert.isNotNull($t; This:C1470.testData; "Test data should be available")
-	$assert.areEqual($t; "database_connection"; This:C1470.testData.connection; "Connection should be set by setup")
+	$t.assert.isNotNull($t; This:C1470.testData; "Test data should be available")
+	$t.assert.areEqual($t; "database_connection"; This:C1470.testData.connection; "Connection should be set by setup")

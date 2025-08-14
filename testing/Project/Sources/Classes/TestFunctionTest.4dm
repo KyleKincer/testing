@@ -2,8 +2,6 @@
 Class constructor()
 
 Function test_test_function_initialization($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	// Create a TestFunction for a specific test method
 	var $exampleClass : 4D:C1709.Class
@@ -16,15 +14,13 @@ Function test_test_function_initialization($t : cs:C1710.Testing)
 	var $testFunction : cs:C1710.TestFunction
 	$testFunction:=cs:C1710.TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
 	
-	$assert.isNotNull($t; $testFunction; "TestFunction should initialize")
-	$assert.areEqual($t; "test_areEqual_pass"; $testFunction.functionName; "Should store function name")
-	$assert.isNotNull($t; $testFunction.t; "Should create Testing context")
-	$assert.isNotNull($t; $testFunction.runtimeErrors; "Should initialize runtime errors collection")
-	$assert.areEqual($t; 0; $testFunction.runtimeErrors.length; "Runtime errors should be empty initially")
+	$t.assert.isNotNull($t; $testFunction; "TestFunction should initialize")
+	$t.assert.areEqual($t; "test_areEqual_pass"; $testFunction.functionName; "Should store function name")
+	$t.assert.isNotNull($t; $testFunction.t; "Should create Testing context")
+	$t.assert.isNotNull($t; $testFunction.runtimeErrors; "Should initialize runtime errors collection")
+	$t.assert.areEqual($t; 0; $testFunction.runtimeErrors.length; "Runtime errors should be empty initially")
 
 Function test_test_function_execution($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	// Create and run a test function
 	var $exampleClass : 4D:C1709.Class
@@ -41,13 +37,11 @@ Function test_test_function_execution($t : cs:C1710.Testing)
 	$testFunction.run()
 	
 	// Check timing was recorded
-	$assert.isTrue($t; $testFunction.startTime>0; "Should record start time")
-	$assert.isTrue($t; $testFunction.endTime>0; "Should record end time")
-	$assert.isTrue($t; $testFunction.endTime>=$testFunction.startTime; "End time should be >= start time")
+	$t.assert.isTrue($t; $testFunction.startTime>0; "Should record start time")
+	$t.assert.isTrue($t; $testFunction.endTime>0; "Should record end time")
+	$t.assert.isTrue($t; $testFunction.endTime>=$testFunction.startTime; "End time should be >= start time")
 
 Function test_test_result_object_creation($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $exampleClass : 4D:C1709.Class
 	$exampleClass:=cs:C1710.ExampleTest
@@ -63,18 +57,16 @@ Function test_test_result_object_creation($t : cs:C1710.Testing)
 	var $result : Object
 	$result:=$testFunction.getResult()
 	
-	$assert.isNotNull($t; $result; "Should return result object")
-	$assert.areEqual($t; "test_areEqual_pass"; $result.name; "Should include test name")
-	$assert.areEqual($t; "ExampleTest"; $result.suite; "Should include suite name")
-	$assert.isNotNull($t; $result.passed; "Should include passed status")
-	$assert.isNotNull($t; $result.failed; "Should include failed status")
-	$assert.isNotNull($t; $result.duration; "Should include duration")
-	$assert.isNotNull($t; $result.runtimeErrors; "Should include runtime errors")
-	$assert.isNotNull($t; $result.logMessages; "Should include log messages")
+	$t.assert.isNotNull($t; $result; "Should return result object")
+	$t.assert.areEqual($t; "test_areEqual_pass"; $result.name; "Should include test name")
+	$t.assert.areEqual($t; "ExampleTest"; $result.suite; "Should include suite name")
+	$t.assert.isNotNull($t; $result.passed; "Should include passed status")
+	$t.assert.isNotNull($t; $result.failed; "Should include failed status")
+	$t.assert.isNotNull($t; $result.duration; "Should include duration")
+	$t.assert.isNotNull($t; $result.runtimeErrors; "Should include runtime errors")
+	$t.assert.isNotNull($t; $result.logMessages; "Should include log messages")
 
 Function test_successful_test_result($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $exampleClass : 4D:C1709.Class
 	$exampleClass:=cs:C1710.ExampleTest
@@ -90,13 +82,11 @@ Function test_successful_test_result($t : cs:C1710.Testing)
 	var $result : Object
 	$result:=$testFunction.getResult()
 	
-	$assert.isTrue($t; $result.passed; "Successful test should be marked as passed")
-	$assert.isFalse($t; $result.failed; "Successful test should not be marked as failed")
-	$assert.areEqual($t; 0; $result.runtimeErrors.length; "Successful test should have no runtime errors")
+	$t.assert.isTrue($t; $result.passed; "Successful test should be marked as passed")
+	$t.assert.isFalse($t; $result.failed; "Successful test should not be marked as failed")
+	$t.assert.areEqual($t; 0; $result.runtimeErrors.length; "Successful test should have no runtime errors")
 
 Function test_duration_calculation($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $exampleClass : 4D:C1709.Class
 	$exampleClass:=cs:C1710.ExampleTest
@@ -112,12 +102,10 @@ Function test_duration_calculation($t : cs:C1710.Testing)
 	var $result : Object
 	$result:=$testFunction.getResult()
 	
-	$assert.isTrue($t; $result.duration>=0; "Duration should be non-negative")
-	$assert.areEqual($t; $testFunction.endTime-$testFunction.startTime; $result.duration; "Duration should match time difference")
+	$t.assert.isTrue($t; $result.duration>=0; "Duration should be non-negative")
+	$t.assert.areEqual($t; $testFunction.endTime-$testFunction.startTime; $result.duration; "Duration should match time difference")
 
 Function test_runtime_error_storage($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	// Test that runtime errors are properly stored
 	// Create a proper TestFunction with valid parameters
@@ -142,12 +130,10 @@ Function test_runtime_error_storage($t : cs:C1710.Testing)
 	var $result : Object
 	$result:=$testFunction.getResult()
 	
-	$assert.areEqual($t; 1; $result.runtimeErrors.length; "Should store runtime errors")
-	$assert.areEqual($t; "Mock error"; $result.runtimeErrors[0].text; "Should store error details")
+	$t.assert.areEqual($t; 1; $result.runtimeErrors.length; "Should store runtime errors")
+	$t.assert.areEqual($t; "Mock error"; $result.runtimeErrors[0].text; "Should store error details")
 
 Function test_testing_context_integration($t : cs:C1710.Testing)
-	var $assert : cs:C1710.Assert
-	$assert:=cs:C1710.Assert.new()
 	
 	var $exampleClass : 4D:C1709.Class
 	$exampleClass:=cs:C1710.ExampleTest
@@ -160,6 +146,6 @@ Function test_testing_context_integration($t : cs:C1710.Testing)
 	$testFunction:=cs:C1710.TestFunction.new($exampleClass; $classInstance; $testMethod; "test_areEqual_pass")
 	
 	// Test that Testing context is properly initialized
-	$assert.isFalse($t; $testFunction.t.failed; "Testing context should start as not failed")
-	$assert.isFalse($t; $testFunction.t.done; "Testing context should start as not done")
-	$assert.areEqual($t; 0; $testFunction.t.logMessages.length; "Testing context should start with no log messages")
+	$t.assert.isFalse($t; $testFunction.t.failed; "Testing context should start as not failed")
+	$t.assert.isFalse($t; $testFunction.t.done; "Testing context should start as not done")
+	$t.assert.areEqual($t; 0; $testFunction.t.logMessages.length; "Testing context should start with no log messages")
