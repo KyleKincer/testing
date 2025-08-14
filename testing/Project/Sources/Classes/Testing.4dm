@@ -76,8 +76,8 @@ Function withTransaction($operation : 4D:C1709.Function) : Boolean
 	
 	// Check if operation succeeded (no test failures)
 	If (Not:C34(This:C1470.failed))
-		VALIDATE TRANSACTION:C240
-		$success:=(OK:C209=1)
+		CANCEL TRANSACTION:C241  // Always rollback for withTransaction
+		$success:=True
 	Else 
 		CANCEL TRANSACTION:C241
 		$success:=False
