@@ -96,7 +96,7 @@ Function test_output_format_defaults_to_human($t : cs:C1710.Testing)
 	
 	// Note: Output format depends on current user parameters when running tests
 	// This test verifies the outputFormat property exists and has a valid value
-	$t.assert.isTrue($t; ($runner.outputFormat="human") || ($runner.outputFormat="json"); "Output format should be either human or json")
+	$t.assert.isTrue($t; ($runner.outputFormat="human") || ($runner.outputFormat="json") || ($runner.outputFormat="junit"); "Output format should be human, json, or junit")
 	
 Function test_test_class_discovery($t : cs:C1710.Testing)
 	
