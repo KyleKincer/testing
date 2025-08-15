@@ -1,7 +1,7 @@
 property classStore : 4D:C1709.Object  // Class store from the calling project
 property testSuites : Collection  // Collection of cs._TestSuite
 property results : Object  // Test results summary
-property outputFormat : Text  // "human" or "json"
+property outputFormat : Text  // "human", "json", "junit"
 property verboseOutput : Boolean  // Whether to include detailed information
 property testPatterns : Collection  // Collection of test patterns to match
 property includeTags : Collection  // Tags to include (OR logic)
