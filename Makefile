@@ -16,7 +16,7 @@ BASE_OPTS := --project $(PROJECT_PATH) --skip-onstartup --dataless --startup-met
 .DEFAULT_GOAL := test
 
 # Build user parameters from make variables
-USER_PARAMS := $(strip $(if $(format),format=$(format)) $(if $(tags),tags=$(tags)) $(if $(test),test=$(test)) $(if $(excludeTags),excludeTags=$(excludeTags)) $(if $(requireTags),requireTags=$(requireTags)))
+USER_PARAMS := $(strip $(if $(format),format=$(format)) $(if $(tags),tags=$(tags)) $(if $(test),test=$(test)) $(if $(excludeTags),excludeTags=$(excludeTags)) $(if $(requireTags),requireTags=$(requireTags)) $(if $(parallel),parallel=$(parallel)) $(if $(maxWorkers),maxWorkers=$(maxWorkers)))
 
 # Run all tests with human-readable output  
 # Usage: make test [key=value key2=value2 ...]
@@ -60,6 +60,22 @@ test-integration:
 test-unit-json:
 	$(TOOL4D) $(BASE_OPTS) --user-param "format=json tags=unit"
 
+# Run tests in parallel mode
+test-parallel:
+	$(TOOL4D) $(BASE_OPTS) --user-param "parallel=true"
+
+# Run tests in parallel mode with JSON output
+test-parallel-json:
+	$(TOOL4D) $(BASE_OPTS) --user-param "parallel=true format=json"
+
+# Run unit tests in parallel mode
+test-parallel-unit:
+	$(TOOL4D) $(BASE_OPTS) --user-param "parallel=true tags=unit"
+
+# Run tests in parallel with custom worker count (usage: make test-parallel-workers WORKERS=4)
+test-parallel-workers:
+	$(TOOL4D) $(BASE_OPTS) --user-param "parallel=true maxWorkers=$(WORKERS)"
+
 # Show help
 help:
 	@echo "4D Unit Testing Framework Commands:"
@@ -73,6 +89,10 @@ help:
 	@echo "  test-unit           - Run unit tests only"
 	@echo "  test-integration    - Run integration tests only"
 	@echo "  test-unit-json      - Run unit tests with JSON output"
+	@echo "  test-parallel       - Run tests in parallel mode"
+	@echo "  test-parallel-json  - Run tests in parallel with JSON output"
+	@echo "  test-parallel-unit  - Run unit tests in parallel"
+	@echo "  test-parallel-workers - Run tests in parallel with custom worker count"
 	@echo "  help                - Show this help message"
 	@echo ""
 	@echo "Examples:"
@@ -84,5 +104,9 @@ help:
 	@echo "  make test-class CLASS=TaggingSystemTest"
 	@echo "  make test-tags TAGS=unit,fast"
 	@echo "  make test-exclude-tags TAGS=slow"
+	@echo "  make test-parallel"
+	@echo "  make test-parallel-json"
+	@echo "  make test-parallel-workers WORKERS=4"
+	@echo "  make test parallel=true maxWorkers=6"
 
-.PHONY: test test-json test-class test-tags test-exclude-tags test-require-tags test-unit test-integration test-unit-json help
+.PHONY: test test-json test-class test-tags test-exclude-tags test-require-tags test-unit test-integration test-unit-json test-parallel test-parallel-json test-parallel-unit test-parallel-workers help
