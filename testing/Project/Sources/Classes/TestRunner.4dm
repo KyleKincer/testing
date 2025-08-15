@@ -303,12 +303,17 @@ Function _buildJUnitXML() : Text
 	var $totalTime : Real
 	$totalTime:=This:C1470.results.duration/1000  // Convert ms to seconds
 	
+	// Calculate errors and failures separately
+	var $totalErrors; $totalFailures : Integer
+	$totalErrors:=This:C1470._countTestsWithRuntimeErrors()
+	$totalFailures:=This:C1470.results.failed-$totalErrors  // Failures are failed tests without runtime errors
+	
 	// XML header and root testsuites element
 	$xml:="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
 	$xml:=$xml+"<testsuites name=\"4D Test Results\""
 	$xml:=$xml+" tests=\""+String:C10(This:C1470.results.totalTests)+"\""
-	$xml:=$xml+" failures=\""+String:C10(This:C1470.results.failed)+"\""
-	$xml:=$xml+" errors=\"0\""  // We don't distinguish errors from failures currently
+	$xml:=$xml+" failures=\""+String:C10($totalFailures)+"\""
+	$xml:=$xml+" errors=\""+String:C10($totalErrors)+"\""
 	$xml:=$xml+" time=\""+String:C10($totalTime; "##0.000")+"\""
 	$xml:=$xml+" timestamp=\""+This:C1470._formatTimestamp(This:C1470.results.startTime)+"\">\r\n"
 	
@@ -333,11 +338,16 @@ Function _buildTestSuiteXML($suite : Object) : Text
 		$suiteTotalTime:=$suiteTotalTime+($test.duration/1000)  // Convert ms to seconds
 	End for each 
 	
+	// Calculate errors and failures for this suite
+	var $suiteErrors; $suiteFailures : Integer
+	$suiteErrors:=This:C1470._countSuiteTestsWithRuntimeErrors($suite)
+	$suiteFailures:=$suite.failed-$suiteErrors
+	
 	// Build testsuite element
 	$xml:="  <testsuite name=\""+This:C1470._escapeXMLAttribute($suite.name)+"\""
 	$xml:=$xml+" tests=\""+String:C10($suite.tests.length)+"\""
-	$xml:=$xml+" failures=\""+String:C10($suite.failed)+"\""
-	$xml:=$xml+" errors=\"0\""
+	$xml:=$xml+" failures=\""+String:C10($suiteFailures)+"\""
+	$xml:=$xml+" errors=\""+String:C10($suiteErrors)+"\""
 	$xml:=$xml+" time=\""+String:C10($suiteTotalTime; "##0.000")+"\""
 	$xml:=$xml+">\r\n"
 	
@@ -377,11 +387,13 @@ Function _buildFailureXML($test : Object) : Text
 	var $xml : Text
 	var $failureMessage : Text
 	var $failureDetails : Text
+	var $elementType : Text
 	
-	// Extract failure message and details
+	// Extract failure message and details, determine element type
 	If ($test.runtimeErrors.length>0)
 		$failureMessage:=($test.runtimeErrors[0].text#Null:C1517) ? $test.runtimeErrors[0].text : "Runtime Error"
 		$failureDetails:=$failureMessage
+		$elementType:="error"
 	Else 
 		If ($test.logMessages.length>0)
 			$failureMessage:=$test.logMessages[0]
@@ -390,11 +402,12 @@ Function _buildFailureXML($test : Object) : Text
 			$failureMessage:="Test failed"
 			$failureDetails:="Test failed without specific error message"
 		End if 
+		$elementType:="failure"
 	End if 
 	
-	$xml:="      <failure message=\""+This:C1470._escapeXMLAttribute($failureMessage)+"\">"
+	$xml:="      <"+$elementType+" message=\""+This:C1470._escapeXMLAttribute($failureMessage)+"\">"
 	$xml:=$xml+"<![CDATA[\n"+$failureDetails+"\nLocation: "+$test.suite+"."+$test.name+"\n]]>"
-	$xml:=$xml+"</failure>\r\n"
+	$xml:=$xml+"</"+$elementType+">\r\n"
 	
 	return $xml
 	
@@ -632,6 +645,32 @@ Function _parseTagList($tagString : Text) : Collection
 	
 	return $tags
 
+Function _countTestsWithRuntimeErrors() : Integer
+	// Count total tests that have runtime errors (not assertion failures)
+	var $errorCount : Integer
+	$errorCount:=0
+	
+	var $suite : Object
+	For each ($suite; This:C1470.results.suites)
+		$errorCount:=$errorCount+This:C1470._countSuiteTestsWithRuntimeErrors($suite)
+	End for each 
+	
+	return $errorCount
+	
+Function _countSuiteTestsWithRuntimeErrors($suite : Object) : Integer
+	// Count tests in a specific suite that have runtime errors
+	var $errorCount : Integer
+	$errorCount:=0
+	
+	var $test : Object
+	For each ($test; $suite.tests)
+		If ($test.runtimeErrors.length>0)
+			$errorCount:=$errorCount+1
+		End if 
+	End for each 
+	
+	return $errorCount
+	
 Function _shouldIncludeTestByTags($testFunction : cs:C1710._TestFunction) : Boolean
 	// Apply tag filtering logic to determine if test should be included
 	
