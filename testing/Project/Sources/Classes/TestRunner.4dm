@@ -163,7 +163,11 @@ Function _generateReport()
 	If (This:C1470.outputFormat="json")
 		This:C1470._generateJSONReport()
 	Else 
-		This:C1470._generateHumanReport()
+		If (This:C1470.outputFormat="junit")
+			This:C1470._generateJUnitXMLReport()
+		Else 
+			This:C1470._generateHumanReport()
+		End if 
 	End if 
 	
 Function _generateHumanReport()
@@ -273,6 +277,172 @@ Function _generateJSONReport()
 	
 	LOG EVENT:C667(Into system standard outputs:K38:9; $jsonString; Information message:K38:1)
 	
+Function _generateJUnitXMLReport()
+	var $params : Object
+	$params:=This:C1470._parseUserParams()
+	
+	// Determine output path - default to test-results/junit.xml in project root
+	var $outputPath : Text
+	$outputPath:=($params.outputPath#Null:C1517) ? $params.outputPath : "test-results/junit.xml"
+	
+	// Build JUnit XML content
+	var $xmlContent : Text
+	$xmlContent:=This:C1470._buildJUnitXML()
+	
+	// Write XML to file
+	This:C1470._writeJUnitXMLToFile($xmlContent; $outputPath)
+	
+	// Log file location for CI visibility
+	LOG EVENT:C667(Into system standard outputs:K38:9; "JUnit XML written to: "+$outputPath+"\r\n"; Information message:K38:1)
+	
+Function _buildJUnitXML() : Text
+	var $xml : Text
+	var $totalTime : Real
+	$totalTime:=This:C1470.results.duration/1000  // Convert ms to seconds
+	
+	// XML header and root testsuites element
+	$xml:="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
+	$xml:=$xml+"<testsuites name=\"4D Test Results\""
+	$xml:=$xml+" tests=\""+String:C10(This:C1470.results.totalTests)+"\""
+	$xml:=$xml+" failures=\""+String:C10(This:C1470.results.failed)+"\""
+	$xml:=$xml+" errors=\"0\""  // We don't distinguish errors from failures currently
+	$xml:=$xml+" time=\""+String:C10($totalTime; "##0.000")+"\""
+	$xml:=$xml+" timestamp=\""+This:C1470._formatTimestamp(This:C1470.results.startTime)+"\">\r\n"
+	
+	// Build testsuite elements
+	var $suite : Object
+	For each ($suite; This:C1470.results.suites)
+		$xml:=$xml+This:C1470._buildTestSuiteXML($suite)
+	End for each 
+	
+	$xml:=$xml+"</testsuites>\r\n"
+	
+	return $xml
+	
+Function _buildTestSuiteXML($suite : Object) : Text
+	var $xml : Text
+	var $suiteTotalTime : Real
+	
+	// Calculate total time for this suite
+	$suiteTotalTime:=0
+	var $test : Object
+	For each ($test; $suite.tests)
+		$suiteTotalTime:=$suiteTotalTime+($test.duration/1000)  // Convert ms to seconds
+	End for each 
+	
+	// Build testsuite element
+	$xml:="  <testsuite name=\""+This:C1470._escapeXMLAttribute($suite.name)+"\""
+	$xml:=$xml+" tests=\""+String:C10($suite.tests.length)+"\""
+	$xml:=$xml+" failures=\""+String:C10($suite.failed)+"\""
+	$xml:=$xml+" errors=\"0\""
+	$xml:=$xml+" time=\""+String:C10($suiteTotalTime; "##0.000")+"\""
+	$xml:=$xml+">\r\n"
+	
+	// Build testcase elements
+	For each ($test; $suite.tests)
+		$xml:=$xml+This:C1470._buildTestCaseXML($test)
+	End for each 
+	
+	$xml:=$xml+"  </testsuite>\r\n"
+	
+	return $xml
+	
+Function _buildTestCaseXML($test : Object) : Text
+	var $xml : Text
+	var $testTime : Real
+	$testTime:=$test.duration/1000  // Convert ms to seconds
+	
+	// Build basic testcase element
+	$xml:="    <testcase"
+	$xml:=$xml+" classname=\""+This:C1470._escapeXMLAttribute($test.suite)+"\""
+	$xml:=$xml+" name=\""+This:C1470._escapeXMLAttribute($test.name)+"\""
+	$xml:=$xml+" file=\"testing/Project/Sources/Classes/"+This:C1470._escapeXMLAttribute($test.suite)+".4dm\""
+	$xml:=$xml+" time=\""+String:C10($testTime; "##0.000")+"\""
+	
+	// If test failed, add failure element
+	If ($test.failed)
+		$xml:=$xml+">\r\n"
+		$xml:=$xml+This:C1470._buildFailureXML($test)
+		$xml:=$xml+"    </testcase>\r\n"
+	Else 
+		$xml:=$xml+" />\r\n"
+	End if 
+	
+	return $xml
+	
+Function _buildFailureXML($test : Object) : Text
+	var $xml : Text
+	var $failureMessage : Text
+	var $failureDetails : Text
+	
+	// Extract failure message and details
+	If ($test.runtimeErrors.length>0)
+		$failureMessage:=($test.runtimeErrors[0].text#Null:C1517) ? $test.runtimeErrors[0].text : "Runtime Error"
+		$failureDetails:=$failureMessage
+	Else 
+		If ($test.logMessages.length>0)
+			$failureMessage:=$test.logMessages[0]
+			$failureDetails:=$test.logMessages.join("\n")
+		Else 
+			$failureMessage:="Test failed"
+			$failureDetails:="Test failed without specific error message"
+		End if 
+	End if 
+	
+	$xml:="      <failure message=\""+This:C1470._escapeXMLAttribute($failureMessage)+"\">"
+	$xml:=$xml+"<![CDATA[\n"+$failureDetails+"\nLocation: "+$test.suite+"."+$test.name+"\n]]>"
+	$xml:=$xml+"</failure>\r\n"
+	
+	return $xml
+	
+Function _writeJUnitXMLToFile($xmlContent : Text; $outputPath : Text)
+	// Parse the path to determine folder and filename
+	var $pathParts : Collection
+	$pathParts:=Split string:C1554($outputPath; "/")
+	
+	// Build output folder path
+	var $outputFolder : 4D:C1709.Folder
+	If ($pathParts.length>1)
+		var $folderPath : Text
+		$folderPath:=$pathParts.slice(0; $pathParts.length-1).join("/")
+		$outputFolder:=Folder:C1567(fk database folder:K87:14).folder($folderPath)
+	Else 
+		$outputFolder:=Folder:C1567(fk database folder:K87:14)
+	End if 
+	
+	// Create output folder if it doesn't exist
+	If (Not:C34($outputFolder.exists))
+		$outputFolder.create()
+	End if 
+	
+	// Get filename
+	var $filename : Text
+	$filename:=$pathParts[$pathParts.length-1]
+	
+	// Create and write XML file
+	var $xmlFile : 4D:C1709.File
+	$xmlFile:=$outputFolder.file($filename)
+	$xmlFile.setText($xmlContent; "UTF-8")
+	
+Function _escapeXMLAttribute($text : Text) : Text
+	var $escaped : Text
+	$escaped:=Replace string:C233($text; "&"; "&amp;")
+	$escaped:=Replace string:C233($escaped; "<"; "&lt;")
+	$escaped:=Replace string:C233($escaped; ">"; "&gt;")
+	$escaped:=Replace string:C233($escaped; "\""; "&quot;")
+	$escaped:=Replace string:C233($escaped; "'"; "&apos;")
+	return $escaped
+	
+Function _formatTimestamp($milliseconds : Integer) : Text
+	// Convert milliseconds to ISO 8601 timestamp
+	var $date : Date
+	var $time : Time
+	var $timestamp : Text
+	
+	// For now, use current timestamp - could be enhanced to use actual start time
+	$timestamp:=String:C10(Current date:C33; ISO date GMT:K1:10)+"T"+String:C10(Current time:C178; HH MM SS:K7:1)
+	return $timestamp
+	
 Function _logFooter()
 	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
 	If (This:C1470.results.failed=0)
@@ -292,7 +462,11 @@ Function _determineOutputFormat()
 	If ($params.format="json")
 		This:C1470.outputFormat:="json"
 	Else 
-		This:C1470.outputFormat:="human"
+		If ($params.format="junit") || ($params.format="xml")
+			This:C1470.outputFormat:="junit"
+		Else 
+			This:C1470.outputFormat:="human"
+		End if 
 	End if
 	
 	// Check for verbose flag

@@ -41,6 +41,12 @@ make test-unit              # Run only unit tests
 make test-integration       # Run only integration tests
 make test-unit-json         # Run unit tests with JSON output
 
+# JUnit XML output for CI/CD integration
+make test-junit             # Run all tests with JUnit XML output
+make test-ci                # Run tests for CI/CD (saves to test-results/junit.xml)
+make test-unit-junit        # Run unit tests with JUnit XML output
+make test-integration-junit # Run integration tests with JUnit XML output
+
 # Show all available commands
 make help
 ```
@@ -55,6 +61,9 @@ If you need more control or the Makefile doesn't meet your needs:
 
 # Run all tests with JSON output  
 /Applications/tool4d.app/Contents/MacOS/tool4d --project $(PWD)/testing/Project/testing.4DProject --skip-onstartup --dataless --startup-method "test" --user-param "format=json"
+
+# Run all tests with JUnit XML output (saves to test-results/junit.xml)
+/Applications/tool4d.app/Contents/MacOS/tool4d --project $(PWD)/testing/Project/testing.4DProject --skip-onstartup --dataless --startup-method "test" --user-param "format=junit"
 ```
 
 ### Test Filtering Parameters
@@ -72,6 +81,8 @@ If you need more control or the Makefile doesn't meet your needs:
 # Combined filtering
 --user-param "tags=unit excludeTags=slow"
 --user-param "format=json tags=integration"
+--user-param "format=junit tags=unit"
+--user-param "format=junit outputPath=results/junit.xml"
 ```
 
 ### Current Test Status
@@ -95,6 +106,71 @@ testing/Project/Sources/Classes/
 ```
 
 The framework automatically discovers and runs any class ending with "Test" that contains methods starting with "test_".
+
+## JUnit XML Output for CI/CD Integration
+
+The framework supports JUnit XML output format for integration with GitLab CI/CD and other continuous integration systems.
+
+### JUnit XML Features
+
+- **GitLab Integration**: Test results appear in merge requests and pipeline views
+- **File Artifacts**: XML files can be archived as CI artifacts for historical tracking
+- **Test Navigation**: Direct links to failing test files in GitLab UI
+- **Standard Format**: Compatible with Jenkins, CircleCI, and other CI tools
+- **Detailed Reporting**: Includes test timing, failure messages, and stack traces
+
+### Basic Usage
+
+```bash
+# Generate JUnit XML (saves to test-results/junit.xml)
+make test-junit
+
+# Custom output location
+make test format=junit outputPath=custom/path/results.xml
+
+# Combined with filtering
+make test-unit-junit                    # Unit tests only
+make test format=junit tags=integration # Integration tests only
+```
+
+### GitLab CI Integration
+
+Add this to your `.gitlab-ci.yml`:
+
+```yaml
+test:
+  script:
+    - make test-ci  # Generates test-results/junit.xml
+  artifacts:
+    reports:
+      junit: test-results/junit.xml
+    paths:
+      - test-results/
+    when: always
+    expire_in: 30 days
+  coverage: '/Lines:\s*(\d+\.?\d*)%/'
+```
+
+### JUnit XML Structure
+
+The generated XML includes:
+
+- **Test Suites**: One per test class
+- **Test Cases**: Individual test methods with timing
+- **Failures**: Detailed failure messages with location info
+- **File References**: Links to source test files
+- **Timestamps**: Test execution timing for performance tracking
+
+Example output structure:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="4D Test Results" tests="121" failures="0" errors="0" time="1.234">
+  <testsuite name="_ExampleTest" tests="5" failures="0" errors="0" time="0.156">
+    <testcase classname="_ExampleTest" name="test_areEqual_pass" 
+              file="testing/Project/Sources/Classes/_ExampleTest.4dm" time="0.023"/>
+  </testsuite>
+</testsuites>
+```
 
 ## Transaction Management
 
