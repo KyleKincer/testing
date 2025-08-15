@@ -294,6 +294,9 @@ Function _generateJUnitXMLReport()
 	
 	// Log file location for CI visibility
 	LOG EVENT:C667(Into system standard outputs:K38:9; "JUnit XML written to: "+$outputPath+"\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; \
+	    "Summary: "+String(This:C1470.results.totalTests)+" tests, "+String(This:C1470.results.passed)+" passed, "+String(This:C1470.results.failed)+" failed"+Char(13)+Char(10); \
+		Information message:K38:1)
 	
 Function _buildJUnitXML() : Text
 	var $xml : Text
