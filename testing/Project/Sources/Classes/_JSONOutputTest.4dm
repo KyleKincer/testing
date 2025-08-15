@@ -148,7 +148,7 @@ Function test_output_format_setting($t : cs:C1710.Testing)
 	$runner:=cs:C1710.TestRunner.new()
 	
 	// Test that output format is set (depends on current user parameters)
-	$t.assert.isTrue($t; ($runner.outputFormat="human") || ($runner.outputFormat="json"); "Output format should be either human or json")
+	$t.assert.isTrue($t; ($runner.outputFormat="human") || ($runner.outputFormat="json") || ($runner.outputFormat="junit"); "Output format should be human, json, or junit")
 	
 	// We can't easily test format=json parameter parsing without mocking
 	// the Get database parameter call, but we can verify the format property exists

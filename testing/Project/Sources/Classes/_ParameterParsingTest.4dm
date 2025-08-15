@@ -11,7 +11,7 @@ Function test_parse_single_parameter($t : cs:C1710.Testing)
 	$runner:=cs:C1710.TestRunner.new()
 	
 	// Test that output format is set (depends on current user parameters)
-	$t.assert.isTrue($t; ($runner.outputFormat="human") || ($runner.outputFormat="json"); "Output format should be either human or json")
+	$t.assert.isTrue($t; ($runner.outputFormat="human") || ($runner.outputFormat="json") || ($runner.outputFormat="junit"); "Output format should be human, json, or junit")
 	$t.assert.areEqual($t; 0; $runner.testPatterns.length; "Should have no test patterns by default")
 
 Function test_pattern_parsing_logic($t : cs:C1710.Testing)
