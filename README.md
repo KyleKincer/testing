@@ -6,6 +6,7 @@ A comprehensive unit testing framework for the 4D 4GL platform with enhanced rep
 
 - [Features](#features)
 - [Quick Start](#quick-start)
+- [Required Setup](#required-setup)
 - [Writing Tests](#writing-tests)
 - [Assertion Library](#assertion-library)
 - [Output Formats](#output-formats)
@@ -264,6 +265,32 @@ tool4d --project YourProject.4DProject --startup-method "test" --user-param "tes
 # Filter tests and get JSON output
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json test=ExampleTest"
 ```
+
+## Required Setup
+
+### Creating the Startup Method
+
+To run tests using the tool4d commands, you must create a project method to serve as the startup method. This method bridges your host project with the testing component.
+
+Create a project method (e.g., named "test") with the following code:
+
+```4d
+var $runner : cs.Testing.TestRunner
+$runner:=cs.Testing.TestRunner.new(cs)
+
+$runner.run()
+```
+
+**Important:** You must pass the host project's class store (`cs`) to the component's `TestRunner.new()` method. This allows the testing component to discover and run test classes from your host project.
+
+### Why This is Required
+
+The testing framework needs access to your project's class store to:
+- Discover test classes ending with "Test"
+- Instantiate test classes from your project
+- Execute test methods within the correct context
+
+Without passing the host project's class store, the framework cannot access your test classes since they exist in the host project rather than the component.
 
 ## Parameter Format
 
