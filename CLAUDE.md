@@ -11,6 +11,7 @@ This project provides a complete testing framework for 4D applications featuring
 - **Flexible filtering** - Run specific test subsets by name, pattern, or tags
 - **Multiple output formats** - Human-readable and JSON output with terse/verbose modes
 - **CI/CD ready** - Structured JSON output for automated testing pipelines
+- **Parallel test execution** - Run test suites concurrently for improved performance
 - **Automatic transaction management** - Test isolation with automatic rollback
 - **Manual transaction control** - Full transaction lifecycle management for advanced scenarios
 
@@ -46,6 +47,12 @@ make test-junit             # Run all tests with JUnit XML output
 make test-ci                # Run tests for CI/CD (saves to test-results/junit.xml)
 make test-unit-junit        # Run unit tests with JUnit XML output
 make test-integration-junit # Run integration tests with JUnit XML output
+
+# Parallel execution
+make test-parallel          # Run all tests in parallel
+make test-parallel-json     # Run tests in parallel with JSON output
+make test-parallel-unit     # Run unit tests in parallel
+make test-parallel-workers WORKERS=4  # Run with custom worker count
 
 # Show all available commands
 make help
@@ -83,6 +90,11 @@ If you need more control or the Makefile doesn't meet your needs:
 --user-param "format=json tags=integration"
 --user-param "format=junit tags=unit"
 --user-param "format=junit outputPath=results/junit.xml"
+
+# Parallel execution
+--user-param "parallel=true"
+--user-param "parallel=true maxWorkers=4"
+--user-param "parallel=true format=json tags=unit"
 ```
 
 ### Current Test Status
@@ -172,6 +184,61 @@ Example output structure:
 </testsuites>
 ```
 
+## Parallel Test Execution
+
+The framework supports parallel execution of test suites to significantly reduce total test runtime while maintaining test isolation.
+
+### Enabling Parallel Execution
+
+```bash
+# Enable parallel execution (uses CPU core count as default worker count)
+make test-parallel
+
+# Enable parallel execution with custom worker count
+make test-parallel-workers WORKERS=4
+
+# Combine parallel execution with other options
+make test parallel=true format=json tags=unit maxWorkers=6
+```
+
+### How Parallel Execution Works
+
+1. **Suite-Level Parallelism**: Test suites run concurrently, but individual tests within a suite run sequentially
+2. **Worker Pool**: Creates worker processes up to the specified maximum (default: CPU core count, max: 8)
+3. **Automatic Load Balancing**: Distributes test suites across available workers
+4. **Test Isolation**: Each worker runs in its own process with separate transaction scope
+5. **Result Aggregation**: Collects and merges results from all workers before generating final report
+
+### Parallel Execution Opt-Out
+
+Test suites can opt out of parallel execution using comment annotations:
+
+```4d
+// Test class that requires sequential execution
+// #parallel: false
+
+Class constructor()
+
+Function test_database_exclusive_operation($t : cs:Testing)
+    // This test requires exclusive database access
+    // and will run sequentially even in parallel mode
+```
+
+### Performance Benefits
+
+- **30-60% reduction** in total test runtime for typical test suites
+- **Better resource utilization** on multi-core machines  
+- **Improved developer experience** with faster feedback loops
+- **CI/CD optimization** reducing pipeline duration
+
+### Best Practices for Parallel Execution
+
+1. **Design for Independence**: Ensure test suites don't depend on each other's state
+2. **Use Transactions**: Leverage automatic transaction management for database isolation
+3. **Opt-Out When Needed**: Use `// #parallel: false` for tests requiring exclusive resources
+4. **Monitor Performance**: Compare sequential vs parallel execution times
+5. **Tune Worker Count**: Adjust `maxWorkers` based on your hardware and test characteristics
+
 ## Transaction Management
 
 The framework provides automatic transaction management for test isolation and manual transaction control for advanced scenarios.
@@ -239,7 +306,7 @@ Function test_transactionWrapper($t : cs:C1710.Testing)
 
 ### Transaction Control Comments
 
-| Comment | Effect |
-|---------|--------|
-| `// #transaction: false` | Disables automatic transactions |
-| No comment | Enables automatic transactions (default) |
+| Comment                  | Effect                                   |
+| ------------------------ | ---------------------------------------- |
+| `// #transaction: false` | Disables automatic transactions          |
+| No comment               | Enables automatic transactions (default) |

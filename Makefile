@@ -35,7 +35,7 @@ EXCLUDE_TAGS_COMBINED := $(strip $(DEFAULT_EXCLUDE_TAGS) $(excludeTags))
 BASE_PARAMS := $(if $(EXCLUDE_TAGS_COMBINED),excludeTags=$(subst $(space),$(comma),$(EXCLUDE_TAGS_COMBINED)))
 
 # Build user parameters from make variables
-USER_PARAMS := $(strip $(BASE_PARAMS) $(if $(format),format=$(format)) $(if $(tags),tags=$(tags)) $(if $(test),test=$(test)) $(if $(requireTags),requireTags=$(requireTags)))
+USER_PARAMS := $(strip $(BASE_PARAMS) $(if $(format),format=$(format)) $(if $(tags),tags=$(tags)) $(if $(test),test=$(test)) $(if $(requireTags),requireTags=$(requireTags)) $(if $(parallel),parallel=$(parallel)) $(if $(maxWorkers),maxWorkers=$(maxWorkers)))
 
 # Ensure tool4d is installed (currently implemented for Linux only)
 $(TOOL4D):
@@ -111,6 +111,22 @@ test-unit-junit:
 test-integration-junit:
 	$(TOOL4D) $(BASE_OPTS) --user-param "format=junit tags=integration"
 
+# Run tests in parallel mode
+test-parallel:
+	$(TOOL4D) $(BASE_OPTS) --user-param "parallel=true"
+
+# Run tests in parallel mode with JSON output
+test-parallel-json:
+	$(TOOL4D) $(BASE_OPTS) --user-param "parallel=true format=json"
+
+# Run unit tests in parallel mode
+test-parallel-unit:
+	$(TOOL4D) $(BASE_OPTS) --user-param "parallel=true tags=unit"
+
+# Run tests in parallel with custom worker count (usage: make test-parallel-workers WORKERS=4)
+test-parallel-workers:
+	$(TOOL4D) $(BASE_OPTS) --user-param "parallel=true maxWorkers=$(WORKERS)"
+
 # Show help
 help:
 	@echo "4D Unit Testing Framework Commands:"
@@ -128,6 +144,10 @@ help:
 	@echo "  test-unit-json      - Run unit tests with JSON output"
 	@echo "  test-unit-junit     - Run unit tests with JUnit XML output"
 	@echo "  test-integration-junit - Run integration tests with JUnit XML output"
+	@echo "  test-parallel       - Run tests in parallel mode"
+	@echo "  test-parallel-json  - Run tests in parallel with JSON output"
+	@echo "  test-parallel-unit  - Run unit tests in parallel"
+	@echo "  test-parallel-workers - Run tests in parallel with custom worker count"
 	@echo "  help                - Show this help message"
 	@echo ""
 	@echo "Examples:"
@@ -143,8 +163,12 @@ help:
 	@echo "  make test-exclude-tags TAGS=slow"
 	@echo "  make test-junit"
 	@echo "  make test-ci"
+	@echo "  make test-parallel"
+	@echo "  make test-parallel-json"
+	@echo "  make test-parallel-workers WORKERS=4"
+	@echo "  make test parallel=true maxWorkers=6"
 
 tool4d: $(TOOL4D)
 	@echo "tool4d ready at $(TOOL4D)"
 
-.PHONY: test test-json test-junit test-ci test-class test-tags test-exclude-tags test-require-tags test-unit test-integration test-unit-json test-unit-junit test-integration-junit help tool4d
+.PHONY: test test-json test-junit test-ci test-class test-tags test-exclude-tags test-require-tags test-unit test-integration test-unit-json test-unit-junit test-integration-junit test-parallel test-parallel-json test-parallel-unit test-parallel-workers help tool4d
