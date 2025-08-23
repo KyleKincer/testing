@@ -1,6 +1,8 @@
 // Comprehensive tests for Assert class edge cases and functionality
 Class constructor()
-
+        
+Function _noError()
+        // Helper method that completes without errors
 Function test_assert_initialization($t : cs:C1710.Testing)
 	$t.assert.isNotNull($t; $t.assert; "Assert should initialize successfully")
 
@@ -134,7 +136,37 @@ Function test_isNotNull_edge_cases($t : cs:C1710.Testing)
 	
 	$mockTest:=cs:C1710.Testing.new()  // Reset
 	$t.assert.isNotNull($mockTest; Null:C1517; "Null should fail")
-	$t.assert.isTrue($t; $mockTest.failed; "Null should fail isNotNull")
+        $t.assert.isTrue($t; $mockTest.failed; "Null should fail isNotNull")
+
+Function test_throwsError_passes_when_error_raised($t : cs:C1710.Testing)
+        var $mockTest : cs:C1710.Testing
+        $mockTest:=cs:C1710.Testing.new()
+
+        var $fn : 4D:C1709.Function
+        $fn:=ThrowRuntimeError
+
+        $t.assert.throwsError($mockTest; $fn; 0; "Should raise an error")
+        $t.assert.isFalse($t; $mockTest.failed; "throwsError should pass for expected error")
+
+Function test_throwsError_fails_for_wrong_code($t : cs:C1710.Testing)
+        var $mockTest : cs:C1710.Testing
+        $mockTest:=cs:C1710.Testing.new()
+
+        var $fn : 4D:C1709.Function
+        $fn:=ThrowRuntimeError
+
+        $t.assert.throwsError($mockTest; $fn; -9999; "Wrong error code")
+        $t.assert.isTrue($t; $mockTest.failed; "throwsError should fail when error code differs")
+
+Function test_throwsError_fails_when_no_error($t : cs:C1710.Testing)
+        var $mockTest : cs:C1710.Testing
+        $mockTest:=cs:C1710.Testing.new()
+
+        var $fn : 4D:C1709.Function
+        $fn:=This:C1470._noError
+
+        $t.assert.throwsError($mockTest; $fn; 0; "Expected error not thrown")
+        $t.assert.isTrue($t; $mockTest.failed; "throwsError should fail when no error occurs")
 
 Function test_fail_method($t : cs:C1710.Testing)
 	var $mockTest : cs:C1710.Testing
