@@ -116,12 +116,13 @@ Function _logHeader()
 	
 Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
 	var $suiteResult : Object
-	$suiteResult:=New object:C1471(\
-		"name"; $testSuite.class.name; \
-		"tests"; []; \
-		"passed"; 0; \
-		"failed"; 0\
-		)
+        $suiteResult:=New object:C1471(\
+                "name"; $testSuite.class.name; \
+                "tests"; []; \
+                "passed"; 0; \
+                "failed"; 0; \
+                "skipped"; 0\
+                )
 	
 	var $testFunction : cs:C1710._TestFunction
 	For each ($testFunction; $testSuite.testFunctions)
@@ -130,29 +131,37 @@ Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
 		
 		This:C1470.results.totalTests+=1
 		
-		If ($testResult.passed)
-			This:C1470.results.passed+=1
-			$suiteResult.passed+=1
-			If (This:C1470.outputFormat="human")
-				LOG EVENT:C667(Into system standard outputs:K38:9; "  ✓ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)\r\n"; Information message:K38:1)
-			End if 
-		Else 
-			This:C1470.results.failed+=1
-			$suiteResult.failed+=1
-			This:C1470.results.failedTests.push($testResult)
-			If (This:C1470.outputFormat="human")
-				var $errorDetails : Text
-				$errorDetails:=""
-				If ($testResult.runtimeErrors.length>0)
-					$errorDetails:=" [Runtime Error: "+$testResult.runtimeErrors[0].text+"]"
-				Else 
-					If ($testResult.logMessages.length>0)
-						$errorDetails:=" ["+$testResult.logMessages[0]+"]"
-					End if 
-				End if 
-				LOG EVENT:C667(Into system standard outputs:K38:9; "  ✗ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)"+$errorDetails+"\r\n"; Error message:K38:3)
-			End if 
-		End if 
+                If ($testResult.skipped)
+                        This:C1470.results.skipped+=1
+                        $suiteResult.skipped+=1
+                        If (This:C1470.outputFormat="human")
+                                LOG EVENT:C667(Into system standard outputs:K38:9; "  - "+$testResult.name+" (skipped)\r\n"; Information message:K38:1)
+                        End if
+                Else
+                        If ($testResult.passed)
+                                This:C1470.results.passed+=1
+                                $suiteResult.passed+=1
+                                If (This:C1470.outputFormat="human")
+                                        LOG EVENT:C667(Into system standard outputs:K38:9; "  ✓ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)\r\n"; Information message:K38:1)
+                                End if
+                        Else
+                                This:C1470.results.failed+=1
+                                $suiteResult.failed+=1
+                                This:C1470.results.failedTests.push($testResult)
+                                If (This:C1470.outputFormat="human")
+                                        var $errorDetails : Text
+                                        $errorDetails:=""
+                                        If ($testResult.runtimeErrors.length>0)
+                                                $errorDetails:=" [Runtime Error: "+$testResult.runtimeErrors[0].text+"]"
+                                        Else
+                                                If ($testResult.logMessages.length>0)
+                                                        $errorDetails:=" ["+$testResult.logMessages[0]+"]"
+                                                End if
+                                        End if
+                                        LOG EVENT:C667(Into system standard outputs:K38:9; "  ✗ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)"+$errorDetails+"\r\n"; Error message:K38:3)
+                                End if
+                        End if
+                End if
 		
 		$suiteResult.tests.push($testResult)
 	End for each 
@@ -168,18 +177,21 @@ Function _generateReport()
 	
 Function _generateHumanReport()
 	var $passRate : Real
-	If (This:C1470.results.totalTests>0)
-		$passRate:=(This:C1470.results.passed/This:C1470.results.totalTests)*100
-	Else 
-		$passRate:=0
-	End if 
+        var $effectiveTotal : Integer
+        $effectiveTotal:=This:C1470.results.totalTests-This:C1470.results.skipped
+        If ($effectiveTotal>0)
+                $passRate:=(This:C1470.results.passed/$effectiveTotal)*100
+        Else
+                $passRate:=0
+        End if
 	
 	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
 	LOG EVENT:C667(Into system standard outputs:K38:9; "=== Test Results Summary ===\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Total Tests: "+String:C10(This:C1470.results.totalTests)+"\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Passed: "+String:C10(This:C1470.results.passed)+"\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Failed: "+String:C10(This:C1470.results.failed)+"\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Pass Rate: "+String:C10($passRate; "##0.0")+"%\r\n"; Information message:K38:1)
+        LOG EVENT:C667(Into system standard outputs:K38:9; "Total Tests: "+String:C10(This:C1470.results.totalTests)+"\r\n"; Information message:K38:1)
+        LOG EVENT:C667(Into system standard outputs:K38:9; "Passed: "+String:C10(This:C1470.results.passed)+"\r\n"; Information message:K38:1)
+        LOG EVENT:C667(Into system standard outputs:K38:9; "Failed: "+String:C10(This:C1470.results.failed)+"\r\n"; Information message:K38:1)
+        LOG EVENT:C667(Into system standard outputs:K38:9; "Skipped: "+String:C10(This:C1470.results.skipped)+"\r\n"; Information message:K38:1)
+        LOG EVENT:C667(Into system standard outputs:K38:9; "Pass Rate: "+String:C10($passRate; "##0.0")+"%\r\n"; Information message:K38:1)
 	LOG EVENT:C667(Into system standard outputs:K38:9; "Duration: "+String:C10(This:C1470.results.duration)+"ms\r\n"; Information message:K38:1)
 	
 	If (This:C1470.results.failed>0)
@@ -206,12 +218,14 @@ Function _generateHumanReport()
 	This:C1470._logFooter()
 	
 Function _generateJSONReport()
-	var $passRate : Real
-	If (This:C1470.results.totalTests>0)
-		$passRate:=(This:C1470.results.passed/This:C1470.results.totalTests)*100
-	Else 
-		$passRate:=0
-	End if 
+        var $passRate : Real
+        var $effectiveTotal : Integer
+        $effectiveTotal:=This:C1470.results.totalTests-This:C1470.results.skipped
+        If ($effectiveTotal>0)
+                $passRate:=(This:C1470.results.passed/$effectiveTotal)*100
+        Else
+                $passRate:=0
+        End if
 	
 	var $jsonReport : Object
 	
@@ -222,14 +236,15 @@ Function _generateJSONReport()
 		$jsonReport.status:=(This:C1470.results.failed=0) ? "success" : "failure"
 	Else 
 		// Terse mode: minimal information
-		$jsonReport:=New object:C1471(\
-			"tests"; This:C1470.results.totalTests; \
-			"passed"; This:C1470.results.passed; \
-			"failed"; This:C1470.results.failed; \
-			"rate"; Round:C94($passRate; 1); \
-			"duration"; This:C1470.results.duration; \
-			"status"; (This:C1470.results.failed=0) ? "ok" : "fail"\
-		)
+                $jsonReport:=New object:C1471(\
+                        "tests"; This:C1470.results.totalTests; \
+                        "passed"; This:C1470.results.passed; \
+                        "failed"; This:C1470.results.failed; \
+                        "skipped"; This:C1470.results.skipped; \
+                        "rate"; Round:C94($passRate; 1); \
+                        "duration"; This:C1470.results.duration; \
+                        "status"; (This:C1470.results.failed=0) ? "ok" : "fail"\
+                )
 		
 		// Only include failed tests if there are any
 		If (This:C1470.results.failed>0)
@@ -258,11 +273,12 @@ Function _generateJSONReport()
 			$suiteSummary:=[]
 			var $suite : Object
 			For each ($suite; This:C1470.results.suites)
-				$suiteSummary.push(New object:C1471(\
-					"name"; $suite.name; \
-					"passed"; $suite.passed; \
-					"failed"; $suite.failed\
-				))
+                                $suiteSummary.push(New object:C1471(\
+                                        "name"; $suite.name; \
+                                        "passed"; $suite.passed; \
+                                        "failed"; $suite.failed; \
+                                        "skipped"; $suite.skipped\
+                                ))
 			End for each 
 			$jsonReport.suites:=$suiteSummary
 		End if 
