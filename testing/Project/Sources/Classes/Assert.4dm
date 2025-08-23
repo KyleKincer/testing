@@ -45,12 +45,40 @@ Function isNull($t : Object; $value : Variant; $message : Text)
 	End if 
 
 Function isNotNull($t : Object; $value : Variant; $message : Text)
-	If ($value=Null)
-		If (Count parameters>=3)
-			This.fail($t; $message)
-		Else 
-			This.fail($t; "Assertion failed: value is Null")
-		End if 
-	End if 
+        If ($value=Null)
+                If (Count parameters>=3)
+                        This.fail($t; $message)
+                Else
+                        This.fail($t; "Assertion failed: value is Null")
+                End if
+        End if
+
+Function contains($t : Object; $container : Variant; $value : Variant; $message : Text)
+        var $found : Boolean
+        var $type : Integer
+        $found:=False
+        $type:=Value type:C1509($container)
+
+        Case of
+                : ($type=Is text:K8:3)
+                        $found:=(Position:C15(String:C10($value); $container)>0)
+                : ($type=Is collection:K8:32)
+                        $found:=($container.indexOf($value)#-1)
+                Else
+                        If (Count parameters>=4)
+                                This.fail($t; $message)
+                        Else
+                                This.fail($t; "Assertion failed: unsupported type for contains")
+                        End if
+                        return
+        End case
+
+        If (Not:C34($found))
+                If (Count parameters>=4)
+                        This.fail($t; $message)
+                Else
+                        This.fail($t; "Assertion failed: container does not contain value")
+                End if
+        End if
 
 

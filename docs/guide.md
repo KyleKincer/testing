@@ -135,6 +135,7 @@ The framework includes built-in assertion methods accessible through `$t.assert`
 - `$t.assert.isNull($t; $value; $message)` - Value must be null
 - `$t.assert.isNotNull($t; $value; $message)` - Value must not be null
 - `$t.assert.fail($t; $message)` - Force test failure
+- `$t.assert.contains($t; $container; $value; $message)` - Text or collection must contain value
 
 ### Usage Example
 ```4d
