@@ -157,14 +157,43 @@ Function test_message_logging($t : cs:C1710.Testing)
 	$t.assert.areEqual($t; "Custom failure message"; $mockTest.logMessages[0]; "Should log the provided message")
 
 Function test_multiple_assertions($t : cs:C1710.Testing)
-	var $mockTest : cs:C1710.Testing
-	$mockTest:=cs:C1710.Testing.new()
+        var $mockTest : cs:C1710.Testing
+        $mockTest:=cs:C1710.Testing.new()
 	
 	// Test multiple assertions accumulating messages
 	$t.assert.areEqual($mockTest; 1; 2; "First failure")
 	$t.assert.areEqual($mockTest; "a"; "b"; "Second failure")
 	
-	$t.assert.isTrue($t; $mockTest.failed; "Multiple failed assertions should mark test as failed")
-	$t.assert.areEqual($t; 2; $mockTest.logMessages.length; "Should accumulate multiple failure messages")
-	$t.assert.areEqual($t; "First failure"; $mockTest.logMessages[0]; "Should store first message")
-	$t.assert.areEqual($t; "Second failure"; $mockTest.logMessages[1]; "Should store second message")
+        $t.assert.isTrue($t; $mockTest.failed; "Multiple failed assertions should mark test as failed")
+        $t.assert.areEqual($t; 2; $mockTest.logMessages.length; "Should accumulate multiple failure messages")
+        $t.assert.areEqual($t; "First failure"; $mockTest.logMessages[0]; "Should store first message")
+        $t.assert.areEqual($t; "Second failure"; $mockTest.logMessages[1]; "Should store second message")
+
+Function test_contains_with_text($t : cs:C1710.Testing)
+        var $mockTest : cs:C1710.Testing
+        $mockTest:=cs:C1710.Testing.new()
+
+        // Successful text containment
+        $t.assert.contains($mockTest; "hello world"; "world"; "Should find substring")
+        $t.assert.isFalse($t; $mockTest.failed; "Valid substring should pass")
+
+        // Failing text containment
+        $mockTest:=cs:C1710.Testing.new()
+        $t.assert.contains($mockTest; "hello"; "world"; "Missing substring should fail")
+        $t.assert.isTrue($t; $mockTest.failed; "Missing substring should fail")
+
+Function test_contains_with_collection($t : cs:C1710.Testing)
+        var $mockTest : cs:C1710.Testing
+        $mockTest:=cs:C1710.Testing.new()
+
+        var $col : Collection
+        $col:=["a"; "b"; "c"]
+
+        // Successful collection containment
+        $t.assert.contains($mockTest; $col; "b"; "Should find element in collection")
+        $t.assert.isFalse($t; $mockTest.failed; "Existing element should pass")
+
+        // Failing collection containment
+        $mockTest:=cs:C1710.Testing.new()
+        $t.assert.contains($mockTest; $col; "d"; "Missing element should fail")
+        $t.assert.isTrue($t; $mockTest.failed; "Missing element should fail")
