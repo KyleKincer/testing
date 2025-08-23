@@ -53,11 +53,12 @@ Function test_shared_storage_initialization($t : cs:C1710.Testing)
 	$runner:=cs:C1710.ParallelTestRunner.new()
 	$runner.testSuites:=[cs:C1710._TestSuite.new(cs:C1710._ExampleTest; "human"; []; $runner)]
 	
-	// Test the runner initialization - this should complete without errors
-	var $success : Boolean
-	$success:=True:C214
-	$t.assert.isTrue($t; $success; "ParallelTestRunner should initialize successfully")
-
+	// Initialize and verify shared storage
+	$runner._initializeSharedStorage()
+	Use (Storage:C1525)
+		$t.assert.isTrue($t; Storage:C1525.parallelTestResults#Null:C1517; "parallelTestResults should be initialized")
+		$t.assert.areEqual($t; $runner.testSuites.length; Storage:C1525.parallelTestResults.totalSuites; "totalSuites should match")
+	End use
 Function test_sequential_fallback($t : cs:C1710.Testing)
 	// #tags: integration, parallel
 	
