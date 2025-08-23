@@ -321,8 +321,24 @@ Function test_error_handling_in_extracted_methods($t : cs:C1710.Testing)
 		"InvalidTest"; New object:C1471("name"; "InvalidTest"); \
 		"ValidTest"; New object:C1471("name"; "ValidTest"; "superclass"; New object:C1471("name"; "Object"))\
 		)
-	var $filteredClasses : Collection
-	$filteredClasses:=$runner._filterTestClasses($malformedStore)
-	// Should find ValidTest but skip InvalidTest (missing superclass)
-	$t.assert.areEqual($t; 1; $filteredClasses.length; "Should handle classes without superclass gracefully")
-	$t.assert.areEqual($t; "ValidTest"; $filteredClasses[0].name; "Should include ValidTest")
+        var $filteredClasses : Collection
+        $filteredClasses:=$runner._filterTestClasses($malformedStore)
+        // Should find ValidTest but skip InvalidTest (missing superclass)
+        $t.assert.areEqual($t; 1; $filteredClasses.length; "Should handle classes without superclass gracefully")
+        $t.assert.areEqual($t; "ValidTest"; $filteredClasses[0].name; "Should include ValidTest")
+
+Function test_skip_tag_counts_as_skipped($t : cs:C1710.Testing)
+
+        // Run TestRunner on a class that should be skipped
+        var $runner : cs:C1710.TestRunner
+        $runner:=cs:C1710.TestRunner.new()
+        $runner.testPatterns:=["_SkipTaggedTest*"]
+        $runner.run()
+
+        var $results : Object
+        $results:=$runner.getResults()
+
+        $t.assert.areEqual($t; 1; $results.totalTests; "Total should count skipped test")
+        $t.assert.areEqual($t; 1; $results.skipped; "Skipped test should be counted")
+        $t.assert.areEqual($t; 0; $results.failed; "Skipped test should not fail")
+        $t.assert.areEqual($t; 0; $results.passed; "Skipped test should not pass")

@@ -16,16 +16,20 @@ Class constructor($class : 4D:C1709.Class; $outputFormat : Text; $testPatterns :
 	This:C1470.discoverTests()
 	
 Function run()
-	This:C1470._callSetup()
-	
-	var $testFunction : cs:C1710._TestFunction
-	For each ($testFunction; This:C1470.testFunctions)
-		This:C1470._callBeforeEach()
-		$testFunction.run()
-		This:C1470._callAfterEach()
-	End for each 
-	
-	This:C1470._callTeardown() 
+        This:C1470._callSetup()
+
+        var $testFunction : cs:C1710._TestFunction
+        For each ($testFunction; This:C1470.testFunctions)
+                If ($testFunction.shouldSkip())
+                        $testFunction.run()
+                Else
+                        This:C1470._callBeforeEach()
+                        $testFunction.run()
+                        This:C1470._callAfterEach()
+                End if
+        End for each
+
+        This:C1470._callTeardown()
 	
 Function discoverTests()
 	var $testFunctions : Collection
