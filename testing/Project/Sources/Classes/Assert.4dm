@@ -45,12 +45,47 @@ Function isNull($t : Object; $value : Variant; $message : Text)
 	End if 
 
 Function isNotNull($t : Object; $value : Variant; $message : Text)
-	If ($value=Null)
-		If (Count parameters>=3)
-			This.fail($t; $message)
-		Else 
-			This.fail($t; "Assertion failed: value is Null")
-		End if 
-	End if 
+        If ($value=Null)
+                If (Count parameters>=3)
+                        This.fail($t; $message)
+                Else
+                        This.fail($t; "Assertion failed: value is Null")
+                End if
+        End if
 
+Function throws($t : Object; $operation : 4D:C1709.Function; $message : Text)
+        // Assert that executing the operation results in a runtime error
+        var $initialCount : Integer
+        var $finalCount : Integer
+        Use (Storage:C1525)
+                If (Storage:C1525.testErrors=Null:C1517)
+                        Storage:C1525.testErrors:=New shared collection:C1527
+                End if
+                $initialCount:=Storage:C1525.testErrors.length
+        End use
+
+        var $previousHandler : Text
+        $previousHandler:=Method called on error:C704
+        ON ERR CALL:C155("TestErrorHandler")
+        $operation.apply()
+        If ($previousHandler#"")
+                ON ERR CALL:C155($previousHandler)
+        Else
+                ON ERR CALL:C155("")
+        End if
+
+        Use (Storage:C1525)
+                $finalCount:=Storage:C1525.testErrors.length
+                If ($finalCount>$initialCount)
+                        Storage:C1525.testErrors.pop()
+                End if
+        End use
+
+        If ($finalCount<=$initialCount)
+                If (Count parameters>=3)
+                        This.fail($t; $message)
+                Else
+                        This.fail($t; "Assertion failed: operation did not throw an error")
+                End if
+        End if
 
