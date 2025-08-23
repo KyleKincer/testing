@@ -39,14 +39,21 @@ Function _runParallel()
 	// Set up global error handler for the test run
 	var $previousErrorHandler : Text
 	$previousErrorHandler:=Method called on error:C704
-	ON ERR CALL:C155("TestErrorHandler")
 	
 	// Tests already discovered in run() method
 	If (This:C1470.testSuites.length=0)
 		This:C1470._generateReport()
+		// Restore previous error handler
+		If ($previousErrorHandler#"")
+			ON ERR CALL:C155($previousErrorHandler)
+		Else
+			ON ERR CALL:C155("")
+		End if
 		return
 	End if
-	
+
+	// Install handler only when we have work to do
+	ON ERR CALL:C155("TestErrorHandler")
 	This:C1470.results.startTime:=Milliseconds:C459
 	
 	If (This:C1470.outputFormat="human")
