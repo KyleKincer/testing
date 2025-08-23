@@ -35,10 +35,10 @@ Function test_parameter_validation($t : cs:C1710.Testing)
 	$result:=(Null:C1517=Null:C1517)
 	$t.assert.isTrue($t; $result; "Null comparison should work")
 
-// #tags: integration, external
+// #tags: integration, external, no-linux
 Function test_file_system_access($t : cs:C1710.Testing)
 	// Test file system access
 	var $folder : 4D:C1709.Folder
 	$folder:=Folder:C1567(fk desktop folder:K87:19)
 	$t.assert.isNotNull($t; $folder; "Should be able to access desktop folder")
-	$t.assert.isTrue($t; $folder.exists; "Desktop folder should exist")
+        $t.assert.isTrue($t; $folder.exists; "Desktop folder should exist")
