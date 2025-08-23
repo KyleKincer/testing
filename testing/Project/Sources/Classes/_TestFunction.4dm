@@ -27,12 +27,27 @@ Function run()
         // Reset the testing context for this test
         This:C1470.t.resetForNewTest()
 
-        // Clear any existing test errors
-        If (Storage:C1525.testErrors#Null:C1517)
-                Use (Storage:C1525)
-                        Storage:C1525.testErrors.clear()
-                End use
-        End if
+        // Clear any existing test errors for this process
+        var $processId : Text
+        $processId:=String:C10(Current process:C322)
+
+        Use (Storage:C1525)
+                If (Storage:C1525.testErrorsByProcess=Null:C1517)
+                        Storage:C1525.testErrorsByProcess:=New shared object:C1526
+                End if
+        End use
+
+        var $errorCollection : Collection
+        Use (Storage:C1525.testErrorsByProcess)
+                If (Storage:C1525.testErrorsByProcess[$processId]=Null:C1517)
+                        Storage:C1525.testErrorsByProcess[$processId]:=New shared collection:C1527
+                End if
+                $errorCollection:=Storage:C1525.testErrorsByProcess[$processId]
+        End use
+
+        Use ($errorCollection)
+                $errorCollection.clear()
+        End use
 
         // Skip test early if tagged to skip
         If (This:C1470.shouldSkip())
@@ -63,16 +78,24 @@ Function run()
 		ON ERR CALL:C155("")
 	End if 
 	
-	// Capture any runtime errors that occurred
-	If (Storage:C1525.testErrors#Null:C1517) && (Storage:C1525.testErrors.length>0)
-		var $error : Object
-		For each ($error; Storage:C1525.testErrors)
-			This:C1470.runtimeErrors.push(OB Copy:C1225($error))
-		End for each 
-		
-		// Mark test as failed if runtime errors occurred
-		This:C1470.t.fail()
-	End if 
+        // Capture any runtime errors that occurred
+        Use (Storage:C1525.testErrorsByProcess)
+                $errorCollection:=Storage:C1525.testErrorsByProcess[$processId]
+        End use
+
+        Use ($errorCollection)
+                If ($errorCollection.length>0)
+                        var $error : Object
+                        For each ($error; $errorCollection)
+                                This:C1470.runtimeErrors.push(OB Copy:C1225($error))
+                        End for each
+
+                        // Mark test as failed if runtime errors occurred
+                        This:C1470.t.fail()
+
+                        $errorCollection.clear()
+                End if
+        End use
 	
 	// Handle transaction cleanup
 	If ($transactionStarted)

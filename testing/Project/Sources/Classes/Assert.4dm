@@ -57,11 +57,21 @@ Function throws($t : Object; $operation : 4D:C1709.Function; $message : Text)
         // Assert that executing the operation results in a runtime error
         var $initialCount : Integer
         var $finalCount : Integer
+        var $processId : Text
+        var $errorCollection : Collection
+        $processId:=String:C10(Current process:C322)
         Use (Storage:C1525)
-                If (Storage:C1525.testErrors=Null:C1517)
-                        Storage:C1525.testErrors:=New shared collection:C1527
+                If (Storage:C1525.testErrorsByProcess=Null:C1517)
+                        Storage:C1525.testErrorsByProcess:=New shared object:C1526
                 End if
-                $initialCount:=Storage:C1525.testErrors.length
+        End use
+
+        Use (Storage:C1525.testErrorsByProcess)
+                If (Storage:C1525.testErrorsByProcess[$processId]=Null:C1517)
+                        Storage:C1525.testErrorsByProcess[$processId]:=New shared collection:C1527
+                End if
+                $errorCollection:=Storage:C1525.testErrorsByProcess[$processId]
+                $initialCount:=$errorCollection.length
         End use
 
         var $previousHandler : Text
@@ -74,10 +84,14 @@ Function throws($t : Object; $operation : 4D:C1709.Function; $message : Text)
                 ON ERR CALL:C155("")
         End if
 
-        Use (Storage:C1525)
-                $finalCount:=Storage:C1525.testErrors.length
+        Use (Storage:C1525.testErrorsByProcess)
+                $errorCollection:=Storage:C1525.testErrorsByProcess[$processId]
+        End use
+
+        Use ($errorCollection)
+                $finalCount:=$errorCollection.length
                 If ($finalCount>$initialCount)
-                        Storage:C1525.testErrors.pop()
+                        $errorCollection.pop()
                 End if
         End use
 

@@ -13,12 +13,22 @@ $errorText:=Error method
 $errorMethod:=Error formula
 $errorLine:=Error line
 
-// Store error information in Storage for later retrieval
-If (Storage:C1525.testErrors=Null:C1517)
-	Use (Storage:C1525)
-		Storage:C1525.testErrors:=New shared collection:C1527
-	End use 
-End if 
+// Determine current process for thread-safe storage
+var $processId : Text
+$processId:=String:C10(Current process:C322)
+
+// Ensure per-process error collection exists
+Use (Storage:C1525)
+        If (Storage:C1525.testErrorsByProcess=Null:C1517)
+                Storage:C1525.testErrorsByProcess:=New shared object:C1526
+        End if
+End use
+
+Use (Storage:C1525.testErrorsByProcess)
+        If (Storage:C1525.testErrorsByProcess[$processId]=Null:C1517)
+                Storage:C1525.testErrorsByProcess[$processId]:=New shared collection:C1527
+        End if
+End use
 
 var $errorInfo : Object
 $errorInfo:=New object:C1471(\
@@ -29,8 +39,13 @@ $errorInfo:=New object:C1471(\
 "timestamp"; Milliseconds:C459\
 )
 
-Use (Storage:C1525.testErrors)
-	Storage:C1525.testErrors.push(OB Copy($errorInfo; ck shared))
-End use 
+var $errorCollection : Collection
+Use (Storage:C1525.testErrorsByProcess)
+        $errorCollection:=Storage:C1525.testErrorsByProcess[$processId]
+End use
+
+Use ($errorCollection)
+        $errorCollection.push(OB Copy($errorInfo; ck shared))
+End use
 
 // Continue execution - don't interrupt the test

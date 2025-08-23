@@ -135,7 +135,7 @@ The framework includes built-in assertion methods accessible through `$t.assert`
 - `$t.assert.isNull($t; $value; $message)` - Value must be null
 - `$t.assert.isNotNull($t; $value; $message)` - Value must not be null
 - `$t.assert.fail($t; $message)` - Force test failure
-- `$t.assert.throws($t; $operation; $message)` - Operation must produce a runtime error
+- `$t.assert.throws($t; $operation; $message)` - Operation must produce a runtime error (thread-safe in parallel tests)
 
 ### Usage Example
 ```4d

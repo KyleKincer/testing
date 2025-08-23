@@ -3,15 +3,21 @@ Class constructor()
 
 Function test_error_handler_initialization($t : cs:C1710.Testing)
 	
-	// Verify that Storage.testErrors exists and can be initialized
-	If (Storage:C1525.testErrors=Null:C1517)
-		Use (Storage:C1525)
-			Storage:C1525.testErrors:=New shared collection:C1527
-		End use 
-	End if 
-	
-	$t.assert.isNotNull($t; Storage:C1525.testErrors; "Error storage should be initialized")
-	$t.assert.areEqual($t; Is collection:K8:32; Value type:C1509(Storage:C1525.testErrors); "Error storage should be a collection")
+        // Verify that per-process error storage exists and can be initialized
+        var $processId : Text
+        $processId:=String:C10(Current process:C322)
+
+        Use (Storage:C1525)
+                If (Storage:C1525.testErrorsByProcess=Null:C1517)
+                        Storage:C1525.testErrorsByProcess:=New shared object:C1526
+                End if
+                If (Storage:C1525.testErrorsByProcess[$processId]=Null:C1517)
+                        Storage:C1525.testErrorsByProcess[$processId]:=New shared collection:C1527
+                End if
+        End use
+
+        $t.assert.isNotNull($t; Storage:C1525.testErrorsByProcess[$processId]; "Error storage should be initialized")
+        $t.assert.areEqual($t; Is collection:K8:32; Value type:C1509(Storage:C1525.testErrorsByProcess[$processId]); "Error storage should be a collection")
 
 Function test_error_information_structure($t : cs:C1710.Testing)
 	

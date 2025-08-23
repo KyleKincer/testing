@@ -99,5 +99,22 @@ Function test_parallel_opt_out_parsing($t : cs:C1710.Testing)
 	var $classCode : Text
 	$classCode:="// Test class with parallel opt-out\r// #parallel: false\rClass constructor()\r\rFunction test_something($t : cs.Testing)\r  // Test code here\r"
 	
-	// Test parsing logic by creating a mock test suite
-	// Note: This would require more complex mocking in a real scenario
+        // Test parsing logic by creating a mock test suite
+        // Note: This would require more complex mocking in a real scenario
+
+Function test_parallel_throws_thread_safety($t : cs:C1710.Testing)
+        // #tags: integration, parallel
+
+        // Verify that throws assertion works correctly when suites run in parallel
+        var $runner : cs:C1710.ParallelTestRunner
+        $runner:=cs:C1710.ParallelTestRunner.new()
+        $runner.parallelMode:=True:C214
+        $runner._initializeResults()
+        $runner.testSuites:=[\
+                cs:C1710._TestSuite.new(cs:C1710._ParallelThrowsTest1; "human"; []; $runner);\
+                cs:C1710._TestSuite.new(cs:C1710._ParallelThrowsTest2; "human"; []; $runner)\
+        ]
+
+        $runner._runParallel()
+
+        $t.assert.areEqual($t; 2; $runner.results.passed; "Both parallel throws tests should pass")
