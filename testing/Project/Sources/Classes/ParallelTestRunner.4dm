@@ -4,6 +4,7 @@ Class extends TestRunner
 property parallelMode : Boolean
 property maxWorkers : Integer
 property workerProcesses : Collection  // Collection of worker process names
+property workerSignals : Collection    // Signals for worker completion
 property sharedResults : Object        // Shared storage for collecting results
 property completedSuites : Integer     // Counter for completed suites
 property sequentialSuites : Collection // Suites that opted out of parallel execution
@@ -11,11 +12,12 @@ property sequentialSuites : Collection // Suites that opted out of parallel exec
 Class constructor($cs : 4D:C1709.Object)
 	Super:C1705($cs)
 	This:C1470.parallelMode:=False:C215
-	This:C1470.maxWorkers:=This:C1470._getDefaultWorkerCount()
-	This:C1470.workerProcesses:=[]
-	This:C1470.completedSuites:=0
-	This:C1470.sequentialSuites:=[]
-	This:C1470._parseParallelOptions()
+        This:C1470.maxWorkers:=This:C1470._getDefaultWorkerCount()
+        This:C1470.workerProcesses:=[]
+        This:C1470.workerSignals:=[]
+        This:C1470.completedSuites:=0
+        This:C1470.sequentialSuites:=[]
+        This:C1470._parseParallelOptions()
 	
 Function run()
 	If (This:C1470.parallelMode)
@@ -148,63 +150,39 @@ Function _executeTestSuitesInParallel()
 		End if
 	End for each
 	
-	// Run parallel suites in workers with signals
-	var $workerSignals : Collection
-	$workerSignals:=[]
-	var $parallelSuiteIndex : Integer
-	$parallelSuiteIndex:=0
-	
-	For each ($testSuite; $parallelSuites)
-		$workerName:=This:C1470.workerProcesses[$parallelSuiteIndex % $workerCount]
-		
-		// Create a signal for this worker task
-		var $signal : 4D:C1709.Signal
-		$signal:=New signal:C1641
-		$workerSignals.push($signal)
-		
-		// Send test suite to worker via CALL WORKER with signal
-		var $suiteData : Object
-		$suiteData:=New object:C1471(\
-			"class"; $testSuite.class; \
-			"outputFormat"; $testSuite.outputFormat; \
-			"testPatterns"; $testSuite.testPatterns; \
-			"testRunner"; This:C1470; \
-			"suiteIndex"; $parallelSuiteIndex; \
-			"signal"; $signal\
-		)
-		
-		CALL WORKER:C1389($workerName; "ParallelTestWorker"; "ExecuteTestSuite"; $suiteData)
-		$parallelSuiteIndex:=$parallelSuiteIndex+1
-	End for each
-	
-	// Wait for all workers to complete and collect results
-	var $workerSignal : 4D:C1709.Signal
-	For each ($workerSignal; $workerSignals)
-		// Wait with timeout to avoid hanging
-		var $signaled : Boolean
-		$signaled:=$workerSignal.wait(5)  // 5 second timeout
-		
-		If ($signaled)
-			// Collect detailed results from the signal and display them
-			If ($workerSignal.suiteResults#Null:C1517)
-				This:C1470._processWorkerResults($workerSignal.suiteResults)
-			Else
-				If (This:C1470.outputFormat="human")
-					LOG EVENT:C667(Into system standard outputs:K38:9; "Warning: Worker completed but no results received\r\n"; Information message:K38:1)
-				End if
-			End if
-		Else
-			If (This:C1470.outputFormat="human")
-				LOG EVENT:C667(Into system standard outputs:K38:9; "Warning: Worker timeout after 5 seconds\r\n"; Error message:K38:3)
-			End if
-		End if
-	End for each
-	
-	// Run sequential suites in main process after parallel ones complete
-	If ($sequentialSuites.length>0)
-		// These will be run after parallel completion in _waitForCompletionAndCollectResults
-		This:C1470.sequentialSuites:=$sequentialSuites
-	End if
+        // Run parallel suites in workers and store signals
+        This:C1470.workerSignals:=New collection:C1472
+        var $parallelSuiteIndex : Integer
+        $parallelSuiteIndex:=0
+
+        For each ($testSuite; $parallelSuites)
+                $workerName:=This:C1470.workerProcesses[$parallelSuiteIndex % $workerCount]
+
+                // Create a signal for this worker task
+                var $signal : 4D:C1709.Signal
+                $signal:=New signal:C1641
+                This:C1470.workerSignals.push($signal)
+
+                // Send test suite to worker via CALL WORKER with signal
+                var $suiteData : Object
+                $suiteData:=New object:C1471(\
+                        "class"; $testSuite.class; \
+                        "outputFormat"; $testSuite.outputFormat; \
+                        "testPatterns"; $testSuite.testPatterns; \
+                        "testRunner"; This:C1470; \
+                        "suiteIndex"; $parallelSuiteIndex; \
+                        "signal"; $signal\
+                )
+
+                CALL WORKER:C1389($workerName; "ParallelTestWorker"; "ExecuteTestSuite"; $suiteData)
+                $parallelSuiteIndex:=$parallelSuiteIndex+1
+        End for each
+
+        // Run sequential suites in main process after parallel ones complete
+        If ($sequentialSuites.length>0)
+                // These will be run after parallel completion in _waitForCompletionAndCollectResults
+                This:C1470.sequentialSuites:=$sequentialSuites
+        End if
 
 Function _waitForCompletionAndCollectResults()
 	// Wait for parallel test suites to complete
@@ -217,11 +195,11 @@ Function _waitForCompletionAndCollectResults()
 	
 	$parallelSuiteCount:=$totalSuites-This:C1470.sequentialSuites.length
 	
-	If ($parallelSuiteCount>0)
-		var $startWait : Integer
-		$startWait:=Milliseconds:C459
-		var $timeout : Integer
-		$timeout:=300000  // 5 minute timeout
+        If ($parallelSuiteCount>0)
+                var $startWait : Integer
+                $startWait:=Milliseconds:C459
+                var $timeout : Integer
+                $timeout:=300000  // 5 minute timeout
 		
 		var $completedCount : Integer
 		$completedCount:=0
@@ -238,14 +216,17 @@ Function _waitForCompletionAndCollectResults()
 			End if
 			
 			DELAY PROCESS:C323(Current process:C322; 10)  // Wait 10 ticks
-		End while
-		
-	End if
-	
-	// Run sequential suites in main process
-	If (This:C1470.sequentialSuites.length>0)
-		If (This:C1470.outputFormat="human")
-			LOG EVENT:C667(Into system standard outputs:K38:9; "Running "+String:C10(This:C1470.sequentialSuites.length)+" sequential test suite(s)\r\n"; Information message:K38:1)
+                End while
+
+        End if
+
+        // Collect results from worker signals
+        This:C1470._aggregateParallelResults()
+
+        // Run sequential suites in main process
+        If (This:C1470.sequentialSuites.length>0)
+                If (This:C1470.outputFormat="human")
+                        LOG EVENT:C667(Into system standard outputs:K38:9; "Running "+String:C10(This:C1470.sequentialSuites.length)+" sequential test suite(s)\r\n"; Information message:K38:1)
 		End if
 		
 		var $testSuite : cs:C1710._TestSuite
@@ -310,8 +291,19 @@ Function _processWorkerResults($suiteResults : Object)
 	End if
 
 Function _aggregateParallelResults()
-	// Results are already processed by _processWorkerResults, this method is now just a placeholder
-	// The individual test processing happens in _processWorkerResults for consistent output
+        // Process results from all worker signals after completion
+        If (This:C1470.workerSignals#Null:C1517)
+                var $workerSignal : 4D:C1709.Signal
+                For each ($workerSignal; This:C1470.workerSignals)
+                        If ($workerSignal.suiteResults#Null:C1517)
+                                This:C1470._processWorkerResults($workerSignal.suiteResults)
+                        Else
+                                If (This:C1470.outputFormat="human")
+                                        LOG EVENT:C667(Into system standard outputs:K38:9; "Warning: Worker completed but no results received\r\n"; Information message:K38:1)
+                                End if
+                        End if
+                End for each
+        End if
 
 Function _cleanupSharedStorage()
 	// Clean up shared storage
