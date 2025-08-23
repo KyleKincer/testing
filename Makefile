@@ -95,12 +95,30 @@ test-integration:
 test-unit-json:
 	$(MAKE) test format=json tags=unit
 
+# Run all tests with JUnit XML output
+test-junit:
+	$(TOOL4D) $(BASE_OPTS) --user-param "format=junit"
+
+# Run tests for CI/CD with custom output path
+test-ci:
+	$(TOOL4D) $(BASE_OPTS) --user-param "format=junit outputPath=test-results/junit.xml"
+
+# Run unit tests with JUnit XML output
+test-unit-junit:
+	$(TOOL4D) $(BASE_OPTS) --user-param "format=junit tags=unit"
+
+# Run integration tests with JUnit XML output
+test-integration-junit:
+	$(TOOL4D) $(BASE_OPTS) --user-param "format=junit tags=integration"
+
 # Show help
 help:
 	@echo "4D Unit Testing Framework Commands:"
 	@echo ""
 	@echo "  test [params]       - Run tests with optional parameters"
 	@echo "  test-json           - Run all tests with JSON output"
+	@echo "  test-junit          - Run all tests with JUnit XML output"
+	@echo "  test-ci             - Run tests for CI/CD (JUnit XML to test-results/)"
 	@echo "  test-class          - Run specific test class (CLASS=ExampleTest)"
 	@echo "  test-tags           - Run tests by tags (TAGS=unit)"
 	@echo "  test-exclude-tags   - Run tests excluding tags (TAGS=slow)"
@@ -108,18 +126,25 @@ help:
 	@echo "  test-unit           - Run unit tests only"
 	@echo "  test-integration    - Run integration tests only"
 	@echo "  test-unit-json      - Run unit tests with JSON output"
+	@echo "  test-unit-junit     - Run unit tests with JUnit XML output"
+	@echo "  test-integration-junit - Run integration tests with JUnit XML output"
 	@echo "  help                - Show this help message"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make test"
 	@echo "  make test format=json"
+	@echo "  make test format=junit"
 	@echo "  make test tags=unit"
 	@echo "  make test format=json tags=unit excludeTags=slow"
+	@echo "  make test format=junit outputPath=results/junit.xml"
 	@echo "  make test test=ExampleTest"
 	@echo "  make test-class CLASS=TaggingSystemTest"
 	@echo "  make test-tags TAGS=unit,fast"
 	@echo "  make test-exclude-tags TAGS=slow"
+	@echo "  make test-junit"
+	@echo "  make test-ci"
+
 tool4d: $(TOOL4D)
 	@echo "tool4d ready at $(TOOL4D)"
 
-.PHONY: test test-json test-class test-tags test-exclude-tags test-require-tags test-unit test-integration test-unit-json help tool4d
+.PHONY: test test-json test-junit test-ci test-class test-tags test-exclude-tags test-require-tags test-unit test-integration test-unit-json test-unit-junit test-integration-junit help tool4d

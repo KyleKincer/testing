@@ -1,7 +1,7 @@
 property class : 4D:C1709.Class
 property classInstance : 4D:C1709.Object
 property testFunctions : Collection  // Collection of cs._TestFunction
-property outputFormat : Text  // "human" or "json"
+property outputFormat : Text  // "human", "json", "junit"
 property testPatterns : Collection  // Collection of test patterns for filtering
 property testRunner : cs:C1710.TestRunner  // Reference to test runner for tag filtering
 
