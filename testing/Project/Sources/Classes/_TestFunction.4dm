@@ -6,6 +6,7 @@ property t : cs:C1710.Testing
 property startTime : Integer
 property endTime : Integer
 property runtimeErrors : Collection
+property skipped : Boolean
 property tags : Collection  // Collection of tag strings
 property useTransactions : Boolean  // Whether to auto-manage transactions for this test
 
@@ -13,24 +14,32 @@ Class constructor($class : 4D:C1709.Class; $classInstance : 4D:C1709.Object; $fu
 	This:C1470.class:=$class
 	This:C1470.classInstance:=$classInstance
 	This:C1470.function:=$function
-	This:C1470.functionName:=$name
-	This:C1470.t:=cs:C1710.Testing.new()
-	This:C1470.runtimeErrors:=[]
-	This:C1470.tags:=This:C1470._parseTags($classCode || "")
-	This:C1470.useTransactions:=This:C1470._shouldUseTransactions($classCode || "")
+        This:C1470.functionName:=$name
+        This:C1470.t:=cs:C1710.Testing.new()
+        This:C1470.runtimeErrors:=[]
+        This:C1470.skipped:=False:C215
+        This:C1470.tags:=This:C1470._parseTags($classCode || "")
+        This:C1470.useTransactions:=This:C1470._shouldUseTransactions($classCode || "")
 	
 Function run()
-	This:C1470.startTime:=Milliseconds:C459
-	
-	// Reset the testing context for this test
-	This:C1470.t.resetForNewTest()
-	
-	// Clear any existing test errors
-	If (Storage:C1525.testErrors#Null:C1517)
-		Use (Storage:C1525)
-			Storage:C1525.testErrors.clear()
-		End use 
-	End if 
+        This:C1470.startTime:=Milliseconds:C459
+
+        // Reset the testing context for this test
+        This:C1470.t.resetForNewTest()
+
+        // Clear any existing test errors
+        If (Storage:C1525.testErrors#Null:C1517)
+                Use (Storage:C1525)
+                        Storage:C1525.testErrors.clear()
+                End use
+        End if
+
+        // Skip test early if tagged to skip
+        If (This:C1470.shouldSkip())
+                This:C1470.skipped:=True:C214
+                This:C1470.endTime:=Milliseconds:C459
+                return
+        End if
 	
 	// Start transaction if configured to use transactions
 	var $transactionStarted : Boolean
@@ -77,22 +86,26 @@ Function run()
 		End if 
 	End if 
 	
-	This:C1470.endTime:=Milliseconds:C459
-	
+        This:C1470.endTime:=Milliseconds:C459
+
 Function getResult() : Object
-	var $duration : Integer
-	$duration:=This:C1470.endTime-This:C1470.startTime
-	
-	return New object:C1471(\
-		"name"; This:C1470.functionName; \
-		"passed"; Not:C34(This:C1470.t.failed); \
-		"failed"; This:C1470.t.failed; \
-		"duration"; $duration; \
-		"suite"; This:C1470.class.name; \
-		"runtimeErrors"; This:C1470.runtimeErrors; \
-		"logMessages"; This:C1470.t.logMessages; \
-		"tags"; This:C1470.tags\
-		)
+        var $duration : Integer
+        $duration:=This:C1470.endTime-This:C1470.startTime
+
+        return New object:C1471(\
+                "name"; This:C1470.functionName; \
+                "passed"; Not:C34(This:C1470.t.failed); \
+                "failed"; This:C1470.t.failed; \
+                "skipped"; This:C1470.skipped; \
+                "duration"; $duration; \
+                "suite"; This:C1470.class.name; \
+                "runtimeErrors"; This:C1470.runtimeErrors; \
+                "logMessages"; This:C1470.t.logMessages; \
+                "tags"; This:C1470.tags\
+                )
+
+Function shouldSkip() : Boolean
+        return (This:C1470.tags.indexOf("skip")>=0)
 
 Function _parseTags($classCode : Text) : Collection
 	// Parse tags from function comments in source code

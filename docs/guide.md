@@ -362,6 +362,20 @@ Function test_file_system_access($t : cs.Testing)
 - Whitespace around tags is automatically trimmed
 - Tests without explicit tags automatically receive the "unit" tag
 
+### Skipping Tests
+
+Mark a test with the `skip` tag to prevent it from running while still
+being reported in the overall test statistics:
+
+```4d
+// #tags: unit, skip
+Function test_pending_feature($t : cs.Testing)
+    $t.assert.fail($t; "This code is not ready")
+```
+
+Skipped tests are counted in the totals and listed separately, but they
+do not affect the pass rate.
+
 ### Tag Filtering Commands
 
 #### Include Tags (OR Logic)
