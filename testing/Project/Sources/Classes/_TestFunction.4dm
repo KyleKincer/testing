@@ -101,7 +101,8 @@ Function getResult() : Object
                 "suite"; This:C1470.class.name; \
                 "runtimeErrors"; This:C1470.runtimeErrors; \
                 "logMessages"; This:C1470.t.logMessages; \
-                "tags"; This:C1470.tags\
+                "tags"; This:C1470.tags; \
+                "callChain"; This:C1470.t.failureCallChain\
                 )
 
 Function shouldSkip() : Boolean

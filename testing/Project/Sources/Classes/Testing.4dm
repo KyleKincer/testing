@@ -5,6 +5,7 @@ property done : Boolean
 property logMessages : Collection
 property assert : cs:C1710.Assert
 property stats : cs:C1710.UnitStatsTracker
+property failureCallChain : Collection
 
 Class constructor()
 	This:C1470.failed:=False:C215
@@ -12,22 +13,28 @@ Class constructor()
 	This:C1470.logMessages:=[]
 	This:C1470.assert:=cs:C1710.Assert.new()
 	This:C1470.stats:=cs:C1710.UnitStatsTracker.new()
+	This:C1470.failureCallChain:=Null
 	
 Function log($message : Text)
 	This:C1470.logMessages.push($message)
 	
 Function fail()
 	This:C1470.failed:=True:C214
+	// Capture call chain when test fails for debugging
+	This:C1470.failureCallChain:=Call chain:C1662
 	
 Function fatal()
 	This:C1470.failed:=True:C214
 	This:C1470.done:=True:C214
+	// Capture call chain when test fails fatally for debugging
+	This:C1470.failureCallChain:=Call chain:C1662
 	
 Function resetForNewTest()
 	This:C1470.failed:=False:C215
 	This:C1470.done:=False:C215
 	This:C1470.logMessages:=[]
 	This:C1470.stats.resetStatistics()
+	This:C1470.failureCallChain:=Null
 	
 Function run($name : Text; $subtest : 4D:C1709.Function)
 	// This will be implemented later
@@ -117,4 +124,43 @@ Function withTransactionValidate($operation : 4D:C1709.Function) : Boolean
 	End if 
 	
 	return $success
+
+Function formatCallChain() : Text
+	// Format the call chain into a readable string for debugging
+	var $result : Text
+	var $i : Integer
+	var $callInfo : Object
+	
+	$result:=""
+	
+	If (This:C1470.failureCallChain#Null)
+		$result:="Call Stack:\n"
+		
+		For ($i; 0; This:C1470.failureCallChain.length-1)
+			$callInfo:=This:C1470.failureCallChain[$i]
+			$result:=$result+"  "+String:C10($i+1)+". "
+			
+			If ($callInfo.name#Null)
+				$result:=$result+$callInfo.name
+			Else 
+				$result:=$result+"<unnamed>"
+			End if 
+			
+			If ($callInfo.type#Null)
+				$result:=$result+" ("+$callInfo.type+")"
+			End if 
+			
+			If ($callInfo.line#Null)
+				$result:=$result+" at line "+String:C10($callInfo.line)
+			End if 
+			
+			If ($callInfo.database#Null)
+				$result:=$result+" in "+$callInfo.database
+			End if 
+			
+			$result:=$result+"\n"
+		End for 
+	End if 
+	
+	return $result
 	

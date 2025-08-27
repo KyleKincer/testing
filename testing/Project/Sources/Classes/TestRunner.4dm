@@ -115,6 +115,11 @@ Function _logHeader()
 	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
 	
 Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
+	// Skip suites with no tests
+	If ($testSuite.testFunctions.length=0)
+		return 
+	End if 
+	
 	var $suiteResult : Object
         $suiteResult:=New object:C1471(\
                 "name"; $testSuite.class.name; \
@@ -157,6 +162,11 @@ Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
                                                 If ($testResult.logMessages.length>0)
                                                         $errorDetails:=" ["+$testResult.logMessages[0]+"]"
                                                 End if
+                                        End if
+                                        
+                                        // Add call chain information if available
+                                        If ($testResult.callChain#Null)
+                                                $errorDetails:=$errorDetails+"\r\n"+This:C1470._formatCallChain($testResult.callChain)
                                         End if
                                         LOG EVENT:C667(Into system standard outputs:K38:9; "  ✗ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)"+$errorDetails+"\r\n"; Error message:K38:3)
                                 End if
@@ -216,6 +226,11 @@ Function _generateHumanReport()
 			End if 
 			
 			LOG EVENT:C667(Into system standard outputs:K38:9; "- "+$failedTest.name+$failureReason+"\r\n"; Error message:K38:3)
+			
+			// Add detailed call chain if available
+			If ($failedTest.callChain#Null)
+				LOG EVENT:C667(Into system standard outputs:K38:9; This:C1470._formatCallChain($failedTest.callChain)+"\r\n"; Error message:K38:3)
+			End if
 		End for each 
 	End if 
 	
@@ -265,6 +280,11 @@ Function _generateJSONReport()
 					If ($failedTest.logMessages.length>0)
 						$terseFailure.reason:=$failedTest.logMessages[0]
 					End if 
+				End if 
+				
+				// Include call chain in verbose JSON output
+				If (This:C1470.verboseOutput) && ($failedTest.callChain#Null)
+					$terseFailure.callChain:=$failedTest.callChain
 				End if 
 				$failedTests.push($terseFailure)
 			End for each 
@@ -422,7 +442,14 @@ Function _buildFailureXML($test : Object) : Text
 	End if 
 	
 	$xml:="      <"+$elementType+" message=\""+This:C1470._escapeXMLAttribute($failureMessage)+"\">"
-	$xml:=$xml+"<![CDATA[\n"+$failureDetails+"\nLocation: "+$test.suite+"."+$test.name+"\n]]>"
+	$xml:=$xml+"<![CDATA[\n"+$failureDetails+"\nLocation: "+$test.suite+"."+$test.name
+	
+	// Include call chain in JUnit XML if available
+	If ($test.callChain#Null)
+		$xml:=$xml+"\n\n"+This:C1470._formatCallChain($test.callChain)
+	End if 
+	
+	$xml:=$xml+"\n]]>"
 	$xml:=$xml+"</"+$elementType+">\r\n"
 	
 	return $xml
@@ -716,3 +743,40 @@ Function _shouldIncludeTestByTags($testFunction : cs:C1710._TestFunction) : Bool
 	
 	// If we have exclude or require filters but no include filters, default to true
 	return True:C214
+
+Function _formatCallChain($callChain : Collection) : Text
+	// Format the call chain into a readable string for debugging
+	var $result : Text
+	var $i : Integer
+	var $callInfo : Object
+	
+	$result:=""
+	
+	If ($callChain#Null)
+		$result:="Call Stack:"
+		
+		For ($i; 0; $callChain.length-1)
+			$callInfo:=$callChain[$i]
+			$result:=$result+"\r\n  "+String:C10($i+1)+". "
+			
+			If ($callInfo.name#Null)
+				$result:=$result+$callInfo.name
+			Else 
+				$result:=$result+"<unnamed>"
+			End if 
+			
+			If ($callInfo.type#Null)
+				$result:=$result+" ("+$callInfo.type+")"
+			End if 
+			
+			If ($callInfo.line#Null)
+				$result:=$result+" at line "+String:C10($callInfo.line)
+			End if 
+			
+			If ($callInfo.database#Null)
+				$result:=$result+" in "+$callInfo.database
+			End if 
+		End for 
+	End if 
+	
+	return $result
