@@ -686,9 +686,8 @@ Function test_withoutTransactions($t : cs.Testing)
 The Testing context provides methods for manual transaction management:
 
 ```4d
-Function test_manualTransactions($t : cs.Testing)
     // #transaction: false
-    
+Function test_manualTransactions($t : cs.Testing)
     // Start transaction manually
     $t.startTransaction()
     
@@ -704,9 +703,8 @@ Function test_manualTransactions($t : cs.Testing)
         $t.cancelTransaction()  
     End if
 
-Function test_transactionWrapper($t : cs.Testing)
     // #transaction: false
-    
+Function test_transactionWrapper($t : cs.Testing)
     // Execute operation within transaction (auto-rollback)
     var $success : Boolean
     $success:=$t.withTransaction(Formula(
