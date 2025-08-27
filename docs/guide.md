@@ -12,6 +12,7 @@ A comprehensive unit testing framework for the 4D platform with enhanced reporti
 - [Output Formats](#output-formats)
 - [Test Filtering](#test-filtering)
 - [Test Tagging](#test-tagging)
+- [Test Lifecycle Methods](#test-lifecycle-methods)
 - [Mocking and Test Utilities](#mocking-and-test-utilities)
 - [CI/CD Integration](#cicd-integration)
 - [Framework Architecture](#framework-architecture)
@@ -655,6 +656,100 @@ $t.assert.areEqual($t; "active"; $user.status; "Status check failed")
 - Each test should be independent and not rely on other tests
 - Use setup/teardown for test data preparation
 - Avoid shared state between tests
+
+## Test Lifecycle Methods
+
+The framework supports optional lifecycle methods for test setup and cleanup operations:
+
+### Setup and Teardown (Suite-Level)
+
+These methods run once per test class:
+
+```4d
+Class constructor()
+    This.testData:=New object
+
+Function setup()
+    // Called once BEFORE all tests in this suite
+    This.testData.connection:="database_connection"
+    This.testData.users:=[]
+
+Function teardown()
+    // Called once AFTER all tests in this suite
+    This.testData:=Null
+```
+
+### BeforeEach and AfterEach (Test-Level)
+
+These methods run before and after each individual test:
+
+```4d
+Function beforeEach()
+    // Called BEFORE each individual test method
+    This.testData.currentTest:="test_"+String(This.beforeEachCount+1)
+
+Function afterEach()
+    // Called AFTER each individual test method
+    This.testData.currentTest:=""
+```
+
+### Complete Example
+
+```4d
+Class constructor()
+    This.users:=[]
+    This.connection:=Null
+
+Function setup()
+    // Initialize test environment once
+    This.connection:=connectToDatabase()
+    This.users:=[]
+
+Function teardown()
+    // Cleanup after all tests
+    disconnectFromDatabase(This.connection)
+    This.connection:=Null
+
+Function beforeEach()
+    // Reset state before each test
+    This.users:=[]
+    createTestUser("testuser@example.com")
+
+Function afterEach()
+    // Cleanup after each test
+    clearTestData()
+
+Function test_user_creation($t : cs.Testing)
+    // Test uses clean state from beforeEach
+    $t.assert.areEqual($t; 1; This.users.length; "Should have one test user")
+
+Function test_user_validation($t : cs.Testing)
+    // Also gets clean state from beforeEach
+    var $user : Object
+    $user:=This.users[0]
+    $t.assert.areEqual($t; "testuser@example.com"; $user.email; "User email should be correct")
+```
+
+### Execution Order
+
+For each test class, the framework executes lifecycle methods in this order:
+
+1. **Class constructor** - Creates the test instance
+2. **setup()** - One-time setup for the entire suite
+3. For each test method:
+   - **beforeEach()** - Pre-test setup
+   - **test_xxx()** - The actual test
+   - **afterEach()** - Post-test cleanup
+4. **teardown()** - One-time cleanup for the entire suite
+
+### Best Practices
+
+- **Use `setup()` for expensive operations** that can be shared across tests (database connections, file loading)
+- **Use `beforeEach()` for test isolation** to ensure each test starts with clean state
+- **Use `afterEach()` for immediate cleanup** to prevent tests from affecting each other
+- **Use `teardown()` for final cleanup** to release resources and reset global state
+- **Keep lifecycle methods lightweight** to minimize test execution overhead
+- **Handle errors gracefully** in cleanup methods to prevent test failures from masking real issues
 
 ## Transaction Management
 
