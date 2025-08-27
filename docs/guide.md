@@ -16,6 +16,7 @@ A comprehensive unit testing framework for the 4D platform with enhanced reporti
 - [CI/CD Integration](#cicd-integration)
 - [Framework Architecture](#framework-architecture)
 - [Best Practices](#best-practices)
+- [Transaction Management](#transaction-management)
 - [License](#license)
 
 ## Features
@@ -654,6 +655,98 @@ $t.assert.areEqual($t; "active"; $user.status; "Status check failed")
 - Each test should be independent and not rely on other tests
 - Use setup/teardown for test data preparation
 - Avoid shared state between tests
+
+## Transaction Management
+
+The framework provides automatic transaction management for test isolation and manual transaction control for advanced scenarios.
+
+### Automatic Transaction Management
+
+By default, each test runs in its own transaction that is automatically rolled back after completion, ensuring:
+- **Test Isolation**: Tests cannot interfere with each other's data
+- **Clean Environment**: Database state is restored after each test
+- **No Side Effects**: Failed tests don't leave partial data
+
+### Controlling Transaction Behavior
+
+Use comment-based annotations to control transaction behavior:
+
+```4d
+Function test_withTransactions($t : cs.Testing)
+    // Automatic transactions enabled (default)
+    // Test data changes will be rolled back
+    
+Function test_withoutTransactions($t : cs.Testing)  
+    // #transaction: false
+    // Disables automatic transaction management
+```
+
+### Manual Transaction Control
+
+The Testing context provides methods for manual transaction management:
+
+```4d
+Function test_manualTransactions($t : cs.Testing)
+    // #transaction: false
+    
+    // Start transaction manually
+    $t.startTransaction()
+    
+    // Check transaction status
+    If ($t.inTransaction())
+        // Perform database operations
+    End if
+    
+    // Validate or cancel transaction
+    If ($success)
+        $t.validateTransaction()
+    Else
+        $t.cancelTransaction()  
+    End if
+
+Function test_transactionWrapper($t : cs.Testing)
+    // #transaction: false
+    
+    // Execute operation within transaction (auto-rollback)
+    var $success : Boolean
+    $success:=$t.withTransaction(Formula(
+        // Database operations here
+        // Will be rolled back automatically
+    ))
+    
+    // Execute operation with validation (persists data)
+    $success:=$t.withTransactionValidate(Formula(
+        // Database operations here  
+        // Will be validated if test succeeds
+    ))
+```
+
+### Transaction Control Comments
+
+| Comment                  | Effect                                   |
+| ------------------------ | ---------------------------------------- |
+| `// #transaction: false` | Disables automatic transactions          |
+| No comment               | Enables automatic transactions (default) |
+
+### Transaction Management Methods
+
+The `$t` (Testing) context provides these transaction management methods:
+
+- `$t.startTransaction()` - Begins a new transaction manually
+- `$t.validateTransaction()` - Commits the current transaction
+- `$t.cancelTransaction()` - Rolls back the current transaction
+- `$t.inTransaction()` - Returns true if currently in a transaction
+- `$t.withTransaction(formula)` - Executes formula in transaction with automatic rollback
+- `$t.withTransactionValidate(formula)` - Executes formula in transaction with commit on success
+
+### Best Practices
+
+- Use automatic transactions (default) for most unit tests to ensure isolation
+- Disable transactions (`// #transaction: false`) only when testing transaction-related functionality
+- Use manual transaction control for integration tests that need to verify data persistence
+- Always check `$t.inTransaction()` before performing transaction operations
+- Use `withTransaction()` for operations that should always rollback
+- Use `withTransactionValidate()` for operations that should persist on test success
 
 ## License
 
