@@ -42,11 +42,11 @@ Test classes must end with "Test":
 Class constructor()
 
 // #tags: unit, math
-Function test_addition_works($t : cs.Testing)
+Function test_addition_works($t : cs.Testing.Testing)
     $t.assert.areEqual($t; 5; 2+3; "Addition should work correctly")
 
 // #tags: unit, string
-Function test_string_comparison($t : cs.Testing)
+Function test_string_comparison($t : cs.Testing.Testing)
     $t.assert.areEqual($t; "hello"; "hello"; "Strings should be equal")
 ```
 
@@ -110,14 +110,14 @@ Without passing the host project's class store, the framework cannot access your
 
 - Class name must end with "Test" (e.g., `UserServiceTest`, `ExampleTest`)
 - Test methods must start with "test_" (e.g., `test_user_creation`, `test_validation`)
-- Test methods receive a `$t : cs.Testing` parameter
+- Test methods receive a `$t : cs.Testing.Testing` parameter
 
 ### Basic Example
 
 ```4d
 Class constructor()
 
-Function test_user_validation($t : cs.Testing)
+Function test_user_validation($t : cs.Testing.Testing)
     var $user : Object
     $user:=New object("name"; "John"; "email"; "john@example.com")
     
@@ -141,7 +141,7 @@ The framework includes built-in assertion methods accessible through `$t.assert`
 
 ### Usage Example
 ```4d
-Function test_calculations($t : cs.Testing)
+Function test_calculations($t : cs.Testing.Testing)
     // Test equality
     $t.assert.areEqual($t; 10; 5*2; "Multiplication should work")
     
@@ -336,23 +336,23 @@ Add tags to test methods using `#tags:` comments immediately before the function
 Class constructor()
 
 // #tags: unit, fast
-Function test_basic_addition($t : cs.Testing)
+Function test_basic_addition($t : cs.Testing.Testing)
     $t.assert.areEqual($t; 4; 2+2; "Addition should work")
 
 // #tags: integration, slow
-Function test_database_connection($t : cs.Testing)
+Function test_database_connection($t : cs.Testing.Testing)
     // Simulate slow database operation
     DELAY PROCESS(Current process; 10)
     $t.assert.isTrue($t; True; "Database connection test")
 
 // #tags: unit, edge-case
-Function test_empty_string_handling($t : cs.Testing)
+Function test_empty_string_handling($t : cs.Testing.Testing)
     var $result : Text
     $result:=""+"test"
     $t.assert.areEqual($t; "test"; $result; "Empty string concatenation")
 
 // #tags: integration, performance, external
-Function test_file_system_access($t : cs.Testing)
+Function test_file_system_access($t : cs.Testing.Testing)
     var $folder : 4D.Folder
     $folder:=Folder(fk desktop folder)
     $t.assert.isNotNull($t; $folder; "Should access desktop folder")
@@ -372,7 +372,7 @@ being reported in the overall test statistics:
 
 ```4d
 // #tags: unit, skip
-Function test_pending_feature($t : cs.Testing)
+Function test_pending_feature($t : cs.Testing.Testing)
     $t.assert.fail($t; "This code is not ready")
 ```
 
@@ -439,49 +439,49 @@ tool4d --project YourProject.4DProject --startup-method "test" --user-param "for
 #### By Test Type
 ```4d
 // #tags: unit
-Function test_calculation_logic($t : cs.Testing)
+Function test_calculation_logic($t : cs.Testing.Testing)
 
 // #tags: integration
-Function test_api_integration($t : cs.Testing)
+Function test_api_integration($t : cs.Testing.Testing)
 
 // #tags: e2e
-Function test_complete_user_workflow($t : cs.Testing)
+Function test_complete_user_workflow($t : cs.Testing.Testing)
 ```
 
 #### By Speed/Performance
 ```4d
 // #tags: fast
-Function test_quick_validation($t : cs.Testing)
+Function test_quick_validation($t : cs.Testing.Testing)
 
 // #tags: slow
-Function test_large_dataset_processing($t : cs.Testing)
+Function test_large_dataset_processing($t : cs.Testing.Testing)
 
 // #tags: performance
-Function test_response_time_requirements($t : cs.Testing)
+Function test_response_time_requirements($t : cs.Testing.Testing)
 ```
 
 #### By Dependencies
 ```4d
 // #tags: database
-Function test_user_repository($t : cs.Testing)
+Function test_user_repository($t : cs.Testing.Testing)
 
 // #tags: external, network
-Function test_api_service($t : cs.Testing)
+Function test_api_service($t : cs.Testing.Testing)
 
 // #tags: filesystem
-Function test_file_operations($t : cs.Testing)
+Function test_file_operations($t : cs.Testing.Testing)
 ```
 
 #### By Feature/Component
 ```4d
 // #tags: auth, security
-Function test_login_validation($t : cs.Testing)
+Function test_login_validation($t : cs.Testing.Testing)
 
 // #tags: billing, finance
-Function test_payment_processing($t : cs.Testing)
+Function test_payment_processing($t : cs.Testing.Testing)
 
 // #tags: reporting, analytics
-Function test_report_generation($t : cs.Testing)
+Function test_report_generation($t : cs.Testing.Testing)
 ```
 
 ### CI/CD Integration with Tags
@@ -518,7 +518,7 @@ When multiple tag filters are specified, they are applied in this order:
 The framework provides built-in mocking capabilities through `$t.stats` (a `UnitStatsTracker` instance):
 
 ```4d
-Function test_mock_example($t : cs.Testing)
+Function test_mock_example($t : cs.Testing.Testing)
     // Create a mock object to test
     var $math : Object
     $math:=New object()
@@ -544,7 +544,7 @@ Function test_mock_example($t : cs.Testing)
 ### Advanced Mocking Example
 
 ```4d
-Function test_multiple_mock_calls($t : cs.Testing)
+Function test_multiple_mock_calls($t : cs.Testing.Testing)
     // Create mock service object
     var $service : Object
     $service:=New object()
@@ -719,11 +719,11 @@ Function afterEach()
     // Cleanup after each test
     clearTestData()
 
-Function test_user_creation($t : cs.Testing)
+Function test_user_creation($t : cs.Testing.Testing)
     // Test uses clean state from beforeEach
     $t.assert.areEqual($t; 1; This.users.length; "Should have one test user")
 
-Function test_user_validation($t : cs.Testing)
+Function test_user_validation($t : cs.Testing.Testing)
     // Also gets clean state from beforeEach
     var $user : Object
     $user:=This.users[0]
@@ -767,11 +767,11 @@ By default, each test runs in its own transaction that is automatically rolled b
 Use comment-based annotations to control transaction behavior:
 
 ```4d
-Function test_withTransactions($t : cs.Testing)
+Function test_withTransactions($t : cs.Testing.Testing)
     // Automatic transactions enabled (default)
     // Test data changes will be rolled back
     
-Function test_withoutTransactions($t : cs.Testing)  
+Function test_withoutTransactions($t : cs.Testing.Testing)  
     // #transaction: false
     // Disables automatic transaction management
 ```
@@ -782,7 +782,7 @@ The Testing context provides methods for manual transaction management:
 
 ```4d
     // #transaction: false
-Function test_manualTransactions($t : cs.Testing)
+Function test_manualTransactions($t : cs.Testing.Testing)
     // Start transaction manually
     $t.startTransaction()
     
@@ -799,7 +799,7 @@ Function test_manualTransactions($t : cs.Testing)
     End if
 
     // #transaction: false
-Function test_transactionWrapper($t : cs.Testing)
+Function test_transactionWrapper($t : cs.Testing.Testing)
     // Execute operation within transaction (auto-rollback)
     var $success : Boolean
     $success:=$t.withTransaction(Formula(
