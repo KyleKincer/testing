@@ -13,6 +13,7 @@ A comprehensive unit testing framework for the 4D platform with enhanced reporti
 - [Test Filtering](#test-filtering)
 - [Test Tagging](#test-tagging)
 - [Test Lifecycle Methods](#test-lifecycle-methods)
+- [Table-Driven Tests](#table-driven-tests)
 - [Mocking and Test Utilities](#mocking-and-test-utilities)
 - [CI/CD Integration](#cicd-integration)
 - [Framework Architecture](#framework-architecture)
@@ -28,6 +29,7 @@ A comprehensive unit testing framework for the 4D platform with enhanced reporti
 - **Rich Assertions**: Built-in assertion library with helpful error messages
 - **Enhanced Reporting**: Detailed test results with execution times and pass rates
 - **JSON Output**: Structured output for CI/CD integration and automated processing
+- **Subtest Support**: Create table-driven tests using `t.run`
 - **Mock Support**: Built-in mocking utilities for isolated unit testing
 - **CI/CD Ready**: GitHub Actions integration for automated testing
 
@@ -750,6 +752,21 @@ For each test class, the framework executes lifecycle methods in this order:
 - **Use `teardown()` for final cleanup** to release resources and reset global state
 - **Keep lifecycle methods lightweight** to minimize test execution overhead
 - **Handle errors gracefully** in cleanup methods to prevent test failures from masking real issues
+
+## Table-Driven Tests
+
+Use subtests to implement table-driven tests. The `t.run` method executes a named subtest with a fresh testing context. If a subtest fails, the parent test is marked as failed and the subtest's log messages are prefixed with its name. Subtests share the same `This` object as the parent test, so any instance methods or state remain available.
+
+```4d
+Function test_math_operations($t : cs.Testing.Testing)
+    var $cases : Collection
+    $cases:=[New object("name"; "1+1"; "in"; 1; "want"; 2)]
+
+    var $case : Object
+    For each ($case; $cases)
+        $t.run($case.name; Formula($1.assert.areEqual($1; $case.want; $case.in+1; "math works")))
+    End for each
+```
 
 ## Transaction Management
 

@@ -16,6 +16,7 @@ Class constructor($class : 4D:C1709.Class; $classInstance : 4D:C1709.Object; $fu
 	This:C1470.function:=$function
         This:C1470.functionName:=$name
         This:C1470.t:=cs:C1710.Testing.new()
+        This:C1470.t.classInstance:=$classInstance
         This:C1470.runtimeErrors:=[]
         This:C1470.skipped:=False:C215
         This:C1470.tags:=This:C1470._parseTags($classCode || "")
