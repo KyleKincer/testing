@@ -151,3 +151,33 @@ Function _setContextChild($t : cs:C1710.Testing)
         $t.log("running")
         This.contextValue:="child"
 
+Function test_run_with_data_argument($t : cs:C1710.Testing)
+
+        var $testing : cs:C1710.Testing
+        $testing:=cs:C1710.Testing.new()
+
+        var $cases : Collection
+        $cases:=[\
+                New object("name"; "ok"; "in"; 1; "want"; 2);\
+                New object("name"; "bad"; "in"; 2; "want"; 4)\
+        ]
+
+        var $case : Object
+        For each ($case; $cases)
+                $testing.run($case.name; This._addOneCase; $case)
+        End for each
+
+        $t.assert.areEqual($t; 2; $testing.logMessages.length; "Should log each case")
+        $t.assert.areEqual($t; "ok: 2"; $testing.logMessages[0]; "Should prefix log with case name")
+        $t.assert.areEqual($t; "bad: 3"; $testing.logMessages[1]; "Should prefix log with case name")
+        $t.assert.isTrue($t; $testing.failed; "Parent should fail if any case fails")
+
+Function _addOneCase($t : cs:C1710.Testing; $case : Object)
+
+        var $got : Integer
+        $got:=$case.in+1
+        $t.log(String($got))
+        If ($got#$case.want)
+                $t.fail()
+        End if
+

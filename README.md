@@ -68,7 +68,7 @@ tool4d --project YourProject.4DProject --startup-method "test" --user-param "tag
 
 ## Table-Driven Tests
 
-Use subtests to build table-driven tests. Each call to `t.run` executes the provided function with a fresh testing context. If a subtest fails, the parent test is marked as failed. Subtests run with the same `This` object as the parent test, so helper methods and state remain accessible.
+Use subtests to build table-driven tests. Each call to `t.run` executes the provided function with a fresh testing context. If a subtest fails, the parent test is marked as failed. Subtests run with the same `This` object as the parent test, so helper methods and state remain accessible. Pass optional data as the third argument when the test logic lives in a separate method.
 
 ```4d
 Function test_math($t : cs.Testing)
@@ -77,8 +77,11 @@ Function test_math($t : cs.Testing)
 
     var $case : Object
     For each ($case; $cases)
-        $t.run($case.name; Formula($1.assert.areEqual($1; $case.want; $case.in+1; "math works")))
+        $t.run($case.name; This._checkMathCase; $case)
     End for each
+
+Function _checkMathCase($t : cs.Testing; $case : Object)
+    $t.assert.areEqual($t; $case.want; $case.in+1; "math works")
 ```
 
 ## Output

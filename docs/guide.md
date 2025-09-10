@@ -755,7 +755,7 @@ For each test class, the framework executes lifecycle methods in this order:
 
 ## Table-Driven Tests
 
-Use subtests to implement table-driven tests. The `t.run` method executes a named subtest with a fresh testing context. If a subtest fails, the parent test is marked as failed and the subtest's log messages are prefixed with its name. Subtests share the same `This` object as the parent test, so any instance methods or state remain available.
+Use subtests to implement table-driven tests. The `t.run` method executes a named subtest with a fresh testing context. If a subtest fails, the parent test is marked as failed and the subtest's log messages are prefixed with its name. Subtests share the same `This` object as the parent test, so any instance methods or state remain available. Pass optional data as the third argument when using a helper method for the subtest logic.
 
 ```4d
 Function test_math_operations($t : cs.Testing.Testing)
@@ -764,8 +764,11 @@ Function test_math_operations($t : cs.Testing.Testing)
 
     var $case : Object
     For each ($case; $cases)
-        $t.run($case.name; Formula($1.assert.areEqual($1; $case.want; $case.in+1; "math works")))
+        $t.run($case.name; This._checkMathCase; $case)
     End for each
+
+Function _checkMathCase($t : cs.Testing.Testing; $case : Object)
+    $t.assert.areEqual($t; $case.want; $case.in+1; "math works")
 ```
 
 ## Transaction Management

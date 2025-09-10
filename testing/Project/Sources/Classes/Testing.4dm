@@ -37,7 +37,7 @@ Function resetForNewTest()
 	This:C1470.stats.resetStatistics()
 	This:C1470.failureCallChain:=Null
 	
-Function run($name : Text; $subtest : 4D:C1709.Function) : Boolean
+Function run($name : Text; $subtest : 4D:C1709.Function; $data : Variant) : Boolean
         // Execute a named subtest with its own Testing context
         // Returns true if the subtest passed
 
@@ -63,7 +63,13 @@ Function run($name : Text; $subtest : 4D:C1709.Function) : Boolean
         If ($context=Null:C1517)
                 $context:=This:C1470
         End if
-        $subtest.apply($context; [$subT])
+
+        var $args : Collection
+        $args:=[$subT]
+        If (Count parameters>=3)
+                $args.push($data)
+        End if
+        $subtest.apply($context; $args)
 
         // Propagate log messages with subtest name prefix
         var $message : Text
