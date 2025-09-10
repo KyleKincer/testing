@@ -6,6 +6,7 @@ property logMessages : Collection
 property assert : cs:C1710.Assert
 property stats : cs:C1710.UnitStatsTracker
 property failureCallChain : Collection
+property classInstance : 4D:C1709.Object
 
 Class constructor()
 	This:C1470.failed:=False:C215
@@ -36,8 +37,56 @@ Function resetForNewTest()
 	This:C1470.stats.resetStatistics()
 	This:C1470.failureCallChain:=Null
 	
-Function run($name : Text; $subtest : 4D:C1709.Function)
-	// This will be implemented later
+Function run($name : Text; $subtest : 4D:C1709.Function; $data : Variant) : Boolean
+        // Execute a named subtest with its own Testing context
+        // Returns true if the subtest passed
+
+        var $subT : cs:C1710.Testing
+        $subT:=cs:C1710.Testing.new()
+
+        // Share assertion and statistics objects with parent
+        $subT.assert:=This:C1470.assert
+        $subT.stats:=This:C1470.stats
+        $subT.classInstance:=This:C1470.classInstance
+
+        var $result : Boolean
+        $result:=True:C214
+
+        // Allow calling run with no subtest for compatibility
+        If ($subtest=Null:C1517)
+                return $result
+        End if
+
+        // Execute the subtest with the parent test context
+        var $context : 4D:C1709.Object
+        $context:=This:C1470.classInstance
+        If ($context=Null:C1517)
+                $context:=This:C1470
+        End if
+
+        var $args : Collection
+        $args:=[$subT]
+        If (Count parameters>=3)
+                $args.push($data)
+        End if
+        $subtest.apply($context; $args)
+
+        // Propagate log messages with subtest name prefix
+        var $message : Text
+        For each ($message; $subT.logMessages)
+                This:C1470.log($name+": "+$message)
+        End for each
+
+        // If the subtest failed, mark parent as failed and capture call chain
+        If ($subT.failed)
+                This:C1470.fail()
+                If ($subT.failureCallChain#Null)
+                        This:C1470.failureCallChain:=$subT.failureCallChain
+                End if
+                $result:=False:C215
+        End if
+
+        return $result
 
 // Transaction management methods for manual control
 

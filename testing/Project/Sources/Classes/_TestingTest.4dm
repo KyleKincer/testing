@@ -113,15 +113,71 @@ Function test_log_with_special_characters($t : cs:C1710.Testing)
 	$t.assert.areEqual($t; "Message with\nnewlines"; $testing.logMessages[1]; "Should preserve newlines")
 	$t.assert.areEqual($t; "Message with\ttabs"; $testing.logMessages[2]; "Should preserve tabs")
 
-Function test_run_method_placeholder($t : cs:C1710.Testing)
-	
-	var $testing : cs:C1710.Testing
-	$testing:=cs:C1710.Testing.new()
-	
-	// Test that run method exists (even if not implemented)
-	// This is a placeholder method in the current implementation
-	$t.assert.isNotNull($t; $testing.run; "Run method should exist")
-	
-	// Call it to ensure it doesn't crash
-	$testing.run("test"; Null:C1517)
-	// Should not throw an error
+Function test_run_executes_subtest($t : cs:C1710.Testing)
+
+        var $testing : cs:C1710.Testing
+        $testing:=cs:C1710.Testing.new()
+
+        var $result : Boolean
+        $result:=$testing.run("sub"; Formula($1.log("ran")))
+
+        $t.assert.isTrue($t; $result; "Run should return true when subtest passes")
+        $t.assert.areEqual($t; 1; $testing.logMessages.length; "Parent should capture subtest log")
+        $t.assert.areEqual($t; "sub: ran"; $testing.logMessages[0]; "Log should be prefixed with subtest name")
+
+Function test_run_propagates_failure($t : cs:C1710.Testing)
+
+        var $testing : cs:C1710.Testing
+        $testing:=cs:C1710.Testing.new()
+
+        var $result : Boolean
+        $result:=$testing.run("fail"; Formula($1.fail()))
+
+        $t.assert.isFalse($t; $result; "Run should return false when subtest fails")
+        $t.assert.isTrue($t; $testing.failed; "Parent test should be marked as failed")
+
+
+Function test_run_uses_parent_context($t : cs:C1710.Testing)
+
+        // Verify that subtests execute with the same object context as the parent
+        This.contextValue:="parent"
+
+        $t.run("ctx"; This._setContextChild)
+
+        $t.assert.areEqual($t; "child"; This.contextValue; "Subtest should run with parent This context")
+
+Function _setContextChild($t : cs:C1710.Testing)
+
+        $t.log("running")
+        This.contextValue:="child"
+
+Function test_run_with_data_argument($t : cs:C1710.Testing)
+
+        var $testing : cs:C1710.Testing
+        $testing:=cs:C1710.Testing.new()
+
+        var $cases : Collection
+        $cases:=[\
+                New object("name"; "ok"; "in"; 1; "want"; 2);\
+                New object("name"; "bad"; "in"; 2; "want"; 4)\
+        ]
+
+        var $case : Object
+        For each ($case; $cases)
+                $testing.run($case.name; This._addOneCase; $case)
+        End for each
+
+        $t.assert.areEqual($t; 2; $testing.logMessages.length; "Should log each case")
+        $t.assert.areEqual($t; "ok: 2"; $testing.logMessages[0]; "Should prefix log with case name")
+        $t.assert.areEqual($t; "bad: 3"; $testing.logMessages[1]; "Should prefix log with case name")
+        $t.assert.isTrue($t; $testing.failed; "Parent should fail if any case fails")
+
+Function _addOneCase($t : cs:C1710.Testing; $case : Object)
+
+        var $got : Integer
+        $got:=$case.in+1
+        $t.log(String($got))
+        If ($got#$case.want)
+                $t.fail()
+        End if
+
