@@ -172,6 +172,22 @@ Function test_run_with_data_argument($t : cs:C1710.Testing)
         $t.assert.areEqual($t; "bad: 3"; $testing.logMessages[1]; "Should prefix log with case name")
         $t.assert.isTrue($t; $testing.failed; "Parent should fail if any case fails")
 
+Function test_run_subtest_stats_isolated($t : cs:C1710.Testing)
+
+        var $testing : cs:C1710.Testing
+        $testing:=cs:C1710.Testing.new()
+
+        // First subtest records a stat
+        $testing.run("first"; Formula($1.stats.mock("mocked"; []; Null)))
+
+        // Second subtest should start with fresh stats
+        $testing.run("second"; Formula($1.assert.areEqual($1; 0; $1.stats.getStat("mocked").getNumberOfCalls(); "Stats should not carry over between subtests")))
+
+        // Parent stats should remain unaffected
+        var $parentStat : cs:C1710._UnitStatsDetail
+        $parentStat:=$testing.stats.getStat("mocked")
+        $t.assert.areEqual($t; 0; $parentStat.getNumberOfCalls(); "Parent stats should remain unaffected")
+
 Function _addOneCase($t : cs:C1710.Testing; $case : Object)
 
         var $got : Integer
