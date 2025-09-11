@@ -44,10 +44,9 @@ Function run($name : Text; $subtest : 4D:C1709.Function; $data : Variant) : Bool
         var $subT : cs:C1710.Testing
         $subT:=cs:C1710.Testing.new()
 
-        // Share assertion and statistics objects with parent
-        $subT.assert:=This:C1470.assert
-        $subT.stats:=This:C1470.stats
-        $subT.classInstance:=This:C1470.classInstance
+       // Share assertion object with parent but keep stats isolated
+       $subT.assert:=This:C1470.assert
+       $subT.classInstance:=This:C1470.classInstance
 
         var $result : Boolean
         $result:=True:C214
