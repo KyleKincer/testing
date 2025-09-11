@@ -572,6 +572,40 @@ Function test_multiple_mock_calls($t : cs.Testing.Testing)
     $t.assert.areEqual($t; "guest"; $stat.getXCallYParameter(2; 1); "Second call should be guest")
 ```
 
+### ⚠️ **CRITICAL: Avoid `This` in Mock Formulas**
+
+**Rule**: Never use `This` directly inside Formula expressions passed to `$t.stats.mock()`.
+
+When the test runner calls `Formula.apply()` on test methods, it overrides the `This` context for all nested Formulas, causing `This` references to fail.
+
+❌ **Wrong:**
+```4d
+$object._method:=Formula($t.stats.mock("_method"; Null; This.mockData))
+// This.mockData will be undefined due to context override
+```
+
+✅ **Correct - Local variable capture:**
+```4d
+var $mockData : Variant
+$mockData:=This.mockData  // Capture the value first
+$object._method:=Formula($t.stats.mock("_method"; Null; $mockData))
+```
+
+✅ **Alternative - Formula parameters:**
+```4d
+$object._method:=Formula($t.stats.mock("_method"; Null; $1); This.mockData)
+```
+
+**When This Applies:**
+- Mock formulas: `Formula($t.stats.mock(...))`
+- Any Formula passed to test framework methods
+- Any Formula that needs to access test class properties (`This.something`)
+
+**Safe Usage:**
+- Local variables and parameters work fine in Formulas
+- `This` is safe in the main test method body, just not in nested Formulas
+- Test framework objects like `$t.stats` work normally
+
 ## CI/CD Integration
 
 ### GitHub Actions Example
