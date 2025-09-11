@@ -1,22 +1,2611 @@
 {
-	"_method_": {},
-	"cs.example": {
-		"Test": {
+	"_method_": {
+		"Testing_RunTestsWithCs": {
+			"Syntax": "**Testing_RunTestsWithCs**( *cs* : 4D.Object )",
+			"Params": [
+				[
+					"cs",
+					"4D.Object",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"cs.Testing": {
+		"_TestSuiteTest": {
 			"new()": {
 				"Syntax": "**.new**()",
 				"Params": [],
 				"Summary": ""
 			}
+		},
+		"_ComprehensiveErrorTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_AssertTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"TestRunner": {
+			"new()": {
+				"Syntax": "**.new**( *cs* : 4D.Object )",
+				"Params": [
+					[
+						"cs",
+						"4D.Object",
+						"->"
+					]
+				],
+				"Summary": ""
+			}
+		},
+		"_MockingExampleTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_ExampleTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_TestingTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_UnitStatsDetail": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"ParallelTestRunner": {
+			"new()": {
+				"Syntax": "**.new**( *cs* : 4D.Object )",
+				"Params": [
+					[
+						"cs",
+						"4D.Object",
+						"->"
+					]
+				],
+				"Summary": ""
+			}
+		},
+		"_JSONOutputTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_ParameterParsingTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"Testing": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_SkipTaggedTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_TestRunnerTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_TestFunctionTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_TestSuite": {
+			"new()": {
+				"Syntax": "**.new**( *class* : 4D.Class; *outputFormat* : Text; *testPatterns* : Collection; *testRunner* : cs.Testing.TestRunner )",
+				"Params": [
+					[
+						"class",
+						"4D.Class",
+						"->"
+					],
+					[
+						"outputFormat",
+						"Text",
+						"->"
+					],
+					[
+						"testPatterns",
+						"Collection",
+						"->"
+					],
+					[
+						"testRunner",
+						"cs.Testing.TestRunner",
+						"->"
+					]
+				],
+				"Summary": ""
+			}
+		},
+		"UnitStatsTracker": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"Assert": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_ErrorHandlingTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_SequentialOnlyTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_TaggingSystemTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_TaggingExampleTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_SetupTeardownTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_ParallelExecutionTest": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"_TestFunction": {
+			"new()": {
+				"Syntax": "**.new**( *class* : 4D.Class; *classInstance* : 4D.Object; *function* : 4D.Function; *name* : Text; *classCode* : Text )",
+				"Params": [
+					[
+						"class",
+						"4D.Class",
+						"->"
+					],
+					[
+						"classInstance",
+						"4D.Object",
+						"->"
+					],
+					[
+						"function",
+						"4D.Function",
+						"->"
+					],
+					[
+						"name",
+						"Text",
+						"->"
+					],
+					[
+						"classCode",
+						"Text",
+						"->"
+					]
+				],
+				"Summary": ""
+			}
 		}
 	},
-	"Test": {
-		"test()": {
-			"Syntax": "**.test**() : cs.example.Test",
+	"_TestSuiteTest": {
+		"test_has_method_detection()": {
+			"Syntax": "**.test_has_method_detection**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_pattern_matching_functionality()": {
+			"Syntax": "**.test_pattern_matching_functionality**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_pattern_filtering_no_matches()": {
+			"Syntax": "**.test_pattern_filtering_no_matches**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_pattern_filtering_no_patterns()": {
+			"Syntax": "**.test_pattern_filtering_no_patterns**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_pattern_filtering_with_suite_match()": {
+			"Syntax": "**.test_pattern_filtering_with_suite_match**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_pattern_filtering_with_wildcard()": {
+			"Syntax": "**.test_pattern_filtering_with_wildcard**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_test_method_discovery()": {
+			"Syntax": "**.test_test_method_discovery**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_pattern_filtering_with_method_match()": {
+			"Syntax": "**.test_pattern_filtering_with_method_match**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_test_suite_initialization()": {
+			"Syntax": "**.test_test_suite_initialization**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_ComprehensiveErrorTest": {
+		"test_timing_precision()": {
+			"Syntax": "**.test_timing_precision**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_concurrent_test_contexts()": {
+			"Syntax": "**.test_concurrent_test_contexts**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_class_discovery_edge_cases()": {
+			"Syntax": "**.test_class_discovery_edge_cases**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_very_long_log_messages()": {
+			"Syntax": "**.test_very_long_log_messages**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_assertion_with_large_data()": {
+			"Syntax": "**.test_assertion_with_large_data**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_pattern_edge_cases()": {
+			"Syntax": "**.test_pattern_edge_cases**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_null_class_handling()": {
+			"Syntax": "**.test_null_class_handling**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_malformed_test_methods()": {
+			"Syntax": "**.test_malformed_test_methods**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_assertion_with_complex_objects()": {
+			"Syntax": "**.test_assertion_with_complex_objects**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_memory_and_cleanup()": {
+			"Syntax": "**.test_memory_and_cleanup**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_log_message_overflow()": {
+			"Syntax": "**.test_log_message_overflow**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_empty_test_class()": {
+			"Syntax": "**.test_empty_test_class**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_AssertTest": {
+		"test_contains_with_text()": {
+			"Syntax": "**.test_contains_with_text**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_areEqual_with_collections()": {
+			"Syntax": "**.test_areEqual_with_collections**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_message_logging()": {
+			"Syntax": "**.test_message_logging**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_isNotNull_edge_cases()": {
+			"Syntax": "**.test_isNotNull_edge_cases**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_assert_initialization()": {
+			"Syntax": "**.test_assert_initialization**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_isTrue_edge_cases()": {
+			"Syntax": "**.test_isTrue_edge_cases**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_areEqual_with_different_types()": {
+			"Syntax": "**.test_areEqual_with_different_types**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_multiple_assertions()": {
+			"Syntax": "**.test_multiple_assertions**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_isFalse_edge_cases()": {
+			"Syntax": "**.test_isFalse_edge_cases**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_areEqual_with_objects()": {
+			"Syntax": "**.test_areEqual_with_objects**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_contains_with_collection()": {
+			"Syntax": "**.test_contains_with_collection**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_isNull_edge_cases()": {
+			"Syntax": "**.test_isNull_edge_cases**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_areEqual_with_null_values()": {
+			"Syntax": "**.test_areEqual_with_null_values**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_fail_method()": {
+			"Syntax": "**.test_fail_method**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"TestRunner": {
+		"getResults()": {
+			"Syntax": "**.getResults**() : Object",
 			"Params": [
 				[
 					"",
-					"cs.example.Test",
+					"Object",
 					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"run()": {
+			"Syntax": "**.run**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"discoverTests()": {
+			"Syntax": "**.discoverTests**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"includeTags": {
+			"Syntax": "includeTags : Collection"
+		},
+		"testPatterns": {
+			"Syntax": "testPatterns : Collection"
+		},
+		"outputFormat": {
+			"Syntax": "outputFormat : Text"
+		},
+		"requireAllTags": {
+			"Syntax": "requireAllTags : Collection"
+		},
+		"excludeTags": {
+			"Syntax": "excludeTags : Collection"
+		},
+		"results": {
+			"Syntax": "results : Object"
+		},
+		"verboseOutput": {
+			"Syntax": "verboseOutput : Boolean"
+		},
+		"testSuites": {
+			"Syntax": "testSuites : Collection"
+		},
+		"classStore": {
+			"Syntax": "classStore : 4D.Object"
+		}
+	},
+	"_MockingExampleTest": {
+		"test_mock_parameter_details()": {
+			"Syntax": "**.test_mock_parameter_details**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_mock_statistics_reset()": {
+			"Syntax": "**.test_mock_statistics_reset**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_mock_with_collections()": {
+			"Syntax": "**.test_mock_with_collections**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_mock_multiple_calls()": {
+			"Syntax": "**.test_mock_multiple_calls**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_mock_basic_functionality()": {
+			"Syntax": "**.test_mock_basic_functionality**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_ExampleTest": {
+		"test_isNotNull_pass()": {
+			"Syntax": "**.test_isNotNull_pass**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_isNull_pass()": {
+			"Syntax": "**.test_isNull_pass**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_isFalse_pass()": {
+			"Syntax": "**.test_isFalse_pass**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_isTrue_pass()": {
+			"Syntax": "**.test_isTrue_pass**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_areEqual_pass()": {
+			"Syntax": "**.test_areEqual_pass**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_TestingTest": {
+		"test_run_uses_parent_context()": {
+			"Syntax": "**.test_run_uses_parent_context**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_run_executes_subtest()": {
+			"Syntax": "**.test_run_executes_subtest**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_fail_after_fatal()": {
+			"Syntax": "**.test_fail_after_fatal**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_multiple_fail_calls()": {
+			"Syntax": "**.test_multiple_fail_calls**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_state_persistence()": {
+			"Syntax": "**.test_state_persistence**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_run_with_data_argument()": {
+			"Syntax": "**.test_run_with_data_argument**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_log_empty_messages()": {
+			"Syntax": "**.test_log_empty_messages**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_run_propagates_failure()": {
+			"Syntax": "**.test_run_propagates_failure**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_fatal_method()": {
+			"Syntax": "**.test_fatal_method**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_fail_method()": {
+			"Syntax": "**.test_fail_method**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_testing_initialization()": {
+			"Syntax": "**.test_testing_initialization**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_log_message_collection()": {
+			"Syntax": "**.test_log_message_collection**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_log_with_special_characters()": {
+			"Syntax": "**.test_log_with_special_characters**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_UnitStatsDetail": {
+		"getXCallParamLength()": {
+			"Syntax": "**.getXCallParamLength**( *xCall* : Integer ) : Integer",
+			"Params": [
+				[
+					"xCall",
+					"Integer",
+					"->"
+				],
+				[
+					"",
+					"Integer",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"getXCallYParameter()": {
+			"Syntax": "**.getXCallYParameter**( *xCall* : Integer; *yParam* : Integer ) : Variant",
+			"Params": [
+				[
+					"xCall",
+					"Integer",
+					"->"
+				],
+				[
+					"yParam",
+					"Integer",
+					"->"
+				],
+				[
+					"",
+					"Variant",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"getNumberOfCalls()": {
+			"Syntax": "**.getNumberOfCalls**() : Integer",
+			"Params": [
+				[
+					"",
+					"Integer",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"appendCalledParameters()": {
+			"Syntax": "**.appendCalledParameters**( *parameters* : Collection )",
+			"Params": [
+				[
+					"parameters",
+					"Collection",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"getXCallParams()": {
+			"Syntax": "**.getXCallParams**( *xCall* : Integer ) : Collection",
+			"Params": [
+				[
+					"xCall",
+					"Integer",
+					"->"
+				],
+				[
+					"",
+					"Collection",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"reset()": {
+			"Syntax": "**.reset**()",
+			"Params": [],
+			"Summary": ""
+		}
+	},
+	"ParallelTestRunner": {
+		"run()": {
+			"Syntax": "**.run**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"completedSuites": {
+			"Syntax": "completedSuites : Integer"
+		},
+		"sequentialSuites": {
+			"Syntax": "sequentialSuites : Collection"
+		},
+		"sharedResults": {
+			"Syntax": "sharedResults : Object"
+		},
+		"maxWorkers": {
+			"Syntax": "maxWorkers : Integer"
+		},
+		"workerSignals": {
+			"Syntax": "workerSignals : Collection"
+		},
+		"workerProcesses": {
+			"Syntax": "workerProcesses : Collection"
+		},
+		"parallelMode": {
+			"Syntax": "parallelMode : Boolean"
+		},
+		"_inheritedFrom_": "TestRunner"
+	},
+	"_JSONOutputTest": {
+		"test_timing_data_integrity()": {
+			"Syntax": "**.test_timing_data_integrity**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_json_parsing_roundtrip()": {
+			"Syntax": "**.test_json_parsing_roundtrip**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_output_format_setting()": {
+			"Syntax": "**.test_output_format_setting**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_json_serialization_compatibility()": {
+			"Syntax": "**.test_json_serialization_compatibility**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_suite_result_structure()": {
+			"Syntax": "**.test_suite_result_structure**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_test_result_object_structure()": {
+			"Syntax": "**.test_test_result_object_structure**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_initial_results_values()": {
+			"Syntax": "**.test_initial_results_values**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_results_object_types()": {
+			"Syntax": "**.test_results_object_types**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_error_object_structure()": {
+			"Syntax": "**.test_error_object_structure**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_results_object_structure()": {
+			"Syntax": "**.test_results_object_structure**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_ParameterParsingTest": {
+		"test_edge_case_patterns()": {
+			"Syntax": "**.test_edge_case_patterns**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_wildcard_suite_filtering()": {
+			"Syntax": "**.test_wildcard_suite_filtering**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_multiple_wildcard_patterns()": {
+			"Syntax": "**.test_multiple_wildcard_patterns**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_special_characters_in_patterns()": {
+			"Syntax": "**.test_special_characters_in_patterns**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_suite_filtering_logic()": {
+			"Syntax": "**.test_suite_filtering_logic**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_case_sensitivity()": {
+			"Syntax": "**.test_case_sensitivity**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_empty_pattern_handling()": {
+			"Syntax": "**.test_empty_pattern_handling**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_pattern_parsing_logic()": {
+			"Syntax": "**.test_pattern_parsing_logic**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_parameter_validation()": {
+			"Syntax": "**.test_parameter_validation**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_parse_single_parameter()": {
+			"Syntax": "**.test_parse_single_parameter**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"Testing": {
+		"formatCallChain()": {
+			"Syntax": "**.formatCallChain**() : Text",
+			"Params": [
+				[
+					"",
+					"Text",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"run()": {
+			"Syntax": "**.run**( *name* : Text; *subtest* : 4D.Function; *data* : Variant ) : Boolean",
+			"Params": [
+				[
+					"name",
+					"Text",
+					"->"
+				],
+				[
+					"subtest",
+					"4D.Function",
+					"->"
+				],
+				[
+					"data",
+					"Variant",
+					"->"
+				],
+				[
+					"",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"inTransaction()": {
+			"Syntax": "**.inTransaction**() : Boolean",
+			"Params": [
+				[
+					"",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"withTransaction()": {
+			"Syntax": "**.withTransaction**( *operation* : 4D.Function ) : Boolean",
+			"Params": [
+				[
+					"operation",
+					"4D.Function",
+					"->"
+				],
+				[
+					"",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"cancelTransaction()": {
+			"Syntax": "**.cancelTransaction**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"validateTransaction()": {
+			"Syntax": "**.validateTransaction**() : Boolean",
+			"Params": [
+				[
+					"",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"withTransactionValidate()": {
+			"Syntax": "**.withTransactionValidate**( *operation* : 4D.Function ) : Boolean",
+			"Params": [
+				[
+					"operation",
+					"4D.Function",
+					"->"
+				],
+				[
+					"",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"fatal()": {
+			"Syntax": "**.fatal**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"log()": {
+			"Syntax": "**.log**( *message* : Text )",
+			"Params": [
+				[
+					"message",
+					"Text",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"resetForNewTest()": {
+			"Syntax": "**.resetForNewTest**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"startTransaction()": {
+			"Syntax": "**.startTransaction**() : Boolean",
+			"Params": [
+				[
+					"",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"fail()": {
+			"Syntax": "**.fail**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"classInstance": {
+			"Syntax": "classInstance : 4D.Object"
+		},
+		"assert": {
+			"Syntax": "assert : cs.Testing.Assert"
+		},
+		"failureCallChain": {
+			"Syntax": "failureCallChain : Collection"
+		},
+		"stats": {
+			"Syntax": "stats : cs.Testing.UnitStatsTracker"
+		},
+		"logMessages": {
+			"Syntax": "logMessages : Collection"
+		},
+		"done": {
+			"Syntax": "done : Boolean"
+		},
+		"failed": {
+			"Syntax": "failed : Boolean"
+		}
+	},
+	"_SkipTaggedTest": {
+		"test_should_be_skipped()": {
+			"Syntax": "**.test_should_be_skipped**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_TransactionExampleTest": {
+		"test_transactionErrorHandling()": {
+			"Syntax": "**.test_transactionErrorHandling**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_dataIsolationExample()": {
+			"Syntax": "**.test_dataIsolationExample**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_transactionWithValidation()": {
+			"Syntax": "**.test_transactionWithValidation**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_nestedTransactionExample()": {
+			"Syntax": "**.test_nestedTransactionExample**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_manualTransactionControl()": {
+			"Syntax": "**.test_manualTransactionControl**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_disabledTransactions()": {
+			"Syntax": "**.test_disabledTransactions**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_automaticTransactionRollback()": {
+			"Syntax": "**.test_automaticTransactionRollback**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_TestRunnerTest": {
+		"test_dependency_injection_pattern()": {
+			"Syntax": "**.test_dependency_injection_pattern**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_parseParamString_comprehensive()": {
+			"Syntax": "**.test_parseParamString_comprehensive**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_results_initialization()": {
+			"Syntax": "**.test_results_initialization**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_pattern_matching_exact()": {
+			"Syntax": "**.test_pattern_matching_exact**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_pattern_matching_universal()": {
+			"Syntax": "**.test_pattern_matching_universal**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_error_handling_in_extracted_methods()": {
+			"Syntax": "**.test_error_handling_in_extracted_methods**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_test_class_discovery()": {
+			"Syntax": "**.test_test_class_discovery**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_parameter_parsing_with_equals()": {
+			"Syntax": "**.test_parameter_parsing_with_equals**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_pattern_matching_wildcards()": {
+			"Syntax": "**.test_pattern_matching_wildcards**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_skip_tag_counts_as_skipped()": {
+			"Syntax": "**.test_skip_tag_counts_as_skipped**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_pattern_matching_with_dependency_extraction()": {
+			"Syntax": "**.test_pattern_matching_with_dependency_extraction**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_output_format_defaults_to_human()": {
+			"Syntax": "**.test_output_format_defaults_to_human**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_filter_test_classes()": {
+			"Syntax": "**.test_filter_test_classes**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_getUserParam_basic_functionality()": {
+			"Syntax": "**.test_getUserParam_basic_functionality**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_test_patterns_initialization()": {
+			"Syntax": "**.test_test_patterns_initialization**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_parse_param_string_empty()": {
+			"Syntax": "**.test_parse_param_string_empty**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_filterTestClasses_comprehensive()": {
+			"Syntax": "**.test_filterTestClasses_comprehensive**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_getClassStore_basic_functionality()": {
+			"Syntax": "**.test_getClassStore_basic_functionality**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_parse_param_string_with_colons()": {
+			"Syntax": "**.test_parse_param_string_with_colons**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_parse_param_string_malformed()": {
+			"Syntax": "**.test_parse_param_string_malformed**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_parse_param_string_with_equals()": {
+			"Syntax": "**.test_parse_param_string_with_equals**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_TestFunctionTest": {
+		"test_runtime_error_storage()": {
+			"Syntax": "**.test_runtime_error_storage**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_duration_calculation()": {
+			"Syntax": "**.test_duration_calculation**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_test_result_object_creation()": {
+			"Syntax": "**.test_test_result_object_creation**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_successful_test_result()": {
+			"Syntax": "**.test_successful_test_result**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_test_function_execution()": {
+			"Syntax": "**.test_test_function_execution**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_testing_context_integration()": {
+			"Syntax": "**.test_testing_context_integration**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_test_function_initialization()": {
+			"Syntax": "**.test_test_function_initialization**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_TestSuite": {
+		"discoverTests()": {
+			"Syntax": "**.discoverTests**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"run()": {
+			"Syntax": "**.run**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"testRunner": {
+			"Syntax": "testRunner : cs.Testing.TestRunner"
+		},
+		"testPatterns": {
+			"Syntax": "testPatterns : Collection"
+		},
+		"outputFormat": {
+			"Syntax": "outputFormat : Text"
+		},
+		"testFunctions": {
+			"Syntax": "testFunctions : Collection"
+		},
+		"classInstance": {
+			"Syntax": "classInstance : 4D.Object"
+		},
+		"class": {
+			"Syntax": "class : 4D.Class"
+		}
+	},
+	"_SimpleTransactionTest": {
+		"test_disableTransaction()": {
+			"Syntax": "**.test_disableTransaction**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_basicTransaction()": {
+			"Syntax": "**.test_basicTransaction**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"UnitStatsTracker": {
+		"createStatistic()": {
+			"Syntax": "**.createStatistic**( *name* : Text ) : cs.Testing.UnitStatsTracker",
+			"Params": [
+				[
+					"name",
+					"Text",
+					"->"
+				],
+				[
+					"",
+					"cs.Testing.UnitStatsTracker",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"mock()": {
+			"Syntax": "**.mock**( *functionName* : Text; *parameters* : Collection; *returnValue* : Variant ) : Variant",
+			"Params": [
+				[
+					"functionName",
+					"Text",
+					"->"
+				],
+				[
+					"parameters",
+					"Collection",
+					"->"
+				],
+				[
+					"returnValue",
+					"Variant",
+					"->"
+				],
+				[
+					"",
+					"Variant",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"getStat()": {
+			"Syntax": "**.getStat**( *name* : Text ) : cs.Testing._UnitStatsDetail",
+			"Params": [
+				[
+					"name",
+					"Text",
+					"->"
+				],
+				[
+					"",
+					"cs.Testing._UnitStatsDetail",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"resetStatistics()": {
+			"Syntax": "**.resetStatistics**()",
+			"Params": [],
+			"Summary": ""
+		}
+	},
+	"Assert": {
+		"contains()": {
+			"Syntax": "**.contains**( *t* : Object; *container* : Variant; *value* : Variant; *message* : Text )",
+			"Params": [
+				[
+					"t",
+					"Object",
+					"->"
+				],
+				[
+					"container",
+					"Variant",
+					"->"
+				],
+				[
+					"value",
+					"Variant",
+					"->"
+				],
+				[
+					"message",
+					"Text",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"isNotNull()": {
+			"Syntax": "**.isNotNull**( *t* : Object; *value* : Variant; *message* : Text )",
+			"Params": [
+				[
+					"t",
+					"Object",
+					"->"
+				],
+				[
+					"value",
+					"Variant",
+					"->"
+				],
+				[
+					"message",
+					"Text",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"fail()": {
+			"Syntax": "**.fail**( *t* : Object; *message* : Text )",
+			"Params": [
+				[
+					"t",
+					"Object",
+					"->"
+				],
+				[
+					"message",
+					"Text",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"isNull()": {
+			"Syntax": "**.isNull**( *t* : Object; *value* : Variant; *message* : Text )",
+			"Params": [
+				[
+					"t",
+					"Object",
+					"->"
+				],
+				[
+					"value",
+					"Variant",
+					"->"
+				],
+				[
+					"message",
+					"Text",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"isFalse()": {
+			"Syntax": "**.isFalse**( *t* : Object; *value* : Variant; *message* : Text )",
+			"Params": [
+				[
+					"t",
+					"Object",
+					"->"
+				],
+				[
+					"value",
+					"Variant",
+					"->"
+				],
+				[
+					"message",
+					"Text",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"isTrue()": {
+			"Syntax": "**.isTrue**( *t* : Object; *value* : Variant; *message* : Text )",
+			"Params": [
+				[
+					"t",
+					"Object",
+					"->"
+				],
+				[
+					"value",
+					"Variant",
+					"->"
+				],
+				[
+					"message",
+					"Text",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"areEqual()": {
+			"Syntax": "**.areEqual**( *t* : Object; *expected* : Variant; *actual* : Variant; *message* : Text )",
+			"Params": [
+				[
+					"t",
+					"Object",
+					"->"
+				],
+				[
+					"expected",
+					"Variant",
+					"->"
+				],
+				[
+					"actual",
+					"Variant",
+					"->"
+				],
+				[
+					"message",
+					"Text",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_ErrorHandlingTest": {
+		"test_assertion_failure_handling()": {
+			"Syntax": "**.test_assertion_failure_handling**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_error_information_structure()": {
+			"Syntax": "**.test_error_information_structure**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_testing_context_properties()": {
+			"Syntax": "**.test_testing_context_properties**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_method_called_on_error_setup()": {
+			"Syntax": "**.test_method_called_on_error_setup**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_error_handler_initialization()": {
+			"Syntax": "**.test_error_handler_initialization**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_SequentialOnlyTest": {
+		"test_file_system_operation()": {
+			"Syntax": "**.test_file_system_operation**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_database_intensive_operation()": {
+			"Syntax": "**.test_database_intensive_operation**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_TaggingSystemTest": {
+		"test_tag_filtering_no_filters()": {
+			"Syntax": "**.test_tag_filtering_no_filters**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_multiple_tags_in_comment()": {
+			"Syntax": "**.test_multiple_tags_in_comment**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_tag_parameter_parsing()": {
+			"Syntax": "**.test_tag_parameter_parsing**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_default_unit_tag()": {
+			"Syntax": "**.test_default_unit_tag**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_tag_parsing_from_comments()": {
+			"Syntax": "**.test_tag_parsing_from_comments**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_tag_filtering_exclude()": {
+			"Syntax": "**.test_tag_filtering_exclude**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_tag_filtering_include()": {
+			"Syntax": "**.test_tag_filtering_include**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_TaggingExampleTest": {
+		"test_file_system_access()": {
+			"Syntax": "**.test_file_system_access**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_large_collection_processing()": {
+			"Syntax": "**.test_large_collection_processing**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_database_connection()": {
+			"Syntax": "**.test_database_connection**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_empty_string_handling()": {
+			"Syntax": "**.test_empty_string_handling**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_parameter_validation()": {
+			"Syntax": "**.test_parameter_validation**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_basic_addition()": {
+			"Syntax": "**.test_basic_addition**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_SetupTeardownTest": {
+		"test_beforeEach_was_called()": {
+			"Syntax": "**.test_beforeEach_was_called**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"afterEach()": {
+			"Syntax": "**.afterEach**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"teardown()": {
+			"Syntax": "**.teardown**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"setup()": {
+			"Syntax": "**.setup**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"test_setup_was_called()": {
+			"Syntax": "**.test_setup_was_called**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_data_is_available()": {
+			"Syntax": "**.test_data_is_available**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"beforeEach()": {
+			"Syntax": "**.beforeEach**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"afterEachCount": {
+			"Syntax": "afterEachCount : Integer"
+		},
+		"beforeEachCount": {
+			"Syntax": "beforeEachCount : Integer"
+		},
+		"teardownCalled": {
+			"Syntax": "teardownCalled : Boolean"
+		},
+		"setupCalled": {
+			"Syntax": "setupCalled : Boolean"
+		},
+		"testData": {
+			"Syntax": "testData : Object"
+		}
+	},
+	"_ParallelExecutionTest": {
+		"test_sequential_fallback()": {
+			"Syntax": "**.test_sequential_fallback**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_worker_process_management()": {
+			"Syntax": "**.test_worker_process_management**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_shared_storage_initialization()": {
+			"Syntax": "**.test_shared_storage_initialization**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_parallel_suite_filtering()": {
+			"Syntax": "**.test_parallel_suite_filtering**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_default_worker_count()": {
+			"Syntax": "**.test_default_worker_count**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_parallel_opt_out_parsing()": {
+			"Syntax": "**.test_parallel_opt_out_parsing**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_parallel_mode_detection()": {
+			"Syntax": "**.test_parallel_mode_detection**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_TestFunction": {
+		"hasTags()": {
+			"Syntax": "**.hasTags**( *tagList* : Collection ) : Boolean",
+			"Params": [
+				[
+					"tagList",
+					"Collection",
+					"->"
+				],
+				[
+					"",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"hasAllTags()": {
+			"Syntax": "**.hasAllTags**( *tagList* : Collection ) : Boolean",
+			"Params": [
+				[
+					"tagList",
+					"Collection",
+					"->"
+				],
+				[
+					"",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"shouldSkip()": {
+			"Syntax": "**.shouldSkip**() : Boolean",
+			"Params": [
+				[
+					"",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"getResult()": {
+			"Syntax": "**.getResult**() : Object",
+			"Params": [
+				[
+					"",
+					"Object",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"run()": {
+			"Syntax": "**.run**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"useTransactions": {
+			"Syntax": "useTransactions : Boolean"
+		},
+		"runtimeErrors": {
+			"Syntax": "runtimeErrors : Collection"
+		},
+		"tags": {
+			"Syntax": "tags : Collection"
+		},
+		"skipped": {
+			"Syntax": "skipped : Boolean"
+		},
+		"endTime": {
+			"Syntax": "endTime : Integer"
+		},
+		"startTime": {
+			"Syntax": "startTime : Integer"
+		},
+		"t": {
+			"Syntax": "t : cs.Testing.Testing"
+		},
+		"functionName": {
+			"Syntax": "functionName : Text"
+		},
+		"function": {
+			"Syntax": "function : 4D.Function"
+		},
+		"classInstance": {
+			"Syntax": "classInstance : 4D.Object"
+		},
+		"class": {
+			"Syntax": "class : 4D.Class"
+		}
+	},
+	"_TransactionDebugTest": {
+		"test_basicStartTransaction()": {
+			"Syntax": "**.test_basicStartTransaction**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_basicInTransaction()": {
+			"Syntax": "**.test_basicInTransaction**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
 				]
 			],
 			"Summary": ""
