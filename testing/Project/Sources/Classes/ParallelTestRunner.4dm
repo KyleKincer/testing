@@ -112,13 +112,15 @@ Function _initializeSharedStorage()
 	// Initialize shared storage with simple counters for result aggregation
 	Use (Storage:C1525)
 		Storage:C1525.parallelTestResults:=New shared object:C1526(\
-			"completedCount"; 0; \
-			"totalSuites"; This:C1470.testSuites.length; \
-			"totalTests"; 0; \
-			"passedTests"; 0; \
-			"failedTests"; 0\
-		)
-	End use
+                        "completedCount"; 0; \
+                        "totalSuites"; This:C1470.testSuites.length; \
+                        "totalTests"; 0; \
+                        "passedTests"; 0; \
+                        "failedTests"; 0; \
+                        "skippedTests"; 0; \
+                        "assertions"; 0\
+                )
+        End use
 
 Function _executeTestSuitesInParallel()
 	// Create workers and distribute test suites among them
@@ -253,42 +255,50 @@ Function _processWorkerResults($suiteResults : Object)
 	If ($suiteResult.tests#Null:C1517)
 		var $test : Object
 		For each ($test; $suiteResult.tests)
-			This:C1470.results.totalTests+=1
-			
-			If ($test.passed)
-				This:C1470.results.passed+=1
-				If (This:C1470.outputFormat="human")
-					LOG EVENT:C667(Into system standard outputs:K38:9; "  ✓ "+$test.name+" ("+String:C10($test.duration)+"ms)\r\n"; Information message:K38:1)
-				End if
-			Else
-				This:C1470.results.failed+=1
-				var $failedTest : Object
-				$failedTest:=OB Copy:C1225($test; ck resolve pointers:K85:26)
-				This:C1470.results.failedTests.push($failedTest)
-				
-				If (This:C1470.outputFormat="human")
-					var $errorDetails : Text
-					$errorDetails:=""
-					
-					// Check for runtime errors first
-					If ($test.runtimeErrors#Null:C1517) && ($test.runtimeErrors.length>0)
-						$errorDetails:=" [Runtime Error: "+$test.runtimeErrors[0].text+"]"
-					Else
-						// Check for failure reason or log messages
-						If ($test.failureReason#Null:C1517) && ($test.failureReason#"")
-							$errorDetails:=" ["+$test.failureReason+"]"
-						Else
-							If ($test.logMessages#Null:C1517) && ($test.logMessages.length>0)
-								$errorDetails:=" ["+$test.logMessages[0]+"]"
-							End if
-						End if
-					End if
-					
-					LOG EVENT:C667(Into system standard outputs:K38:9; "  ✗ "+$test.name+" ("+String:C10($test.duration)+"ms)"+$errorDetails+"\r\n"; Error message:K38:3)
-				End if
-			End if
-		End for each
-	End if
+                        This:C1470.results.totalTests+=1
+                        This:C1470.results.assertions+=$test.assertionCount
+
+                        If ($test.skipped)
+                                This:C1470.results.skipped+=1
+                                If (This:C1470.outputFormat="human")
+                                        LOG EVENT:C667(Into system standard outputs:K38:9; "  - "+$test.name+" (skipped)\r\n"; Information message:K38:1)
+                                End if
+                        Else
+                                If ($test.passed)
+                                        This:C1470.results.passed+=1
+                                        If (This:C1470.outputFormat="human")
+                                                LOG EVENT:C667(Into system standard outputs:K38:9; "  ✓ "+$test.name+" ("+String:C10($test.duration)+"ms)\r\n"; Information message:K38:1)
+                                        End if
+                                Else
+                                        This:C1470.results.failed+=1
+                                        var $failedTest : Object
+                                        $failedTest:=OB Copy:C1225($test; ck resolve pointers:K85:26)
+                                        This:C1470.results.failedTests.push($failedTest)
+
+                                        If (This:C1470.outputFormat="human")
+                                                var $errorDetails : Text
+                                                $errorDetails:=""
+
+                                                // Check for runtime errors first
+                                                If ($test.runtimeErrors#Null:C1517) && ($test.runtimeErrors.length>0)
+                                                        $errorDetails:=" [Runtime Error: "+$test.runtimeErrors[0].text+"]"
+                                                Else
+                                                        // Check for failure reason or log messages
+                                                        If ($test.failureReason#Null:C1517) && ($test.failureReason#"")
+                                                                $errorDetails:=" ["+$test.failureReason+"]"
+                                                        Else
+                                                                If ($test.logMessages#Null:C1517) && ($test.logMessages.length>0)
+                                                                        $errorDetails:=" ["+$test.logMessages[0]+"]"
+                                                                End if
+                                                        End if
+                                                End if
+
+                                                LOG EVENT:C667(Into system standard outputs:K38:9; "  ✗ "+$test.name+" ("+String:C10($test.duration)+"ms)"+$errorDetails+"\r\n"; Error message:K38:3)
+                                        End if
+                                End if
+                        End if
+                End for each
+        End if
 
 Function _aggregateParallelResults()
         // Process results from all worker signals after completion

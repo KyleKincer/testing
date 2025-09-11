@@ -99,14 +99,15 @@ Function _initializeResults()
 	This:C1470.results:=New object:C1471(\
 		"totalTests"; 0; \
 		"passed"; 0; \
-		"failed"; 0; \
-		"skipped"; 0; \
-		"startTime"; 0; \
-		"endTime"; 0; \
-		"duration"; 0; \
-		"suites"; []; \
-		"failedTests"; []\
-		)
+                "failed"; 0; \
+                "skipped"; 0; \
+                "startTime"; 0; \
+                "endTime"; 0; \
+                "duration"; 0; \
+                "suites"; []; \
+                "failedTests"; []; \
+                "assertions"; 0\
+                )
 	
 Function _logHeader()
 	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
@@ -120,13 +121,14 @@ Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
 		return 
 	End if 
 	
-	var $suiteResult : Object
+        var $suiteResult : Object
         $suiteResult:=New object:C1471(\
                 "name"; $testSuite.class.name; \
                 "tests"; []; \
                 "passed"; 0; \
                 "failed"; 0; \
-                "skipped"; 0\
+                "skipped"; 0; \
+                "assertions"; 0\
                 )
 	
 	var $testFunction : cs:C1710._TestFunction
@@ -173,8 +175,10 @@ Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
                         End if
                 End if
 		
-		$suiteResult.tests.push($testResult)
-	End for each 
+                $suiteResult.tests.push($testResult)
+                This:C1470.results.assertions+=($testResult.assertionCount)
+                $suiteResult.assertions+=($testResult.assertionCount)
+        End for each
 	
 	This:C1470.results.suites.push($suiteResult)
 	
@@ -205,8 +209,9 @@ Function _generateHumanReport()
         LOG EVENT:C667(Into system standard outputs:K38:9; "Passed: "+String:C10(This:C1470.results.passed)+"\r\n"; Information message:K38:1)
         LOG EVENT:C667(Into system standard outputs:K38:9; "Failed: "+String:C10(This:C1470.results.failed)+"\r\n"; Information message:K38:1)
         LOG EVENT:C667(Into system standard outputs:K38:9; "Skipped: "+String:C10(This:C1470.results.skipped)+"\r\n"; Information message:K38:1)
+        LOG EVENT:C667(Into system standard outputs:K38:9; "Assertions: "+String:C10(This:C1470.results.assertions)+"\r\n"; Information message:K38:1)
         LOG EVENT:C667(Into system standard outputs:K38:9; "Pass Rate: "+String:C10($passRate; "##0.0")+"%\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Duration: "+String:C10(This:C1470.results.duration)+"ms\r\n"; Information message:K38:1)
+        LOG EVENT:C667(Into system standard outputs:K38:9; "Duration: "+String:C10(This:C1470.results.duration)+"ms\r\n"; Information message:K38:1)
 	
 	If (This:C1470.results.failed>0)
 		LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
@@ -260,53 +265,75 @@ Function _generateJSONReport()
                         "passed"; This:C1470.results.passed; \
                         "failed"; This:C1470.results.failed; \
                         "skipped"; This:C1470.results.skipped; \
+                        "assertions"; This:C1470.results.assertions; \
                         "rate"; Round:C94($passRate; 1); \
                         "duration"; This:C1470.results.duration; \
                         "status"; (This:C1470.results.failed=0) ? "ok" : "fail"\
                 )
-		
-		// Only include failed tests if there are any
-		If (This:C1470.results.failed>0)
-			var $failedTests : Collection
-			$failedTests:=[]
-			var $failedTest : Object
-			For each ($failedTest; This:C1470.results.failedTests)
-				var $terseFailure : Object
-				$terseFailure:=New object:C1471("test"; $failedTest.name; "suite"; $failedTest.suite)
-				// Only include error details if they exist and are different
-				If ($failedTest.runtimeErrors.length>0)
-					$terseFailure.error:=$failedTest.runtimeErrors[0].text
-				Else 
-					If ($failedTest.logMessages.length>0)
-						$terseFailure.reason:=$failedTest.logMessages[0]
-					End if 
-				End if 
-				
-				// Include call chain in verbose JSON output
-				If (This:C1470.verboseOutput) && ($failedTest.callChain#Null)
-					$terseFailure.callChain:=$failedTest.callChain
-				End if 
-				$failedTests.push($terseFailure)
-			End for each 
-			$jsonReport.failures:=$failedTests
-		End if 
-		
-		// Only include suite summary if there are multiple suites
-		If (This:C1470.results.suites.length>1)
-			var $suiteSummary : Collection
-			$suiteSummary:=[]
-			var $suite : Object
-			For each ($suite; This:C1470.results.suites)
+
+                // Include individual test results with assertions
+                var $testResults : Collection
+                $testResults:=[]
+                var $suite : Object
+                var $test : Object
+                For each ($suite; This:C1470.results.suites)
+                        For each ($test; $suite.tests)
+                                $testResults.push(New object:C1471(\
+                                        "name"; $test.name; \
+                                        "suite"; $test.suite; \
+                                        "passed"; Not:C34($test.failed) && Not:C34($test.skipped); \
+                                        "failed"; $test.failed; \
+                                        "skipped"; $test.skipped; \
+                                        "duration"; $test.duration; \
+                                        "assertions"; $test.assertions; \
+                                        "assertionCount"; $test.assertions.length\
+                                ))
+                        End for each
+                End for each
+                $jsonReport.testResults:=$testResults
+
+                // Only include failed tests if there are any
+                If (This:C1470.results.failed>0)
+                        var $failedTests : Collection
+                        $failedTests:=[]
+                        var $failedTest : Object
+                        For each ($failedTest; This:C1470.results.failedTests)
+                                var $terseFailure : Object
+                                $terseFailure:=New object:C1471("test"; $failedTest.name; "suite"; $failedTest.suite)
+                                // Only include error details if they exist and are different
+                                If ($failedTest.runtimeErrors.length>0)
+                                        $terseFailure.error:=$failedTest.runtimeErrors[0].text
+                                Else
+                                        If ($failedTest.logMessages.length>0)
+                                                $terseFailure.reason:=$failedTest.logMessages[0]
+                                        End if
+                                End if
+
+                                // Include call chain in verbose JSON output
+                                If (This:C1470.verboseOutput) && ($failedTest.callChain#Null)
+                                        $terseFailure.callChain:=$failedTest.callChain
+                                End if
+                                $failedTests.push($terseFailure)
+                        End for each
+                        $jsonReport.failures:=$failedTests
+                End if
+
+                // Only include suite summary if there are multiple suites
+                If (This:C1470.results.suites.length>1)
+                        var $suiteSummary : Collection
+                        $suiteSummary:=[]
+                        For each ($suite; This:C1470.results.suites)
                                 $suiteSummary.push(New object:C1471(\
                                         "name"; $suite.name; \
                                         "passed"; $suite.passed; \
                                         "failed"; $suite.failed; \
-                                        "skipped"; $suite.skipped\
+                                        "skipped"; $suite.skipped; \
+                                        "assertions"; $suite.assertions\
                                 ))
-			End for each 
-			$jsonReport.suites:=$suiteSummary
-		End if 
-	End if 
+                        End for each
+                        $jsonReport.suites:=$suiteSummary
+                End if
+        End if
 	
 	var $jsonString : Text
 	$jsonString:=JSON Stringify:C1217($jsonReport; *)

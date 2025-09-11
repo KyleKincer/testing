@@ -3,6 +3,7 @@
 property failed : Boolean
 property done : Boolean
 property logMessages : Collection
+property assertions : Collection
 property assert : cs:C1710.Assert
 property stats : cs:C1710.UnitStatsTracker
 property failureCallChain : Collection
@@ -11,10 +12,11 @@ property classInstance : 4D:C1709.Object
 Class constructor()
 	This:C1470.failed:=False:C215
 	This:C1470.done:=False:C215
-	This:C1470.logMessages:=[]
-	This:C1470.assert:=cs:C1710.Assert.new()
-	This:C1470.stats:=cs:C1710.UnitStatsTracker.new()
-	This:C1470.failureCallChain:=Null
+        This:C1470.logMessages:=[]
+        This:C1470.assertions:=[]
+        This:C1470.assert:=cs:C1710.Assert.new()
+        This:C1470.stats:=cs:C1710.UnitStatsTracker.new()
+        This:C1470.failureCallChain:=Null
 	
 Function log($message : Text)
 	This:C1470.logMessages.push($message)
@@ -33,9 +35,10 @@ Function fatal()
 Function resetForNewTest()
 	This:C1470.failed:=False:C215
 	This:C1470.done:=False:C215
-	This:C1470.logMessages:=[]
-	This:C1470.stats.resetStatistics()
-	This:C1470.failureCallChain:=Null
+        This:C1470.logMessages:=[]
+        This:C1470.assertions:=[]
+        This:C1470.stats.resetStatistics()
+        This:C1470.failureCallChain:=Null
 	
 Function run($name : Text; $subtest : 4D:C1709.Function; $data : Variant) : Boolean
         // Execute a named subtest with its own Testing context

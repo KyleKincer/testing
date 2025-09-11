@@ -18,7 +18,8 @@ Function test_results_object_structure($t : cs:C1710.Testing)
 	$t.assert.isNotNull($t; $results.endTime; "Should have endTime field")
 	$t.assert.isNotNull($t; $results.duration; "Should have duration field")
 	$t.assert.isNotNull($t; $results.suites; "Should have suites field")
-	$t.assert.isNotNull($t; $results.failedTests; "Should have failedTests field")
+        $t.assert.isNotNull($t; $results.failedTests; "Should have failedTests field")
+        $t.assert.isNotNull($t; $results.assertions; "Should have assertions field")
 
 Function test_results_object_types($t : cs:C1710.Testing)
 	
@@ -37,7 +38,8 @@ Function test_results_object_types($t : cs:C1710.Testing)
 	$t.assert.areEqual($t; Is real:K8:4; Value type:C1509($results.endTime); "endTime should be numeric")
 	$t.assert.areEqual($t; Is real:K8:4; Value type:C1509($results.duration); "duration should be numeric")
 	$t.assert.areEqual($t; Is collection:K8:32; Value type:C1509($results.suites); "suites should be collection")
-	$t.assert.areEqual($t; Is collection:K8:32; Value type:C1509($results.failedTests); "failedTests should be collection")
+        $t.assert.areEqual($t; Is collection:K8:32; Value type:C1509($results.failedTests); "failedTests should be collection")
+        $t.assert.areEqual($t; Is real:K8:4; Value type:C1509($results.assertions); "assertions should be numeric")
 
 Function test_initial_results_values($t : cs:C1710.Testing)
 	
@@ -50,8 +52,9 @@ Function test_initial_results_values($t : cs:C1710.Testing)
 	// Test initial values
 	$t.assert.areEqual($t; 0; $results.totalTests; "totalTests should start at 0")
 	$t.assert.areEqual($t; 0; $results.passed; "passed should start at 0")
-	$t.assert.areEqual($t; 0; $results.failed; "failed should start at 0")
-	$t.assert.areEqual($t; 0; $results.skipped; "skipped should start at 0")
+        $t.assert.areEqual($t; 0; $results.failed; "failed should start at 0")
+        $t.assert.areEqual($t; 0; $results.skipped; "skipped should start at 0")
+        $t.assert.areEqual($t; 0; $results.assertions; "assertions should start at 0")
 	$t.assert.areEqual($t; 0; $results.startTime; "startTime should start at 0")
 	$t.assert.areEqual($t; 0; $results.endTime; "endTime should start at 0")
 	$t.assert.areEqual($t; 0; $results.duration; "duration should start at 0")
@@ -82,7 +85,11 @@ Function test_test_result_object_structure($t : cs:C1710.Testing)
 	$t.assert.isNotNull($t; $result.duration; "Result should have duration field")
 	$t.assert.isNotNull($t; $result.suite; "Result should have suite field")
 	$t.assert.isNotNull($t; $result.runtimeErrors; "Result should have runtimeErrors field")
-	$t.assert.isNotNull($t; $result.logMessages; "Result should have logMessages field")
+        $t.assert.isNotNull($t; $result.logMessages; "Result should have logMessages field")
+        $t.assert.isNotNull($t; $result.assertions; "Result should have assertions field")
+        $t.assert.isNotNull($t; $result.assertionCount; "Result should have assertionCount field")
+        $t.assert.areEqual($t; Is collection:K8:32; Value type:C1509($result.assertions); "Assertions should be collection")
+        $t.assert.areEqual($t; Is real:K8:4; Value type:C1509($result.assertionCount); "assertionCount should be numeric")
 
 Function test_suite_result_structure($t : cs:C1710.Testing)
 	
@@ -95,17 +102,21 @@ Function test_suite_result_structure($t : cs:C1710.Testing)
 	
 	// Create a mock suite result structure
 	var $suiteResult : Object
-	$suiteResult:=New object:C1471(\
-		"name"; "MockTest"; \
-		"tests"; []; \
-		"passed"; 0; \
-		"failed"; 0\
-		)
+        $suiteResult:=New object:C1471(\
+                "name"; "MockTest"; \
+                "tests"; []; \
+                "passed"; 0; \
+                "failed"; 0; \
+                "skipped"; 0; \
+                "assertions"; 0\
+                )
 	
 	$t.assert.areEqual($t; "MockTest"; $suiteResult.name; "Suite result should have name")
 	$t.assert.areEqual($t; Is collection:K8:32; Value type:C1509($suiteResult.tests); "Suite result should have tests collection")
 	$t.assert.areEqual($t; Is real:K8:4; Value type:C1509($suiteResult.passed); "Suite result should have passed count")
-	$t.assert.areEqual($t; Is real:K8:4; Value type:C1509($suiteResult.failed); "Suite result should have failed count")
+        $t.assert.areEqual($t; Is real:K8:4; Value type:C1509($suiteResult.failed); "Suite result should have failed count")
+        $t.assert.areEqual($t; Is real:K8:4; Value type:C1509($suiteResult.skipped); "Suite result should have skipped count")
+        $t.assert.areEqual($t; Is real:K8:4; Value type:C1509($suiteResult.assertions); "Suite result should have assertions count")
 
 Function test_json_serialization_compatibility($t : cs:C1710.Testing)
 	
