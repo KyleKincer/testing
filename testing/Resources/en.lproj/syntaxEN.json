@@ -804,6 +804,17 @@
 		}
 	},
 	"_TestingTest": {
+		"test_run_subtest_stats_isolated()": {
+			"Syntax": "**.test_run_subtest_stats_isolated**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
 		"test_run_uses_parent_context()": {
 			"Syntax": "**.test_run_uses_parent_context**( *t* : cs.Testing.Testing )",
 			"Params": [
