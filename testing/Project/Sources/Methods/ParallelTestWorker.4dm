@@ -25,12 +25,14 @@ Case of
 		
 		// Collect detailed test results from completed test suite (using regular objects)
 		var $suiteResults : Object
-		$suiteResults:=New object:C1471(\
-			"name"; String:C10($testSuite.class.name); \
-			"tests"; New collection:C1472; \
-			"passed"; 0; \
-			"failed"; 0\
-			)
+                $suiteResults:=New object:C1471(\
+                        "name"; String:C10($testSuite.class.name); \
+                        "tests"; New collection:C1472; \
+                        "passed"; 0; \
+                        "failed"; 0; \
+                        "skipped"; 0; \
+                        "assertions"; 0\
+                        )
 		
 		var $testFunction : cs:C1710._TestFunction
 		For each ($testFunction; $testSuite.testFunctions)
@@ -39,13 +41,16 @@ Case of
 			
 			// Create a clean result object for transport
 			var $cleanResult : Object
-			$cleanResult:=New object:C1471(\
-				"name"; String:C10($testResult.name); \
-				"passed"; Bool:C1537($testResult.passed); \
-				"failed"; Bool:C1537($testResult.failed); \
-				"duration"; Num:C11($testResult.duration); \
-				"suite"; String:C10($testResult.suite)\
-				)
+                        $cleanResult:=New object:C1471(\
+                                "name"; String:C10($testResult.name); \
+                                "passed"; Bool:C1537($testResult.passed); \
+                                "failed"; Bool:C1537($testResult.failed); \
+                                "skipped"; Bool:C1537($testResult.skipped); \
+                                "duration"; Num:C11($testResult.duration); \
+                                "suite"; String:C10($testResult.suite); \
+                                "assertions"; $testResult.assertions; \
+                                "assertionCount"; $testResult.assertions.length\
+                                )
 			
 			// Add failure details if test failed
 			If ($testResult.failed)
@@ -83,20 +88,27 @@ Case of
 			
 			$suiteResults.tests.push($cleanResult)
 			
-			If ($testResult.passed)
-				$suiteResults.passed+=1
-			Else 
-				$suiteResults.failed+=1
-			End if 
+                        $suiteResults.assertions+=$testResult.assertions.length
+                        If ($testResult.skipped)
+                                $suiteResults.skipped+=1
+                        Else
+                                If ($testResult.passed)
+                                        $suiteResults.passed+=1
+                                Else
+                                        $suiteResults.failed+=1
+                                End if
+                        End if
 		End for each 
 		
 		// Update shared counters for summary
 		Use (Storage:C1525.parallelTestResults)
 			Storage:C1525.parallelTestResults.completedCount+=1
 			Storage:C1525.parallelTestResults.totalTests+=$suiteResults.tests.length
-			Storage:C1525.parallelTestResults.passedTests+=$suiteResults.passed
-			Storage:C1525.parallelTestResults.failedTests+=$suiteResults.failed
-		End use 
+                        Storage:C1525.parallelTestResults.passedTests+=$suiteResults.passed
+                        Storage:C1525.parallelTestResults.failedTests+=$suiteResults.failed
+                        Storage:C1525.parallelTestResults.skippedTests+=$suiteResults.skipped
+                        Storage:C1525.parallelTestResults.assertions+=$suiteResults.assertions
+                End use
 		
 		// Attach detailed results to signal and trigger completion
 		If ($data.signal#Null:C1517)

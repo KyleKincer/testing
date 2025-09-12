@@ -3,6 +3,7 @@
 property failed : Boolean
 property done : Boolean
 property logMessages : Collection
+property assertions : Collection
 property assert : cs:C1710.Assert
 property stats : cs:C1710.UnitStatsTracker
 property failureCallChain : Collection
@@ -11,18 +12,45 @@ property classInstance : 4D:C1709.Object
 Class constructor()
 	This:C1470.failed:=False:C215
 	This:C1470.done:=False:C215
-	This:C1470.logMessages:=[]
-	This:C1470.assert:=cs:C1710.Assert.new()
-	This:C1470.stats:=cs:C1710.UnitStatsTracker.new()
-	This:C1470.failureCallChain:=Null
+        This:C1470.logMessages:=[]
+        This:C1470.assertions:=[]
+        This:C1470.assert:=cs:C1710.Assert.new()
+        This:C1470.stats:=cs:C1710.UnitStatsTracker.new()
+        This:C1470.failureCallChain:=Null
 	
 Function log($message : Text)
 	This:C1470.logMessages.push($message)
 	
-Function fail()
-	This:C1470.failed:=True:C214
-	// Capture call chain when test fails for debugging
-	This:C1470.failureCallChain:=Call chain:C1662
+Function fail($expected : Variant; $actual : Variant; $message : Text)
+        // Mark the test as failed and record assertion details
+        This:C1470.failed:=True:C214
+        This:C1470.failureCallChain:=Get call chain:C1662
+
+        var $exp : Variant
+        var $act : Variant
+        var $msg : Text
+
+        $exp:=Null
+        $act:=Null
+        $msg:=""
+
+        Case of
+                : (Count parameters=1)
+                        $msg:=$expected
+                : (Count parameters=2)
+                        $exp:=$expected
+                        $act:=$actual
+                : (Count parameters>=3)
+                        $exp:=$expected
+                        $act:=$actual
+                        $msg:=$message
+        End case
+
+        This:C1470.assert._recordAssertion(This:C1470; False:C215; $exp; $act; $msg; This:C1470.failureCallChain)
+
+        If ($msg#"")
+                This:C1470.log($msg)
+        End if
 	
 Function fatal()
 	This:C1470.failed:=True:C214
@@ -33,9 +61,10 @@ Function fatal()
 Function resetForNewTest()
 	This:C1470.failed:=False:C215
 	This:C1470.done:=False:C215
-	This:C1470.logMessages:=[]
-	This:C1470.stats.resetStatistics()
-	This:C1470.failureCallChain:=Null
+        This:C1470.logMessages:=[]
+        This:C1470.assertions:=[]
+        This:C1470.stats.resetStatistics()
+        This:C1470.failureCallChain:=Null
 	
 Function run($name : Text; $subtest : 4D:C1709.Function; $data : Variant) : Boolean
         // Execute a named subtest with its own Testing context

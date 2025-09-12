@@ -157,10 +157,11 @@ Function test_results_initialization($t : cs:C1710.Testing)
 	$t.assert.isNotNull($t; $results; "Results should be initialized")
 	$t.assert.areEqual($t; 0; $results.totalTests; "Total tests should start at 0")
 	$t.assert.areEqual($t; 0; $results.passed; "Passed should start at 0")
-	$t.assert.areEqual($t; 0; $results.failed; "Failed should start at 0")
-	$t.assert.areEqual($t; 0; $results.skipped; "Skipped should start at 0")
-	$t.assert.isNotNull($t; $results.suites; "Suites should be initialized")
-	$t.assert.isNotNull($t; $results.failedTests; "FailedTests should be initialized")
+        $t.assert.areEqual($t; 0; $results.failed; "Failed should start at 0")
+        $t.assert.areEqual($t; 0; $results.skipped; "Skipped should start at 0")
+        $t.assert.isNotNull($t; $results.suites; "Suites should be initialized")
+        $t.assert.isNotNull($t; $results.failedTests; "FailedTests should be initialized")
+        $t.assert.areEqual($t; 0; $results.assertions; "Assertions should start at 0")
 	
 Function test_test_patterns_initialization($t : cs:C1710.Testing)
 	
@@ -332,6 +333,8 @@ Function test_skip_tag_counts_as_skipped($t : cs:C1710.Testing)
         // Run TestRunner on a class that should be skipped
         var $runner : cs:C1710.TestRunner
         $runner:=cs:C1710.TestRunner.new()
+        // Suppress output during this internal test run
+        $runner.outputFormat:="none"
         $runner.testPatterns:=["_SkipTaggedTest*"]
         $runner.run()
 
