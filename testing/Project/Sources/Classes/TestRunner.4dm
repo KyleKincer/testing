@@ -288,7 +288,7 @@ Function _generateJSONReport()
                                         "skipped"; $test.skipped; \
                                         "duration"; $test.duration; \
                                         "assertions"; $test.assertions; \
-                                        "assertionCount"; $test.assertions.length\
+                                        "assertionCount"; $test.assertionCount\
                                 ))
                         End for each
                 End for each
