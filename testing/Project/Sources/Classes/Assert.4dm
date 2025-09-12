@@ -109,11 +109,25 @@ Function _recordAssertion($t : Object; $passed : Boolean; $expected : Variant; $
         var $assertInfo : Object
         $assertInfo:=New object:C1471(\
                 "passed"; $passed; \
-                "expected"; $expected; \
-                "actual"; $actual; \
+                "expected"; This:C1470._sanitizeValue($expected); \
+                "actual"; This:C1470._sanitizeValue($actual); \
                 "message"; $message; \
                 "line"; $line\
                 )
         $t.assertions.push($assertInfo)
+
+Function _sanitizeValue($value : Variant) : Variant
+        var $type : Integer
+        $type:=Value type:C1509($value)
+
+        // Use placeholders for complex structures to avoid serialization errors
+        Case of
+                : ($type=Is object:K8:27)
+                        return "<object>"
+                : ($type=Is collection:K8:32)
+                        return "<collection>"
+                Else
+                        return $value
+        End case
 
 

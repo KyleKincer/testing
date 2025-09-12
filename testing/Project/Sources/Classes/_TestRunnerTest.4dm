@@ -333,6 +333,8 @@ Function test_skip_tag_counts_as_skipped($t : cs:C1710.Testing)
         // Run TestRunner on a class that should be skipped
         var $runner : cs:C1710.TestRunner
         $runner:=cs:C1710.TestRunner.new()
+        // Suppress output during this internal test run
+        $runner.outputFormat:="none"
         $runner.testPatterns:=["_SkipTaggedTest*"]
         $runner.run()
 

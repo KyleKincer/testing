@@ -183,15 +183,17 @@ Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
 	This:C1470.results.suites.push($suiteResult)
 	
 Function _generateReport()
-	If (This:C1470.outputFormat="json")
-		This:C1470._generateJSONReport()
-	Else 
-		If (This:C1470.outputFormat="junit")
-			This:C1470._generateJUnitXMLReport()
-		Else 
-			This:C1470._generateHumanReport()
-		End if 
-	End if 
+        If (This:C1470.outputFormat="json")
+                This:C1470._generateJSONReport()
+        Else
+                If (This:C1470.outputFormat="junit")
+                        This:C1470._generateJUnitXMLReport()
+                Else
+                        If (This:C1470.outputFormat#"none")
+                                This:C1470._generateHumanReport()
+                        End if
+                End if
+        End if
 	
 Function _generateHumanReport()
 	var $passRate : Real
