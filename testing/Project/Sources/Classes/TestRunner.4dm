@@ -7,6 +7,8 @@ property testPatterns : Collection  // Collection of test patterns to match
 property includeTags : Collection  // Tags to include (OR logic)
 property excludeTags : Collection  // Tags to exclude
 property requireAllTags : Collection  // Tags that must all be present (AND logic)
+property _cachedTestClasses : Collection  // Cached collection of discovered test classes
+property _classStoreSignature : Text  // Signature of the class store for cache validation
 
 Class constructor($cs : 4D:C1709.Object)
 	This:C1470.classStore:=$cs || cs:C1710
@@ -62,38 +64,104 @@ Function discoverTests()
 	End for each 
 	
 Function _getTestClasses()->$classes : Collection
-	// Returns collection of 4D.Class
-	var $classStore : Object
-	$classStore:=This:C1470._getClassStore()
-	
-	return This:C1470._filterTestClasses($classStore)
+        // Returns collection of 4D.Class with caching persisted to disk
+        var $classStore : Object
+        var $classes : Collection
+        $classStore:=This:C1470._getClassStore()
+
+        // Build a signature based on the current class names so we can detect changes
+        var $classNames : Collection
+        $classNames:=OB Keys:C1719($classStore)
+        var $signature : Text
+        $signature:=JSON Stringify:C1217($classNames)
+
+        // Try to load from disk cache if not already in memory
+        If (This:C1470._cachedTestClasses=Null:C1517)
+                This:C1470._loadCache($signature; $classStore)
+        End if
+
+        // If the class store hasn't changed and we have a cache, return it
+        If ($signature=This:C1470._classStoreSignature) && (This:C1470._cachedTestClasses#Null:C1517)
+                return This:C1470._cachedTestClasses
+        End if
+
+        // Otherwise, compute and store the cache
+        $classes:=This:C1470._filterTestClasses($classStore; $classNames)
+        This:C1470._cachedTestClasses:=$classes
+        This:C1470._classStoreSignature:=$signature
+        This:C1470._saveCache()
+
+        return $classes
 	
 Function _getClassStore() : Object
 	// Extracted method to make testing easier - can be mocked
 	return This:C1470.classStore
 	
-Function _filterTestClasses($classStore : Object) : Collection
-	var $classes : Collection
-	$classes:=[]
-	var $className : Text
-	For each ($className; $classStore)
-		// Skip classes without superclass property (malformed classes)
-		If ($classStore[$className].superclass=Null:C1517)
-			continue
-		End if 
-		
-		// Skip Dataclasses for now
-		If ($classStore[$className].superclass.name="DataClass")
-			continue
-		End if 
-		
-		// Test classes end with "Test", e.g. "MyClassTest"
-		If ($className="@Test")
-			$classes.push($classStore[$className])
-		End if 
-	End for each 
-	
-	return $classes
+Function _filterTestClasses($classStore : Object; $classNames : Collection) : Collection
+        var $classes : Collection
+        $classes:=[]
+        var $className : Text
+        var $classInfo : Object
+        If ($classNames=Null:C1517)
+                $classNames:=OB Keys:C1719($classStore)
+        End if
+        For each ($className; $classNames)
+                $classInfo:=$classStore[$className]
+                // Skip classes without superclass property (malformed classes)
+                If ($classInfo.superclass=Null:C1517)
+                        continue
+                End if
+
+                // Skip Dataclasses for now
+                If ($classInfo.superclass.name="DataClass")
+                        continue
+                End if
+
+                // Test classes end with "Test", e.g. "MyClassTest"
+                If ($className="@Test")
+                        $classes.push($classInfo)
+                End if
+        End for each
+
+        return $classes
+
+Function _cacheFile()->$file : 4D:C1709.File
+        // Cache stored in DerivedData so it persists across runs but isn't versioned
+        return Folder:C1567(fk database folder:K87:14).folder("Project").folder("DerivedData").file("testClassCache.json")
+
+Function _loadCache($signature : Text; $classStore : Object)
+        var $cacheFile : 4D:C1709.File
+        $cacheFile:=This:C1470._cacheFile()
+        If ($cacheFile.exists)
+                var $cacheText : Text
+                $cacheText:=$cacheFile.getText("UTF-8")
+                var $cacheObj : Object
+                $cacheObj:=JSON Parse:C1218($cacheText)
+                If ($cacheObj#Null:C1517) && ($cacheObj.signature=$signature)
+                        var $classes : Collection
+                        $classes:=This:C1470._filterTestClasses($classStore; $cacheObj.classes)
+                        This:C1470._cachedTestClasses:=$classes
+                        This:C1470._classStoreSignature:=$signature
+                End if
+        End if
+
+Function _saveCache()
+        var $cacheFile : 4D:C1709.File
+        $cacheFile:=This:C1470._cacheFile()
+        var $parent : 4D:C1709.Folder
+        $parent:=$cacheFile.parent
+        If (Not:C34($parent.exists))
+                $parent.create()
+        End if
+        var $names : Collection
+        $names:=[]
+        var $classInfo : 4D:C1709.Class
+        For each ($classInfo; This:C1470._cachedTestClasses)
+                $names.push($classInfo.name)
+        End for each
+        var $cacheObj : Object
+        $cacheObj:=New object:C1471("signature"; This:C1470._classStoreSignature; "classes"; $names)
+        $cacheFile.setText(JSON Stringify:C1217($cacheObj); "UTF-8")
 	
 Function _initializeResults()
 	This:C1470.results:=New object:C1471(\

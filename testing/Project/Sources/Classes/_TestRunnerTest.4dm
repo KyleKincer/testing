@@ -75,7 +75,7 @@ Function test_filter_test_classes($t : cs:C1710.Testing)
 		)
 	
 	var $testClasses : Collection
-	$testClasses:=$runner._filterTestClasses($mockClassStore)
+        $testClasses:=$runner._filterTestClasses($mockClassStore; Null:C1517)
 	
 	// Should find ExampleTest and ErrorHandlingTest from the mock
 	var $foundNames : Collection
@@ -112,9 +112,35 @@ Function test_test_class_discovery($t : cs:C1710.Testing)
 	
 	// Verify that all returned classes have names ending with "Test"
 	var $class : 4D:C1709.Class
-	For each ($class; $testClasses)
-		$t.assert.isTrue($t; $class.name="@Test"; "All discovered classes should end with 'Test', found: "+$class.name)
-	End for each 
+        For each ($class; $testClasses)
+                $t.assert.isTrue($t; $class.name="@Test"; "All discovered classes should end with 'Test', found: "+$class.name)
+        End for each
+
+Function test_persistent_class_cache($t : cs:C1710.Testing)
+
+        var $runner : cs:C1710.TestRunner
+        $runner:=cs:C1710.TestRunner.new()
+
+        // Ensure cache file is removed before testing
+        var $cacheFile : 4D:C1709.File
+        $cacheFile:=$runner._cacheFile()
+        If ($cacheFile.exists)
+                $cacheFile.delete()
+        End if
+
+        // First run should create the cache file
+        var $classes : Collection
+        $classes:=$runner._getTestClasses()
+        $t.assert.isTrue($t; $cacheFile.exists; "Cache file should be created on first run")
+
+        // Clear in-memory cache to simulate fresh run
+        $runner._cachedTestClasses:=Null:C1517
+        $runner._classStoreSignature:=""
+
+        // Second run should load from disk and return same number of classes
+        var $classes2 : Collection
+        $classes2:=$runner._getTestClasses()
+        $t.assert.areEqual($t; $classes.length; $classes2.length; "Cache should provide same classes on subsequent runs")
 	
 Function test_pattern_matching_exact($t : cs:C1710.Testing)
 	
@@ -239,7 +265,7 @@ Function test_filterTestClasses_comprehensive($t : cs:C1710.Testing)
 		)
 	
 	var $testClasses : Collection
-	$testClasses:=$runner._filterTestClasses($mockClassStore)
+    $testClasses:=$runner._filterTestClasses($mockClassStore; Null:C1517)
 	
 	// Should find all test classes (ExampleTest, ErrorHandlingTest, TestRunnerTest, ComprehensiveErrorTest)
 	$t.assert.isTrue($t; $testClasses.length>=4; "Should find at least 4 test classes")
@@ -283,7 +309,7 @@ Function test_dependency_injection_pattern($t : cs:C1710.Testing)
 	var $emptyStore : Object
 	$emptyStore:=New object:C1471
 	var $noClasses : Collection
-	$noClasses:=$runner._filterTestClasses($emptyStore)
+    $noClasses:=$runner._filterTestClasses($emptyStore; Null:C1517)
 	$t.assert.areEqual($t; 0; $noClasses.length; "Should handle empty class store")
 	
 Function test_pattern_matching_with_dependency_extraction($t : cs:C1710.Testing)
@@ -323,7 +349,7 @@ Function test_error_handling_in_extracted_methods($t : cs:C1710.Testing)
 		"ValidTest"; New object:C1471("name"; "ValidTest"; "superclass"; New object:C1471("name"; "Object"))\
 		)
         var $filteredClasses : Collection
-        $filteredClasses:=$runner._filterTestClasses($malformedStore)
+        $filteredClasses:=$runner._filterTestClasses($malformedStore; Null:C1517)
         // Should find ValidTest but skip InvalidTest (missing superclass)
         $t.assert.areEqual($t; 1; $filteredClasses.length; "Should handle classes without superclass gracefully")
         $t.assert.areEqual($t; "ValidTest"; $filteredClasses[0].name; "Should include ValidTest")
