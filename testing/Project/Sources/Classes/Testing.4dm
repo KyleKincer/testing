@@ -24,7 +24,7 @@ Function log($message : Text)
 Function fail($expected : Variant; $actual : Variant; $message : Text)
         // Mark the test as failed and record assertion details
         This:C1470.failed:=True:C214
-        This:C1470.failureCallChain:=Call chain:C1662
+        This:C1470.failureCallChain:=Get call chain:C1662
 
         var $exp : Variant
         var $act : Variant
@@ -46,7 +46,7 @@ Function fail($expected : Variant; $actual : Variant; $message : Text)
                         $msg:=$message
         End case
 
-        This:C1470.assert._recordAssertion(This:C1470; False:C215; $exp; $act; $msg)
+        This:C1470.assert._recordAssertion(This:C1470; False:C215; $exp; $act; $msg; This:C1470.failureCallChain)
 
         If ($msg#"")
                 This:C1470.log($msg)

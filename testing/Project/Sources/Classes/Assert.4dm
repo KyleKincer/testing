@@ -104,10 +104,17 @@ Function contains($t : Object; $container : Variant; $value : Variant; $message 
 		End if 
 	End if 
 	
-Function _recordAssertion($t : Object; $passed : Boolean; $expected : Variant; $actual : Variant; $message : Text)
+Function _recordAssertion($t : Object; $passed : Boolean; $expected : Variant; $actual : Variant; $message : Text; $callChain : Collection)
 	var $cc : Collection
 	var $line : Variant
-	$cc:=Get call chain:C1662
+	
+	// Use provided call chain if available, otherwise capture it
+	If (Count parameters>=6) && ($callChain#Null)
+		$cc:=$callChain
+	Else 
+		$cc:=Get call chain:C1662
+	End if 
+	
 	$line:=Null:C1517
 	If ($cc.length>2) && ($cc[2].line#Null:C1517)
 		$line:=$cc[2].line
