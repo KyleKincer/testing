@@ -371,3 +371,49 @@ Function test_skip_tag_counts_as_skipped($t : cs:C1710.Testing)
         $t.assert.areEqual($t; 1; $results.skipped; "Skipped test should be counted")
         $t.assert.areEqual($t; 0; $results.failed; "Skipped test should not fail")
         $t.assert.areEqual($t; 0; $results.passed; "Skipped test should not pass")
+
+Function test_function_cache_persistence($t : cs:C1710.Testing)
+
+        var $runner : cs:C1710.TestRunner
+        $runner:=cs:C1710.TestRunner.new()
+
+        // Remove existing cache file
+        var $cacheFile : 4D:C1709.File
+        $cacheFile:=$runner._cacheFile()
+        If ($cacheFile.exists)
+                $cacheFile.delete()
+        End if
+
+        // Build a suite to populate function cache
+        var $class : 4D:C1709.Class
+        $class:=cs:C1710._ExampleTest
+        var $suite : cs:C1710._TestSuite
+        $suite:=cs:C1710._TestSuite.new($class; "human"; []; $runner)
+
+        $t.assert.isTrue($t; $cacheFile.exists; "Cache file should be created after suite discovery")
+
+        // Clear in-memory cache and ensure functions load from disk
+        $runner._functionCache:=Null:C1517
+        var $cached : Collection
+        $cached:=$runner._getCachedFunctionsForClass($class)
+        $t.assert.isNotNull($t; $cached; "Cached functions should be loaded from disk")
+        $t.assert.isTrue($t; $cached.length>0; "Cached functions should be present")
+
+Function test_force_cache_refresh_option($t : cs:C1710.Testing)
+
+        var $runner : cs:C1710.TestRunner
+        $runner:=cs:C1710.TestRunner.new()
+
+        var $class : 4D:C1709.Class
+        $class:=cs:C1710._ExampleTest
+
+        // Populate cache
+        var $suite : cs:C1710._TestSuite
+        $suite:=cs:C1710._TestSuite.new($class; "human"; []; $runner)
+
+        // Force refresh
+        $runner.forceCacheRefresh:=True:C214
+        $runner._functionCache:=Null:C1517
+        var $cached : Collection
+        $cached:=$runner._getCachedFunctionsForClass($class)
+        $t.assert.areEqual($t; Null:C1517; $cached; "Cache should be ignored when refresh is forced")

@@ -9,14 +9,17 @@ property excludeTags : Collection  // Tags to exclude
 property requireAllTags : Collection  // Tags that must all be present (AND logic)
 property _cachedTestClasses : Collection  // Cached collection of discovered test classes
 property _classStoreSignature : Text  // Signature of the class store for cache validation
+property _functionCache : Object  // Cache of test functions per class
+property forceCacheRefresh : Boolean  // Whether to ignore caches and recompute
 
 Class constructor($cs : 4D:C1709.Object)
 	This:C1470.classStore:=$cs || cs:C1710
 	This:C1470.testSuites:=[]
-	This:C1470._initializeResults()
-	This:C1470._determineOutputFormat()
-	This:C1470._parseTestPatterns()
-	This:C1470._parseTagFilters()
+        This:C1470._initializeResults()
+        This:C1470._determineOutputFormat()
+        This:C1470._parseTestPatterns()
+        This:C1470._parseTagFilters()
+        This:C1470._parseCacheOptions()
 	
 Function run()
 	// Set up global error handler for the test run
@@ -142,6 +145,11 @@ Function _loadCache($signature : Text; $classStore : Object)
                         $classes:=This:C1470._filterTestClasses($classStore; $cacheObj.classes)
                         This:C1470._cachedTestClasses:=$classes
                         This:C1470._classStoreSignature:=$signature
+                        If ($cacheObj.functions#Null:C1517)
+                                This:C1470._functionCache:=$cacheObj.functions
+                        Else
+                                This:C1470._functionCache:=New object:C1471
+                        End if
                 End if
         End if
 
@@ -160,8 +168,59 @@ Function _saveCache()
                 $names.push($classInfo.name)
         End for each
         var $cacheObj : Object
-        $cacheObj:=New object:C1471("signature"; This:C1470._classStoreSignature; "classes"; $names)
+        $cacheObj:=New object:C1471("signature"; This:C1470._classStoreSignature; "classes"; $names; "functions"; This:C1470._getFunctionCache())
         $cacheFile.setText(JSON Stringify:C1217($cacheObj); "UTF-8")
+
+Function _parseCacheOptions()
+        var $params : Object
+        $params:=This:C1470._parseUserParams()
+        This:C1470.forceCacheRefresh:=($params.refreshCache="1") || ($params.refreshCache="true")
+
+Function _getFunctionCache() : Object
+        If (This:C1470._functionCache=Null:C1517)
+                // Ensure cache is loaded from disk if available
+                If (This:C1470._cachedTestClasses=Null:C1517)
+                        This:C1470._getTestClasses()
+                Else
+                        This:C1470._loadCache(This:C1470._classStoreSignature; This:C1470._getClassStore())
+                End if
+                If (This:C1470._functionCache=Null:C1517)
+                        This:C1470._functionCache:=New object:C1471
+                End if
+        End if
+        return This:C1470._functionCache
+
+Function _classFileSignature($className : Text) : Text
+        var $file : 4D:C1709.File
+        $file:=Folder:C1567(fk database folder:K87:14).folder("Project").folder("Sources").folder("Classes").file($className+".4dm")
+        If ($file.exists)
+                return String:C10($file.modificationDate)+"-"+String:C10($file.modificationTime)+"-"+String:C10($file.size)
+        End if
+        return ""
+
+Function _getCachedFunctionsForClass($class : 4D:C1709.Class) : Collection
+        var $entry : Object
+        var $className : Text
+        $className:=$class.name
+        var $sig : Text
+        $sig:=This:C1470._classFileSignature($className)
+        $entry:=This:C1470._getFunctionCache()[$className]
+        If (Not:C34(This:C1470.forceCacheRefresh)) && ($entry#Null:C1517) && ($entry.signature=$sig)
+                return $entry.functions
+        End if
+        return Null:C1517
+
+Function _updateFunctionCache($className : Text; $signature : Text; $testFunctions : Collection)
+        var $functions : Collection
+        $functions:=[]
+        var $tf : cs:C1710._TestFunction
+        For each ($tf; $testFunctions)
+                $functions.push(New object:C1471("name"; $tf.functionName; "tags"; $tf.tags; "useTransactions"; $tf.useTransactions))
+        End for each
+        var $entry : Object
+        $entry:=New object:C1471("signature"; $signature; "functions"; $functions)
+        This:C1470._getFunctionCache()[$className]:=$entry
+        This:C1470._saveCache()
 	
 Function _initializeResults()
 	This:C1470.results:=New object:C1471(\
