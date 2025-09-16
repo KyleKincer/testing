@@ -75,6 +75,8 @@ Function _getTestClasses()->$classes : Collection
         // Build a signature based on the current class names so we can detect changes
         var $classNames : Collection
         $classNames:=OB Keys:C1719($classStore)
+        // Ensure deterministic order so signature is stable across runs
+        $classNames.sort()
         var $signature : Text
         $signature:=JSON Stringify:C1217($classNames)
 
