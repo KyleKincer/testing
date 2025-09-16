@@ -399,6 +399,72 @@ Function test_function_cache_persistence($t : cs:C1710.Testing)
         $t.assert.isNotNull($t; $cached; "Cached functions should be loaded from disk")
         $t.assert.isTrue($t; $cached.length>0; "Cached functions should be present")
 
+Function test_function_cache_retains_unfiltered_functions_with_patterns($t : cs:C1710.Testing)
+
+        var $runner : cs:C1710.TestRunner
+        $runner:=cs:C1710.TestRunner.new()
+
+        var $cacheFile : 4D:C1709.File
+        $cacheFile:=$runner._cacheFile()
+        If ($cacheFile.exists)
+                $cacheFile.delete()
+        End if
+
+        var $class : 4D:C1709.Class
+        $class:=cs:C1710._ExampleTest
+
+        // Populate cache using a restrictive pattern filter
+        var $filteredSuite : cs:C1710._TestSuite
+        $filteredSuite:=cs:C1710._TestSuite.new($class; "human"; ["*areEqual*"]; $runner)
+        $t.assert.areEqual($t; 1; $filteredSuite.testFunctions.length; "Pattern filter should limit discovered tests")
+
+        var $cachedAfterFilter : Collection
+        $cachedAfterFilter:=$runner._getCachedFunctionsForClass($class)
+        $t.assert.isNotNull($t; $cachedAfterFilter; "Cache should exist after filtered discovery")
+
+        // A fresh runner without patterns should still see every test via the cache
+        var $runnerAll : cs:C1710.TestRunner
+        $runnerAll:=cs:C1710.TestRunner.new()
+        var $suiteAll : cs:C1710._TestSuite
+        $suiteAll:=cs:C1710._TestSuite.new($class; "human"; []; $runnerAll)
+
+        $t.assert.isTrue($t; $suiteAll.testFunctions.length>$filteredSuite.testFunctions.length; "Unfiltered run should include more tests than filtered run")
+        $t.assert.areEqual($t; $suiteAll.testFunctions.length; $cachedAfterFilter.length; "Cache should retain all test functions even when initial discovery used patterns")
+
+Function test_function_cache_retains_unfiltered_functions_with_tag_filters($t : cs:C1710.Testing)
+
+        var $runner : cs:C1710.TestRunner
+        $runner:=cs:C1710.TestRunner.new()
+
+        var $cacheFile : 4D:C1709.File
+        $cacheFile:=$runner._cacheFile()
+        If ($cacheFile.exists)
+                $cacheFile.delete()
+        End if
+
+        // Restrict discovery to tests tagged as "unit"
+        $runner.includeTags:=["unit"]
+
+        var $class : 4D:C1709.Class
+        $class:=cs:C1710._TaggingExampleTest
+
+        var $tagFilteredSuite : cs:C1710._TestSuite
+        $tagFilteredSuite:=cs:C1710._TestSuite.new($class; "human"; []; $runner)
+        $t.assert.areEqual($t; 3; $tagFilteredSuite.testFunctions.length; "Include tag filter should limit discovered tests")
+
+        var $cachedAfterTags : Collection
+        $cachedAfterTags:=$runner._getCachedFunctionsForClass($class)
+        $t.assert.isNotNull($t; $cachedAfterTags; "Cache should exist after tag-filtered discovery")
+
+        var $runnerNoTags : cs:C1710.TestRunner
+        $runnerNoTags:=cs:C1710.TestRunner.new()
+        $runnerNoTags.excludeTags:=[]
+        var $suiteAll : cs:C1710._TestSuite
+        $suiteAll:=cs:C1710._TestSuite.new($class; "human"; []; $runnerNoTags)
+
+        $t.assert.isTrue($t; $suiteAll.testFunctions.length>$tagFilteredSuite.testFunctions.length; "Removing tag filters should expose additional tests")
+        $t.assert.areEqual($t; $suiteAll.testFunctions.length; $cachedAfterTags.length; "Cache should retain every test regardless of tag filters")
+
 Function test_force_cache_refresh_option($t : cs:C1710.Testing)
 
         var $runner : cs:C1710.TestRunner

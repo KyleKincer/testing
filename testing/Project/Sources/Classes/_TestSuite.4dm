@@ -73,7 +73,11 @@ Function discoverTests()
         For each ($function; $testFunctions)
                 var $testFunction : cs:C1710._TestFunction
                 $testFunction:=cs:C1710._TestFunction.new(This:C1470.class; This:C1470.classInstance; $function.function; $function.name; $classCode)
-                $allWrappers.push($testFunction)
+
+                // Always retain complete discovery set for caching
+                If ($allWrappers#Null:C1517)
+                        $allWrappers.push($testFunction)
+                End if
 
                 // Filter individual test methods based on patterns
                 If (This:C1470._shouldIncludeTestMethod($function.name))
@@ -89,7 +93,7 @@ Function discoverTests()
                 End if
         End for each
 
-        If (This:C1470.testRunner#Null:C1517)
+        If ($allWrappers#Null:C1517)
                 var $sig : Text
                 $sig:=This:C1470.testRunner._classFileSignature(This:C1470.class.name)
                 // Cache the complete set of discovered test functions so filters don't drop entries

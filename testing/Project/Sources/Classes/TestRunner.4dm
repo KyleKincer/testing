@@ -72,6 +72,12 @@ Function _getTestClasses()->$classes : Collection
         var $classes : Collection
         $classStore:=This:C1470._getClassStore()
 
+        If (This:C1470.forceCacheRefresh)
+                This:C1470._cachedTestClasses:=Null:C1517
+                This:C1470._classStoreSignature:=""
+                This:C1470._functionCache:=New object:C1471
+        End if
+
         // Build a signature based on the current class names so we can detect changes
         var $classNames : Collection
         $classNames:=OB Keys:C1719($classStore)
@@ -81,12 +87,12 @@ Function _getTestClasses()->$classes : Collection
         $signature:=JSON Stringify:C1217($classNames)
 
         // Try to load from disk cache if not already in memory
-        If (This:C1470._cachedTestClasses=Null:C1517)
+        If (Not:C34(This:C1470.forceCacheRefresh)) && (This:C1470._cachedTestClasses=Null:C1517)
                 This:C1470._loadCache($signature; $classStore)
         End if
 
         // If the class store hasn't changed and we have a cache, return it
-        If ($signature=This:C1470._classStoreSignature) && (This:C1470._cachedTestClasses#Null:C1517)
+        If (Not:C34(This:C1470.forceCacheRefresh)) && ($signature=This:C1470._classStoreSignature) && (This:C1470._cachedTestClasses#Null:C1517)
                 return This:C1470._cachedTestClasses
         End if
 
@@ -139,6 +145,9 @@ Function _cacheFile()->$file : 4D:C1709.File
         return Folder:C1567(fk database folder:K87:14).folder("Project").folder("DerivedData").file("testClassCache.json")
 
 Function _loadCache($signature : Text; $classStore : Object)
+        If (This:C1470.forceCacheRefresh)
+                return
+        End if
         var $cacheFile : 4D:C1709.File
         $cacheFile:=This:C1470._cacheFile()
         If ($cacheFile.exists)
@@ -183,6 +192,13 @@ Function _parseCacheOptions()
         This:C1470.forceCacheRefresh:=($params.refreshCache="1") || ($params.refreshCache="true")
 
 Function _getFunctionCache() : Object
+        If (This:C1470.forceCacheRefresh)
+                If (This:C1470._functionCache=Null:C1517)
+                        This:C1470._functionCache:=New object:C1471
+                End if
+                return This:C1470._functionCache
+        End if
+
         If (This:C1470._functionCache=Null:C1517)
                 // Ensure cache is loaded from disk if available
                 If (This:C1470._cachedTestClasses=Null:C1517)
