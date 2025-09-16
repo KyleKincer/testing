@@ -66,13 +66,17 @@ Function discoverTests()
         var $classCode : Text
         $classCode:=This:C1470._getClassCode()
 
+        var $allWrappers : Collection
+        $allWrappers:=[]
+
         var $function : Object
         For each ($function; $testFunctions)
+                var $testFunction : cs:C1710._TestFunction
+                $testFunction:=cs:C1710._TestFunction.new(This:C1470.class; This:C1470.classInstance; $function.function; $function.name; $classCode)
+                $allWrappers.push($testFunction)
+
                 // Filter individual test methods based on patterns
                 If (This:C1470._shouldIncludeTestMethod($function.name))
-                        var $testFunction : cs:C1710._TestFunction
-                        $testFunction:=cs:C1710._TestFunction.new(This:C1470.class; This:C1470.classInstance; $function.function; $function.name; $classCode)
-
                         // Apply tag filtering if TestRunner is available
                         If (This:C1470.testRunner#Null:C1517)
                                 If (This:C1470.testRunner._shouldIncludeTestByTags($testFunction))
@@ -88,7 +92,8 @@ Function discoverTests()
         If (This:C1470.testRunner#Null:C1517)
                 var $sig : Text
                 $sig:=This:C1470.testRunner._classFileSignature(This:C1470.class.name)
-                This:C1470.testRunner._updateFunctionCache(This:C1470.class.name; $sig; This:C1470.testFunctions)
+                // Cache the complete set of discovered test functions so filters don't drop entries
+                This:C1470.testRunner._updateFunctionCache(This:C1470.class.name; $sig; $allWrappers)
         End if
 	
 Function _getTestClassFunctions() : Collection
