@@ -64,6 +64,9 @@ tool4d --project YourProject.4DProject --startup-method "test" --user-param "tes
 # Filter by tags
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "tags=unit"
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "tags=unit excludeTags=slow"
+
+# Force the runner to refresh cached discovery data (accepts true/1)
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "refreshCache=true"
 ```
 
 ## Table-Driven Tests
