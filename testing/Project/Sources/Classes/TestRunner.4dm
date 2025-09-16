@@ -112,6 +112,10 @@ Function _filterTestClasses($classStore : Object; $classNames : Collection) : Co
         End if
         For each ($className; $classNames)
                 $classInfo:=$classStore[$className]
+                // Skip missing or malformed entries
+                If ($classInfo=Null:C1517)
+                        continue
+                End if
                 // Skip classes without superclass property (malformed classes)
                 If ($classInfo.superclass=Null:C1517)
                         continue
@@ -123,7 +127,7 @@ Function _filterTestClasses($classStore : Object; $classNames : Collection) : Co
                 End if
 
                 // Test classes end with "Test", e.g. "MyClassTest"
-                If ($className="@Test")
+                If (This:C1470._matchesPattern($className; "*Test"))
                         $classes.push($classInfo)
                 End if
         End for each
