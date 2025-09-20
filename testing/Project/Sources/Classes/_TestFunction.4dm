@@ -50,19 +50,7 @@ Function run()
 		$transactionStarted:=True
 	End if 
 	
-	// Set up error handler to capture runtime errors
-	var $previousErrorHandler : Text
-	$previousErrorHandler:=Method called on error:C704
-	ON ERR CALL:C155("TestErrorHandler")
-	
-	This:C1470.function.apply(This:C1470.classInstance; [This:C1470.t])
-	
-	// Restore previous error handler
-	If ($previousErrorHandler#"")
-		ON ERR CALL:C155($previousErrorHandler)
-	Else 
-		ON ERR CALL:C155("")
-	End if 
+        This:C1470.function.apply(This:C1470.classInstance; [This:C1470.t])
 	
 	// Capture any runtime errors that occurred
 	If (Storage:C1525.testErrors#Null:C1517) && (Storage:C1525.testErrors.length>0)

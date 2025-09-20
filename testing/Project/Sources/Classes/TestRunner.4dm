@@ -17,37 +17,68 @@ Class constructor($cs : 4D:C1709.Object)
 	This:C1470._parseTagFilters()
 	
 Function run()
-	// Set up global error handler for the test run
-	var $previousErrorHandler : Text
-	$previousErrorHandler:=Method called on error:C704
-	ON ERR CALL:C155("TestErrorHandler")
-	
-	This:C1470._initializeResults()
-	This:C1470.testSuites:=[]
-	This:C1470.discoverTests()
-	
-	This:C1470.results.startTime:=Milliseconds:C459
-	
-	If (This:C1470.outputFormat="human")
-		This:C1470._logHeader()
-	End if 
-	
-	var $testSuite : cs:C1710._TestSuite
-	For each ($testSuite; This:C1470.testSuites)
-		$testSuite.run()
-		This:C1470._collectSuiteResults($testSuite)
-	End for each 
-	
-	This:C1470.results.endTime:=Milliseconds:C459
-	This:C1470.results.duration:=This:C1470.results.endTime-This:C1470.results.startTime
-	This:C1470._generateReport()
-	
-	// Restore previous error handler
-	If ($previousErrorHandler#"")
-		ON ERR CALL:C155($previousErrorHandler)
-	Else 
-		ON ERR CALL:C155("")
-	End if 
+        var $handlerState : Object
+        $handlerState:=This:C1470._installErrorHandler()
+        This:C1470._runInternal()
+        This:C1470._restoreErrorHandler($handlerState)
+
+Function _runInternal()
+        This:C1470._prepareSuites()
+        This:C1470._runSuitesSequentially()
+
+Function _prepareSuites()
+        This:C1470._initializeResults()
+        This:C1470.testSuites:=[]
+        This:C1470.discoverTests()
+
+Function _runSuitesSequentially()
+        This:C1470.results.startTime:=Milliseconds:C459
+
+        If (This:C1470.outputFormat="human")
+                This:C1470._logHeader()
+        End if
+
+        var $testSuite : cs:C1710._TestSuite
+        For each ($testSuite; This:C1470.testSuites)
+                $testSuite.run()
+                This:C1470._collectSuiteResults($testSuite)
+        End for each
+
+        This:C1470.results.endTime:=Milliseconds:C459
+        This:C1470.results.duration:=This:C1470.results.endTime-This:C1470.results.startTime
+        This:C1470._generateReport()
+
+Function _installErrorHandler() : Object
+        var $previousErrorHandler : Text
+        var $shouldInstall : Boolean
+
+        $previousErrorHandler:=Method called on error:C704
+        $shouldInstall:=($previousErrorHandler#"TestErrorHandler")
+
+        If ($shouldInstall)
+                ON ERR CALL:C155("TestErrorHandler")
+        End if
+
+        return New object:C1471(\
+                "previousHandler"; $previousErrorHandler; \
+                "installedNewHandler"; $shouldInstall\
+                )
+
+Function _restoreErrorHandler($handlerState : Object)
+        If ($handlerState=Null:C1517)
+                return
+        End if
+
+        If ($handlerState.installedNewHandler)
+                var $previousErrorHandler : Text
+                $previousErrorHandler:=$handlerState.previousHandler
+
+                If ($previousErrorHandler#"")
+                        ON ERR CALL:C155($previousErrorHandler)
+                Else
+                        ON ERR CALL:C155("")
+                End if
+        End if
 	
 Function discoverTests()
 	var $class : 4D:C1709.Class

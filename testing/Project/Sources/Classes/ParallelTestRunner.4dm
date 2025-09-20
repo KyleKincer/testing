@@ -19,49 +19,32 @@ Class constructor($cs : 4D:C1709.Object)
         This:C1470.sequentialSuites:=[]
         This:C1470._parseParallelOptions()
 	
-Function run()
-	If (This:C1470.parallelMode)
-		// Discover tests first to check if we have multiple suites
-		This:C1470._initializeResults()
-		This:C1470.testSuites:=[]
-		This:C1470.discoverTests()
-		
-		If (This:C1470.testSuites.length>1)
-			This:C1470._runParallel()
-		Else
-			// Fall back to sequential execution for single suite
-			Super:C1706.run()
-		End if
-	Else
-		// Fall back to sequential execution when parallel disabled
-		Super:C1706.run()
-	End if
+Function _runInternal()
+        If (This:C1470.parallelMode)
+                This:C1470._prepareSuites()
+
+                If (This:C1470.testSuites.length>1)
+                        This:C1470._runParallel()
+                Else
+                        This:C1470._runSuitesSequentially()
+                End if
+        Else
+                Super:C1706._runInternal()
+        End if
 
 Function _runParallel()
-	// Set up global error handler for the test run
-	var $previousErrorHandler : Text
-	$previousErrorHandler:=Method called on error:C704
-	
-	// Tests already discovered in run() method
-	If (This:C1470.testSuites.length=0)
-		This:C1470._generateReport()
-		// Restore previous error handler
-		If ($previousErrorHandler#"")
-			ON ERR CALL:C155($previousErrorHandler)
-		Else
-			ON ERR CALL:C155("")
-		End if
-		return
-	End if
+        // Tests are already prepared before entering this method
+        If (This:C1470.testSuites.length=0)
+                This:C1470._generateReport()
+                return
+        End if
 
-	// Install handler only when we have work to do
-	ON ERR CALL:C155("TestErrorHandler")
-	This:C1470.results.startTime:=Milliseconds:C459
-	
-	If (This:C1470.outputFormat="human")
-		This:C1470._logHeader()
-		LOG EVENT:C667(Into system standard outputs:K38:9; "Running "+String:C10(This:C1470.testSuites.length)+" test suites in parallel (max "+String:C10(This:C1470.maxWorkers)+" workers)\r\n"; Information message:K38:1)
-	End if
+        This:C1470.results.startTime:=Milliseconds:C459
+
+        If (This:C1470.outputFormat="human")
+                This:C1470._logHeader()
+                LOG EVENT:C667(Into system standard outputs:K38:9; "Running "+String:C10(This:C1470.testSuites.length)+" test suites in parallel (max "+String:C10(This:C1470.maxWorkers)+" workers)\r\n"; Information message:K38:1)
+        End if
 	
 	// Initialize shared storage for parallel results
 	This:C1470._initializeSharedStorage()
@@ -72,19 +55,12 @@ Function _runParallel()
 	// Wait for all workers to complete and collect results
 	This:C1470._waitForCompletionAndCollectResults()
 	
-	This:C1470.results.endTime:=Milliseconds:C459
-	This:C1470.results.duration:=This:C1470.results.endTime-This:C1470.results.startTime
-	This:C1470._generateReport()
-	
-	// Clean up shared storage
-	This:C1470._cleanupSharedStorage()
-	
-	// Restore previous error handler
-	If ($previousErrorHandler#"")
-		ON ERR CALL:C155($previousErrorHandler)
-	Else
-		ON ERR CALL:C155("")
-	End if
+        This:C1470.results.endTime:=Milliseconds:C459
+        This:C1470.results.duration:=This:C1470.results.endTime-This:C1470.results.startTime
+        This:C1470._generateReport()
+
+        // Clean up shared storage
+        This:C1470._cleanupSharedStorage()
 
 Function _parseParallelOptions()
 	var $params : Object
@@ -316,10 +292,11 @@ Function _aggregateParallelResults()
         End if
 
 Function _cleanupSharedStorage()
-	// Clean up shared storage
-	Use (Storage:C1525)
-		Storage:C1525.parallelTestResults:=Null:C1517
-	End use
+        // Clean up shared storage
+        Use (Storage:C1525)
+                Storage:C1525.parallelTestResults:=Null:C1517
+                Storage:C1525.parallelWorkerHandlerStates:=Null:C1517
+        End use
 
 Function _shouldRunSuiteInParallel($testSuite : cs:C1710._TestSuite) : Boolean
 	// Check if suite should run in parallel (allow opt-out via comments)
