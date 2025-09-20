@@ -15,10 +15,44 @@ Case of
 			$data.testRunner\
 			)
 		
-		// Set up error handler for this worker
-		var $previousErrorHandler : Text
-		$previousErrorHandler:=Method called on error:C704
-		ON ERR CALL:C155("TestErrorHandler")
+                // Set up error handler for this worker when not already installed
+                var $workerKey : Text
+                $workerKey:=String:C10(Current process:C322)
+
+                var $previousErrorHandler : Text
+                var $shouldInstallHandler : Boolean
+                $previousErrorHandler:=Method called on error:C704
+                $shouldInstallHandler:=($previousErrorHandler#"TestErrorHandler")
+
+                var $handlerState : Object
+                Use (Storage:C1525)
+                        If (Storage:C1525.parallelWorkerHandlerStates=Null:C1517)
+                                Storage:C1525.parallelWorkerHandlerStates:=New shared object:C1526()
+                        End if
+
+                        $handlerState:=Storage:C1525.parallelWorkerHandlerStates[$workerKey]
+
+                        If ($handlerState=Null:C1517)
+                                $handlerState:=New shared object:C1526(\
+                                        "installed"; False:C215; \
+                                        "changed"; False:C215; \
+                                        "previousHandler"; ""\
+                                        )
+                                Storage:C1525.parallelWorkerHandlerStates[$workerKey]:=$handlerState
+                        End if
+                End use
+
+                Use ($handlerState)
+                        If (Not:C34($handlerState.installed))
+                                $handlerState.previousHandler:=$previousErrorHandler
+                                $handlerState.changed:=$shouldInstallHandler
+                                $handlerState.installed:=True:C214
+                        End if
+                End use
+
+                If ($shouldInstallHandler)
+                        ON ERR CALL:C155("TestErrorHandler")
+                End if
 		
 		// Run the test suite
 		$testSuite.run()
@@ -119,14 +153,40 @@ Case of
 			$data.signal.trigger()
 		End if 
 		
-		// Restore previous error handler
-		If ($previousErrorHandler#"")
-			ON ERR CALL:C155($previousErrorHandler)
-		Else 
-			ON ERR CALL:C155("")
-		End if 
-		
-	: ($command="StopWorker")
-		KILL WORKER:C1390
+        : ($command="StopWorker")
+                var $workerKey : Text
+                $workerKey:=String:C10(Current process:C322)
+
+                var $handlerState : Object
+                Use (Storage:C1525)
+                        If (Storage:C1525.parallelWorkerHandlerStates#Null:C1517)
+                                $handlerState:=Storage:C1525.parallelWorkerHandlerStates[$workerKey]
+                                If ($handlerState#Null:C1517)
+                                        Storage:C1525.parallelWorkerHandlerStates[$workerKey]:=Null:C1517
+                                End if
+                        End if
+                End use
+
+                If ($handlerState#Null:C1517)
+                        var $shouldRestore : Boolean
+                        var $previousHandler : Text
+
+                        Use ($handlerState)
+                                $shouldRestore:=$handlerState.changed
+                                $previousHandler:=$handlerState.previousHandler
+                                $handlerState.installed:=False:C215
+                                $handlerState.changed:=False:C215
+                        End use
+
+                        If ($shouldRestore)
+                                If ($previousHandler#"")
+                                        ON ERR CALL:C155($previousHandler)
+                                Else
+                                        ON ERR CALL:C155("")
+                                End if
+                        End if
+                End if
+
+                KILL WORKER:C1390
 		
 End case 

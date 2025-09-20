@@ -144,19 +144,7 @@ Function withTransaction($operation : 4D:C1709.Function) : Boolean
 	
 	START TRANSACTION:C239
 	
-	// Set up error handler to catch any errors during operation
-	var $previousErrorHandler : Text
-	$previousErrorHandler:=Method called on error:C704
-	ON ERR CALL:C155("TestErrorHandler")
-	
-	$operation.apply()
-	
-	// Restore previous error handler
-	If ($previousErrorHandler#"")
-		ON ERR CALL:C155($previousErrorHandler)
-	Else 
-		ON ERR CALL:C155("")
-	End if 
+        $operation.apply()
 	
 	// Check if operation succeeded (no test failures)
 	If (Not:C34(This:C1470.failed))
@@ -177,19 +165,7 @@ Function withTransactionValidate($operation : 4D:C1709.Function) : Boolean
 	
 	START TRANSACTION:C239
 	
-	// Set up error handler to catch any errors during operation
-	var $previousErrorHandler : Text
-	$previousErrorHandler:=Method called on error:C704
-	ON ERR CALL:C155("TestErrorHandler")
-	
-	$operation.apply()
-	
-	// Restore previous error handler
-	If ($previousErrorHandler#"")
-		ON ERR CALL:C155($previousErrorHandler)
-	Else 
-		ON ERR CALL:C155("")
-	End if 
+        $operation.apply()
 	
 	// Validate transaction if test succeeded
 	If (Not:C34(This:C1470.failed))
