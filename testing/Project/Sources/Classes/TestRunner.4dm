@@ -17,10 +17,34 @@ Class constructor($cs : 4D:C1709.Object)
 	This:C1470._parseTagFilters()
 	
 Function run()
+        This:C1470._prepareErrorHandlingStorage()
         var $handlerState : Object
         $handlerState:=This:C1470._installErrorHandler()
         This:C1470._runInternal()
+        This:C1470._captureGlobalErrors()
         This:C1470._restoreErrorHandler($handlerState)
+
+Function _prepareErrorHandlingStorage()
+        Use (Storage:C1525)
+                If (Storage:C1525.testErrors=Null:C1517)
+                        Storage:C1525.testErrors:=New shared collection:C1527
+                Else
+                        Storage:C1525.testErrors.clear()
+                End if
+
+                If (Storage:C1525.testErrorHandlerProcesses=Null:C1517)
+                        Storage:C1525.testErrorHandlerProcesses:=New shared collection:C1527
+                Else
+                        Storage:C1525.testErrorHandlerProcesses.clear()
+                End if
+
+                Storage:C1525.testErrorHandlerState:=New shared object:C1526(\
+                        "globalHandlerChanged"; False:C215; \
+                        "previousGlobalHandler"; ""; \
+                        "localHandlers"; New shared object:C1526(); \
+                        "localHandlerChanges"; New shared object:C1526()\
+                        )
+        End use
 
 Function _runInternal()
         This:C1470._prepareSuites()
@@ -50,18 +74,42 @@ Function _runSuitesSequentially()
 
 Function _installErrorHandler() : Object
         var $previousErrorHandler : Text
-        var $shouldInstall : Boolean
+        var $previousGlobalHandler : Text
+        var $shouldInstallLocal : Boolean
+        var $shouldInstallGlobal : Boolean
+        var $currentProcess : Integer
 
         $previousErrorHandler:=Method called on error:C704
-        $shouldInstall:=($previousErrorHandler#"TestErrorHandler")
+        $shouldInstallLocal:=($previousErrorHandler#"TestErrorHandler")
 
-        If ($shouldInstall)
+        If ($shouldInstallLocal)
                 ON ERR CALL:C155("TestErrorHandler")
+        End if
+
+        $currentProcess:=Current process:C322
+        TestErrorHandlerRegisterProcess($currentProcess; $previousErrorHandler; $shouldInstallLocal)
+
+        $previousGlobalHandler:=Method called on error:C704(1)
+        $shouldInstallGlobal:=($previousGlobalHandler#"TestErrorHandler")
+
+        If ($shouldInstallGlobal)
+                ON ERR CALL:C155("TestErrorHandler"; 1)
+        End if
+
+        If (Storage:C1525.testErrorHandlerState#Null:C1517)
+                Use (Storage:C1525.testErrorHandlerState)
+                        Storage:C1525.testErrorHandlerState.previousGlobalHandler:=$previousGlobalHandler
+                        Storage:C1525.testErrorHandlerState.globalHandlerChanged:=$shouldInstallGlobal
+                End use
         End if
 
         return New object:C1471(\
                 "previousHandler"; $previousErrorHandler; \
-                "installedNewHandler"; $shouldInstall\
+                "installedLocalHandler"; $shouldInstallLocal; \
+                "previousGlobalHandler"; $previousGlobalHandler; \
+                "installedGlobalHandler"; $shouldInstallGlobal; \
+                "installedNewHandler"; $shouldInstallLocal; \
+                "processNumber"; $currentProcess\
                 )
 
 Function _restoreErrorHandler($handlerState : Object)
@@ -69,7 +117,14 @@ Function _restoreErrorHandler($handlerState : Object)
                 return
         End if
 
-        If ($handlerState.installedNewHandler)
+        var $processNumber : Integer
+        $processNumber:=$handlerState.processNumber || Current process:C322
+        TestErrorHandlerUnregister($processNumber)
+
+        var $restoreLocal : Boolean
+        $restoreLocal:=($handlerState.installedLocalHandler#Null:C1517) ? $handlerState.installedLocalHandler : $handlerState.installedNewHandler
+
+        If ($restoreLocal)
                 var $previousErrorHandler : Text
                 $previousErrorHandler:=$handlerState.previousHandler
 
@@ -78,6 +133,24 @@ Function _restoreErrorHandler($handlerState : Object)
                 Else
                         ON ERR CALL:C155("")
                 End if
+        End if
+
+        If ($handlerState.installedGlobalHandler)
+                var $previousGlobalHandler : Text
+                $previousGlobalHandler:=$handlerState.previousGlobalHandler
+
+                If ($previousGlobalHandler#"")
+                        ON ERR CALL:C155($previousGlobalHandler; 1)
+                Else
+                        ON ERR CALL:C155(""; 1)
+                End if
+        End if
+
+        If (Storage:C1525.testErrorHandlerState#Null:C1517)
+                Use (Storage:C1525.testErrorHandlerState)
+                        Storage:C1525.testErrorHandlerState.previousGlobalHandler:=""
+                        Storage:C1525.testErrorHandlerState.globalHandlerChanged:=False:C215
+                End use
         End if
 	
 Function discoverTests()
@@ -127,9 +200,9 @@ Function _filterTestClasses($classStore : Object) : Collection
 	return $classes
 	
 Function _initializeResults()
-	This:C1470.results:=New object:C1471(\
-		"totalTests"; 0; \
-		"passed"; 0; \
+        This:C1470.results:=New object:C1471(\
+                "totalTests"; 0; \
+                "passed"; 0; \
                 "failed"; 0; \
                 "skipped"; 0; \
                 "startTime"; 0; \
@@ -137,7 +210,10 @@ Function _initializeResults()
                 "duration"; 0; \
                 "suites"; []; \
                 "failedTests"; []; \
-                "assertions"; 0\
+                "assertions"; 0; \
+                "globalErrors"; []; \
+                "hasGlobalErrors"; False:C215; \
+                "globalErrorCount"; 0\
                 )
 	
 Function _logHeader()
@@ -211,8 +287,68 @@ Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
                 $suiteResult.assertions+=($testResult.assertionCount)
         End for each
 	
-	This:C1470.results.suites.push($suiteResult)
-	
+        This:C1470.results.suites.push($suiteResult)
+
+Function _captureGlobalErrors()
+        var $globalErrors : Collection
+        $globalErrors:=This:C1470._drainGlobalErrorsFromStorage()
+
+        This:C1470.results.globalErrors:=$globalErrors
+        This:C1470.results.globalErrorCount:=$globalErrors.length
+        This:C1470.results.hasGlobalErrors:=Bool:C1537($globalErrors.length>0)
+
+Function _drainGlobalErrorsFromStorage() : Collection
+        var $globalErrors : Collection
+        $globalErrors:=New collection:C1472
+
+        If (Storage:C1525.testErrors#Null:C1517)
+                Use (Storage:C1525.testErrors)
+                        var $index : Integer
+                        For ($index; Storage:C1525.testErrors.length-1; 0; -1)
+                                var $error : Object
+                                $error:=Storage:C1525.testErrors[$index]
+
+                                var $context : Text
+                                $context:=$error.context || ""
+
+                                If ($context#"local")
+                                        $globalErrors.push(OB Copy:C1225($error))
+                                        Storage:C1525.testErrors.remove($index)
+                                End if
+                        End for
+                End use
+        End if
+
+        return $globalErrors
+
+Function _formatGlobalErrorForLog($error : Object) : Text
+        var $codeText : Text
+        var $processText : Text
+        var $methodText : Text
+        var $lineText : Text
+        var $formulaText : Text
+        var $message : Text
+
+        $codeText:=($error.code#Null:C1517) ? String:C10($error.code) : "?"
+        $processText:=($error.processNumber#Null:C1517) ? String:C10($error.processNumber) : "?"
+        $methodText:=$error.text || "Unknown location"
+
+        If ($error.line#Null:C1517)
+                $lineText:=" line "+String:C10($error.line)
+        Else
+                $lineText:=""
+        End if
+
+        $formulaText:=$error.method || ""
+
+        $message:="- ["+$codeText+"] Process "+$processText+": "+$methodText+$lineText
+
+        If ($formulaText#"")
+                $message:=$message+"\r\n      "+$formulaText
+        End if
+
+        return $message
+
 Function _generateReport()
         If (This:C1470.outputFormat="json")
                 This:C1470._generateJSONReport()
@@ -245,10 +381,14 @@ Function _generateHumanReport()
         LOG EVENT:C667(Into system standard outputs:K38:9; "Assertions: "+String:C10(This:C1470.results.assertions)+"\r\n"; Information message:K38:1)
         LOG EVENT:C667(Into system standard outputs:K38:9; "Pass Rate: "+String:C10($passRate; "##0.0")+"%\r\n"; Information message:K38:1)
         LOG EVENT:C667(Into system standard outputs:K38:9; "Duration: "+String:C10(This:C1470.results.duration)+"ms\r\n"; Information message:K38:1)
-	
-	If (This:C1470.results.failed>0)
-		LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
-		LOG EVENT:C667(Into system standard outputs:K38:9; "=== Failed Tests ===\r\n"; Error message:K38:3)
+
+        var $externalMessageType : Integer
+        $externalMessageType:=Choose:C955(This:C1470.results.globalErrorCount>0; Error message:K38:3; Information message:K38:1)
+        LOG EVENT:C667(Into system standard outputs:K38:9; "External Errors: "+String:C10(This:C1470.results.globalErrorCount)+"\r\n"; $externalMessageType)
+
+        If (This:C1470.results.failed>0)
+                LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
+                LOG EVENT:C667(Into system standard outputs:K38:9; "=== Failed Tests ===\r\n"; Error message:K38:3)
 		
 		var $failedTest : Object
 		For each ($failedTest; This:C1470.results.failedTests)
@@ -269,10 +409,20 @@ Function _generateHumanReport()
 			If ($failedTest.callChain#Null)
 				LOG EVENT:C667(Into system standard outputs:K38:9; This:C1470._formatCallChain($failedTest.callChain)+"\r\n"; Error message:K38:3)
 			End if
-		End for each 
-	End if 
-	
-	This:C1470._logFooter()
+                End for each
+        End if
+
+        If (This:C1470.results.hasGlobalErrors)
+                LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
+                LOG EVENT:C667(Into system standard outputs:K38:9; "=== Runtime Errors Outside Test Processes ===\r\n"; Error message:K38:3)
+
+                var $globalError : Object
+                For each ($globalError; This:C1470.results.globalErrors)
+                        LOG EVENT:C667(Into system standard outputs:K38:9; This:C1470._formatGlobalErrorForLog($globalError)+"\r\n"; Error message:K38:3)
+                End for each
+        End if
+
+        This:C1470._logFooter()
 	
 Function _generateJSONReport()
         var $passRate : Real
@@ -284,15 +434,18 @@ Function _generateJSONReport()
                 $passRate:=0
         End if
 	
-	var $jsonReport : Object
-	
-	If (This:C1470.verboseOutput)
-		// Verbose mode: include all details (original format)
-		$jsonReport:=OB Copy:C1225(This:C1470.results)
-		$jsonReport.passRate:=$passRate
-		$jsonReport.status:=(This:C1470.results.failed=0) ? "success" : "failure"
-	Else 
-		// Terse mode: minimal information
+        var $jsonReport : Object
+
+        var $hasFailures : Boolean
+        $hasFailures:=(This:C1470.results.failed>0) || This:C1470.results.hasGlobalErrors
+
+        If (This:C1470.verboseOutput)
+                // Verbose mode: include all details (original format)
+                $jsonReport:=OB Copy:C1225(This:C1470.results)
+                $jsonReport.passRate:=$passRate
+                $jsonReport.status:=$hasFailures ? "failure" : "success"
+        Else
+                // Terse mode: minimal information
                 $jsonReport:=New object:C1471(\
                         "tests"; This:C1470.results.totalTests; \
                         "passed"; This:C1470.results.passed; \
@@ -301,7 +454,10 @@ Function _generateJSONReport()
                         "assertions"; This:C1470.results.assertions; \
                         "rate"; Round:C94($passRate; 1); \
                         "duration"; This:C1470.results.duration; \
-                        "status"; (This:C1470.results.failed=0) ? "ok" : "fail"\
+                        "globalErrors"; This:C1470.results.globalErrors; \
+                        "globalErrorCount"; This:C1470.results.globalErrorCount; \
+                        "hasGlobalErrors"; This:C1470.results.hasGlobalErrors; \
+                        "status"; $hasFailures ? "fail" : "ok"\
                 )
 
                 // Include individual test results with assertions
@@ -400,9 +556,12 @@ Function _buildJUnitXML() : Text
 	$totalTime:=This:C1470.results.duration/1000  // Convert ms to seconds
 	
 	// Calculate errors and failures separately
-	var $totalErrors; $totalFailures : Integer
-	$totalErrors:=This:C1470._countTestsWithRuntimeErrors()
-	$totalFailures:=This:C1470.results.failed-$totalErrors  // Failures are failed tests without runtime errors
+        var $totalErrors; $totalFailures : Integer
+        var $globalErrorCount : Integer
+        $totalErrors:=This:C1470._countTestsWithRuntimeErrors()
+        $globalErrorCount:=This:C1470.results.globalErrorCount
+        $totalErrors:=$totalErrors+$globalErrorCount
+        $totalFailures:=This:C1470.results.failed-$totalErrors  // Failures are failed tests without runtime errors
 	
 	// XML header and root testsuites element
 	$xml:="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
@@ -414,12 +573,16 @@ Function _buildJUnitXML() : Text
 	$xml:=$xml+" timestamp=\""+This:C1470._formatTimestamp(This:C1470.results.startTime)+"\">\r\n"
 	
 	// Build testsuite elements
-	var $suite : Object
-	For each ($suite; This:C1470.results.suites)
-		$xml:=$xml+This:C1470._buildTestSuiteXML($suite)
-	End for each 
-	
-	$xml:=$xml+"</testsuites>\r\n"
+        var $suite : Object
+        For each ($suite; This:C1470.results.suites)
+                $xml:=$xml+This:C1470._buildTestSuiteXML($suite)
+        End for each
+
+        If (This:C1470.results.hasGlobalErrors)
+                $xml:=$xml+This:C1470._buildGlobalErrorsSystemErr()
+        End if
+
+        $xml:=$xml+"</testsuites>\r\n"
 	
 	return $xml
 	
@@ -480,10 +643,10 @@ Function _buildTestCaseXML($test : Object) : Text
 	return $xml
 	
 Function _buildFailureXML($test : Object) : Text
-	var $xml : Text
-	var $failureMessage : Text
-	var $failureDetails : Text
-	var $elementType : Text
+        var $xml : Text
+        var $failureMessage : Text
+        var $failureDetails : Text
+        var $elementType : Text
 	
 	// Extract failure message and details, determine element type
 	If ($test.runtimeErrors.length>0)
@@ -510,10 +673,25 @@ Function _buildFailureXML($test : Object) : Text
 	End if 
 	
 	$xml:=$xml+"\n]]>"
-	$xml:=$xml+"</"+$elementType+">\r\n"
-	
-	return $xml
-	
+        $xml:=$xml+"</"+$elementType+">\r\n"
+
+        return $xml
+
+Function _buildGlobalErrorsSystemErr() : Text
+        var $xml : Text
+
+        $xml:="  <system-err><![CDATA[\n"
+        $xml:=$xml+"External runtime errors detected: "+String:C10(This:C1470.results.globalErrorCount)+"\n"
+
+        var $error : Object
+        For each ($error; This:C1470.results.globalErrors)
+                $xml:=$xml+This:C1470._formatGlobalErrorForLog($error)+"\n"
+        End for each
+
+        $xml:=$xml+"]]></system-err>\r\n"
+
+        return $xml
+
 Function _writeJUnitXMLToFile($xmlContent : Text; $outputPath : Text)
 	// Parse the path to determine folder and filename
 	var $pathParts : Collection
@@ -563,13 +741,27 @@ Function _formatTimestamp($milliseconds : Integer) : Text
 	return $timestamp
 	
 Function _logFooter()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
-	If (This:C1470.results.failed=0)
-		LOG EVENT:C667(Into system standard outputs:K38:9; "All tests passed! 🎉\r\n"; Information message:K38:1)
-	Else 
-		LOG EVENT:C667(Into system standard outputs:K38:9; String:C10(This:C1470.results.failed)+" test(s) failed\r\n"; Error message:K38:3)
-	End if 
-	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
+        LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
+        If ((This:C1470.results.failed=0) && Not:C34(This:C1470.results.hasGlobalErrors))
+                LOG EVENT:C667(Into system standard outputs:K38:9; "All tests passed! 🎉\r\n"; Information message:K38:1)
+        Else
+                var $summaryMessage : Text
+                $summaryMessage:=""
+
+                If (This:C1470.results.failed>0)
+                        $summaryMessage:=String:C10(This:C1470.results.failed)+" test(s) failed"
+                End if
+
+                If (This:C1470.results.hasGlobalErrors)
+                        If ($summaryMessage#"")
+                                $summaryMessage:=$summaryMessage+"; "
+                        End if
+                        $summaryMessage:=$summaryMessage+String:C10(This:C1470.results.globalErrorCount)+" external runtime error(s)"
+                End if
+
+                LOG EVENT:C667(Into system standard outputs:K38:9; $summaryMessage+"\r\n"; Error message:K38:3)
+        End if
+        LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
 	
 Function getResults() : Object
 	return This:C1470.results

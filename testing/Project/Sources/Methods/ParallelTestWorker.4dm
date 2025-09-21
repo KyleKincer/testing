@@ -36,7 +36,8 @@ Case of
                                 $handlerState:=New shared object:C1526(\
                                         "installed"; False:C215; \
                                         "changed"; False:C215; \
-                                        "previousHandler"; ""\
+                                        "previousHandler"; ""; \
+                                        "registered"; False:C215\
                                         )
                                 Storage:C1525.parallelWorkerHandlerStates[$workerKey]:=$handlerState
                         End if
@@ -47,6 +48,10 @@ Case of
                                 $handlerState.previousHandler:=$previousErrorHandler
                                 $handlerState.changed:=$shouldInstallHandler
                                 $handlerState.installed:=True:C214
+                                If (Not:C34($handlerState.registered))
+                                        TestErrorHandlerRegisterProcess(Current process:C322; $handlerState.previousHandler; $handlerState.changed)
+                                        $handlerState.registered:=True:C214
+                                End if
                         End if
                 End use
 
@@ -170,13 +175,22 @@ Case of
                 If ($handlerState#Null:C1517)
                         var $shouldRestore : Boolean
                         var $previousHandler : Text
+                        var $wasRegistered : Boolean
 
                         Use ($handlerState)
                                 $shouldRestore:=$handlerState.changed
                                 $previousHandler:=$handlerState.previousHandler
                                 $handlerState.installed:=False:C215
                                 $handlerState.changed:=False:C215
+                                $wasRegistered:=$handlerState.registered
+                                If ($handlerState.registered)
+                                        $handlerState.registered:=False:C215
+                                End if
                         End use
+
+                        If ($wasRegistered)
+                                TestErrorHandlerUnregister(Current process:C322)
+                        End if
 
                         If ($shouldRestore)
                                 If ($previousHandler#"")
