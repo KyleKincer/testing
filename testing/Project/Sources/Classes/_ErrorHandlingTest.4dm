@@ -2,16 +2,25 @@
 Class constructor()
 
 Function test_error_handler_initialization($t : cs:C1710.Testing)
-	
-	// Verify that Storage.testErrors exists and can be initialized
-	If (Storage:C1525.testErrors=Null:C1517)
-		Use (Storage:C1525)
-			Storage:C1525.testErrors:=New shared collection:C1527
-		End use 
-	End if 
-	
-	$t.assert.isNotNull($t; Storage:C1525.testErrors; "Error storage should be initialized")
-	$t.assert.areEqual($t; Is collection:K8:32; Value type:C1509(Storage:C1525.testErrors); "Error storage should be a collection")
+
+        var $runner : cs:C1710.TestRunner
+        $runner:=cs:C1710.TestRunner.new()
+        $runner._prepareErrorHandlingStorage()
+
+        // Verify that Storage.testErrors exists and can be initialized
+        $t.assert.isNotNull($t; Storage:C1525.testErrors; "Error storage should be initialized")
+        $t.assert.areEqual($t; Is collection:K8:32; Value type:C1509(Storage:C1525.testErrors); "Error storage should be a collection")
+
+        // Ensure forwarding state is set up
+        $t.assert.isNotNull($t; Storage:C1525.testErrorHandlerForwarding; "Forwarding registry should be initialized")
+        $t.assert.areEqual($t; Is object:K8:27; Value type:C1509(Storage:C1525.testErrorHandlerForwarding); "Forwarding registry should be an object")
+
+        Use (Storage:C1525.testErrorHandlerForwarding)
+                $t.assert.isNotNull($t; Storage:C1525.testErrorHandlerForwarding.local; "Local forwarding map should exist")
+                $t.assert.areEqual($t; Is object:K8:27; Value type:C1509(Storage:C1525.testErrorHandlerForwarding.local); "Local forwarding map should be an object")
+                $t.assert.isNotNull($t; Storage:C1525.testErrorHandlerForwarding.global; "Global forwarding state should exist")
+                $t.assert.areEqual($t; Is object:K8:27; Value type:C1509(Storage:C1525.testErrorHandlerForwarding.global); "Global forwarding state should be an object")
+        End use
 
 Function test_error_information_structure($t : cs:C1710.Testing)
 	
@@ -101,16 +110,64 @@ Function test_register_process_tracking($t : cs:C1710.Testing)
         var $processNumber : Integer
         $processNumber:=98765
 
-        TestErrorHandlerRegisterProcess($processNumber)
+        var $registerOptions : Object
+        $registerOptions:=New object:C1471(\
+                "previousLocalHandler"; "LegacyLocalHandler"; \
+                "forwardLocal"; True:C214; \
+                "previousGlobalHandler"; "LegacyGlobalHandler"; \
+                "forwardGlobal"; True:C214\
+        )
+
+        TestErrorHandlerRegisterProcess($processNumber; $registerOptions)
 
         Use (Storage:C1525.testErrorHandlerProcesses)
                 $t.assert.isTrue($t; Storage:C1525.testErrorHandlerProcesses.indexOf($processNumber)>=0; "Should register process for local error tracking")
         End use
 
-        TestErrorHandlerUnregister($processNumber)
+        Use (Storage:C1525.testErrorHandlerForwarding)
+                var $localEntry : Object
+                $localEntry:=Storage:C1525.testErrorHandlerForwarding.local[String:C10($processNumber)]
+                $t.assert.isNotNull($t; $localEntry; "Should create local forwarding entry")
+                If ($localEntry#Null:C1517)
+                        $t.assert.areEqual($t; "LegacyLocalHandler"; $localEntry.handler; "Should track previous local handler")
+                        $t.assert.isTrue($t; $localEntry.shouldForward; "Local forwarding should be enabled")
+                End if
+
+                var $globalState : Object
+                $globalState:=Storage:C1525.testErrorHandlerForwarding.global
+                $t.assert.isNotNull($t; $globalState; "Should maintain global forwarding state")
+                If ($globalState#Null:C1517)
+                        $t.assert.areEqual($t; "LegacyGlobalHandler"; $globalState.handler; "Should track previous global handler")
+                        $t.assert.isTrue($t; $globalState.shouldForward; "Global forwarding should be enabled")
+                        $t.assert.areEqual($t; $processNumber; $globalState.installedProcess; "Should record installing process")
+                End if
+        End use
+
+        var $unregisterOptions : Object
+        $unregisterOptions:=New object:C1471(\
+                "clearGlobal"; True:C214\
+        )
+
+        TestErrorHandlerUnregister($processNumber; $unregisterOptions)
 
         Use (Storage:C1525.testErrorHandlerProcesses)
                 $t.assert.isFalse($t; Storage:C1525.testErrorHandlerProcesses.indexOf($processNumber)>=0; "Should remove process from tracking after unregister")
+        End use
+
+        Use (Storage:C1525.testErrorHandlerForwarding)
+                var $localEntryAfter : Object
+                $localEntryAfter:=Storage:C1525.testErrorHandlerForwarding.local[String:C10($processNumber)]
+                If ($localEntryAfter#Null:C1517)
+                        $t.assert.areEqual($t; ""; $localEntryAfter.handler; "Local handler reference should be cleared on unregister")
+                        $t.assert.isFalse($t; $localEntryAfter.shouldForward; "Local forwarding should be disabled on unregister")
+                End if
+
+                var $globalStateAfter : Object
+                $globalStateAfter:=Storage:C1525.testErrorHandlerForwarding.global
+                If ($globalStateAfter#Null:C1517)
+                        $t.assert.isFalse($t; $globalStateAfter.shouldForward; "Global forwarding should be disabled after unregister")
+                        $t.assert.areEqual($t; 0; $globalStateAfter.installedProcess; "Global installer should reset after unregister")
+                End if
         End use
 
 Function test_testing_context_properties($t : cs:C1710.Testing)

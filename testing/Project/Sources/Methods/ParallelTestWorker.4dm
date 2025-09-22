@@ -24,6 +24,14 @@ Case of
                 $previousErrorHandler:=Method called on error:C704
                 $shouldInstallHandler:=($previousErrorHandler#"TestErrorHandler")
 
+                var $registerOptions : Object
+                $registerOptions:=New object:C1471(\
+                        "previousLocalHandler"; $previousErrorHandler; \
+                        "forwardLocal"; $shouldInstallHandler; \
+                        "previousGlobalHandler"; ""; \
+                        "forwardGlobal"; False:C215\
+                )
+
                 var $handlerState : Object
                 Use (Storage:C1525)
                         If (Storage:C1525.parallelWorkerHandlerStates=Null:C1517)
@@ -49,7 +57,7 @@ Case of
                                 $handlerState.changed:=$shouldInstallHandler
                                 $handlerState.installed:=True:C214
                                 If (Not:C34($handlerState.registered))
-                                        TestErrorHandlerRegisterProcess(Current process:C322)
+                                        TestErrorHandlerRegisterProcess(Current process:C322; $registerOptions)
                                         $handlerState.registered:=True:C214
                                 End if
                         End if

@@ -37,6 +37,15 @@ Function _prepareErrorHandlingStorage()
                 Else
                         Storage:C1525.testErrorHandlerProcesses.clear()
                 End if
+
+                Storage:C1525.testErrorHandlerForwarding:=New shared object:C1526(\
+                        "local"; New shared object:C1526; \
+                        "global"; New shared object:C1526(\
+                                "handler"; ""; \
+                                "shouldForward"; False:C215; \
+                                "installedProcess"; 0\
+                        )\
+                )
         End use
 
 Function _runInternal()
@@ -79,11 +88,20 @@ Function _installErrorHandler() : Object
                 ON ERR CALL:C155("TestErrorHandler")
         End if
 
-        $currentProcess:=Current process:C322
-        TestErrorHandlerRegisterProcess($currentProcess)
-
         $previousGlobalHandler:=Method called on error:C704(1)
         $shouldInstallGlobal:=($previousGlobalHandler#"TestErrorHandler")
+
+        $currentProcess:=Current process:C322
+
+        var $registerOptions : Object
+        $registerOptions:=New object:C1471(\
+                "previousLocalHandler"; $previousErrorHandler; \
+                "forwardLocal"; $shouldInstallLocal; \
+                "previousGlobalHandler"; $previousGlobalHandler; \
+                "forwardGlobal"; $shouldInstallGlobal\
+        )
+
+        TestErrorHandlerRegisterProcess($currentProcess; $registerOptions)
 
         If ($shouldInstallGlobal)
                 ON ERR CALL:C155("TestErrorHandler"; 1)
@@ -105,7 +123,13 @@ Function _restoreErrorHandler($handlerState : Object)
 
         var $processNumber : Integer
         $processNumber:=$handlerState.processNumber || Current process:C322
-        TestErrorHandlerUnregister($processNumber)
+
+        var $unregisterOptions : Object
+        $unregisterOptions:=New object:C1471(\
+                "clearGlobal"; $handlerState.installedGlobalHandler\
+        )
+
+        TestErrorHandlerUnregister($processNumber; $unregisterOptions)
 
         var $restoreLocal : Boolean
         $restoreLocal:=($handlerState.installedLocalHandler#Null:C1517) ? $handlerState.installedLocalHandler : $handlerState.installedNewHandler
