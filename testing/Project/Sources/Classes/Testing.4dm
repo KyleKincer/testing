@@ -8,15 +8,19 @@ property assert : cs:C1710.Assert
 property stats : cs:C1710.UnitStatsTracker
 property failureCallChain : Collection
 property classInstance : 4D:C1709.Object
+property triggersGloballyEnabled : Boolean
+property triggersEnabledTables : Collection
 
 Class constructor()
-	This:C1470.failed:=False:C215
-	This:C1470.done:=False:C215
+        This:C1470.failed:=False:C215
+        This:C1470.done:=False:C215
         This:C1470.logMessages:=[]
         This:C1470.assertions:=[]
         This:C1470.assert:=cs:C1710.Assert.new()
         This:C1470.stats:=cs:C1710.UnitStatsTracker.new()
         This:C1470.failureCallChain:=Null
+        This:C1470._resetTriggerTracking()
+        This:C1470.disableAllTriggers()
 	
 Function log($message : Text)
 	This:C1470.logMessages.push($message)
@@ -59,12 +63,119 @@ Function fatal()
 	This:C1470.failureCallChain:=Call chain:C1662
 	
 Function resetForNewTest()
-	This:C1470.failed:=False:C215
-	This:C1470.done:=False:C215
+        This:C1470.disableAllTriggers()
+        This:C1470.failed:=False:C215
+        This:C1470.done:=False:C215
         This:C1470.logMessages:=[]
         This:C1470.assertions:=[]
         This:C1470.stats.resetStatistics()
         This:C1470.failureCallChain:=Null
+
+Function disableAllTriggers()
+        This:C1470._executeSQL("ALTER DATABASE DISABLE TRIGGERS")
+
+        If (This:C1470.triggersEnabledTables#Null:C1517)
+                var $tableName : Text
+                For each ($tableName; This:C1470.triggersEnabledTables)
+                        This:C1470._disableTriggersForTable($tableName)
+                End for each
+        End if
+
+        This:C1470._resetTriggerTracking()
+
+Function enableAllTriggers()
+        This:C1470._executeSQL("ALTER DATABASE ENABLE TRIGGERS")
+        This:C1470.triggersGloballyEnabled:=True:C214
+
+Function enableTableTriggers($tableName : Text)
+        If ($tableName=Null:C1517)
+                return
+        End if
+
+        If ($tableName="")
+                return
+        End if
+
+        var $statement : Text
+        $statement:="ALTER TABLE "+This:C1470._quoteIdentifier($tableName)+" ENABLE TRIGGERS"
+        This:C1470._executeSQL($statement)
+
+        If (This:C1470.triggersEnabledTables=Null:C1517)
+                This:C1470.triggersEnabledTables:=[]
+        End if
+
+        If (This:C1470.triggersEnabledTables.indexOf($tableName)<0)
+                This:C1470.triggersEnabledTables.push($tableName)
+        End if
+
+Function disableTableTriggers($tableName : Text)
+        If ($tableName=Null:C1517)
+                return
+        End if
+
+        If ($tableName="")
+                return
+        End if
+
+        This:C1470._disableTriggersForTable($tableName)
+
+        If (This:C1470.triggersEnabledTables#Null:C1517)
+                var $index : Integer
+                $index:=This:C1470.triggersEnabledTables.indexOf($tableName)
+                If ($index>=0)
+                        This:C1470.triggersEnabledTables.remove($index)
+                End if
+        End if
+
+Function restoreTriggerDefaults()
+        This:C1470.disableAllTriggers()
+
+Function _disableTriggersForTable($tableName : Text)
+        If ($tableName=Null:C1517)
+                return
+        End if
+
+        If ($tableName="")
+                return
+        End if
+
+        var $statement : Text
+        $statement:="ALTER TABLE "+This:C1470._quoteIdentifier($tableName)+" DISABLE TRIGGERS"
+        This:C1470._executeSQL($statement)
+
+Function _quoteIdentifier($identifier : Text) : Text
+        If ($identifier=Null:C1517)
+                return "\"\""
+        End if
+
+        var $escaped : Text
+        $escaped:=Replace string:C233($identifier; "\""; "\"\"")
+        return "\""+$escaped+"\""
+
+Function _executeSQL($statement : Text)
+        If ($statement="")
+                return
+        End if
+
+        var $finalStatement : Text
+        $finalStatement:=$statement
+
+        If (Length:C16($finalStatement)>0)
+                var $lastChar : Text
+                $lastChar:=Substring:C12($finalStatement; Length:C16($finalStatement); 1)
+                If ($lastChar#";")
+                        $finalStatement:=$finalStatement+";"
+                End if
+        End if
+
+        This:C1470._performSQLExecution($finalStatement)
+
+Function _performSQLExecution($statement : Text)
+        SQL EXECUTE($statement)
+
+Function _resetTriggerTracking()
+        This:C1470.triggersGloballyEnabled:=False:C215
+        This:C1470.triggersEnabledTables:=[]
 	
 Function run($name : Text; $subtest : 4D:C1709.Function; $data : Variant) : Boolean
         // Execute a named subtest with its own Testing context

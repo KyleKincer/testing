@@ -188,6 +188,120 @@ Function test_run_subtest_stats_isolated($t : cs:C1710.Testing)
         $parentStat:=$testing.stats.getStat("mocked")
         $t.assert.areEqual($t; 0; $parentStat.getNumberOfCalls(); "Parent stats should remain unaffected")
 
+Function test_triggers_disabled_by_default($t : cs:C1710.Testing)
+
+        var $mock : cs:C1710._TestingTriggerMock
+        $mock:=cs:C1710._TestingTriggerMock.new()
+
+        $t.assert.isTrue($t; ($mock.executedStatements.length>0); "Should execute SQL on initialization")
+        $t.assert.areEqual($t; "ALTER DATABASE DISABLE TRIGGERS;"; $mock.executedStatements[0]; "Should disable triggers by default")
+        $t.assert.isFalse($t; $mock.triggersGloballyEnabled; "Global trigger flag should be cleared")
+
+Function test_enable_all_triggers_executes_sql($t : cs:C1710.Testing)
+
+        var $mock : cs:C1710._TestingTriggerMock
+        $mock:=cs:C1710._TestingTriggerMock.new()
+        $mock.executedStatements:=[]
+
+        $mock.enableAllTriggers()
+
+        $t.assert.areEqual($t; 1; $mock.executedStatements.length; "Should execute a single SQL statement")
+        $t.assert.areEqual($t; "ALTER DATABASE ENABLE TRIGGERS;"; $mock.executedStatements[0]; "Should enable triggers globally")
+        $t.assert.isTrue($t; $mock.triggersGloballyEnabled; "Global trigger flag should be set")
+
+Function test_enable_table_triggers_tracks_tables($t : cs:C1710.Testing)
+
+        var $mock : cs:C1710._TestingTriggerMock
+        $mock:=cs:C1710._TestingTriggerMock.new()
+        $mock.executedStatements:=[]
+
+        $mock.enableTableTriggers("Orders")
+
+        $t.assert.areEqual($t; 1; $mock.executedStatements.length; "Should execute table enable SQL")
+        $t.assert.areEqual($t; "ALTER TABLE \"Orders\" ENABLE TRIGGERS;"; $mock.executedStatements[0]; "Should quote table name")
+        $t.assert.areEqual($t; 1; $mock.triggersEnabledTables.length; "Should track enabled table")
+        $t.assert.areEqual($t; "Orders"; $mock.triggersEnabledTables[0]; "Should store table identifier")
+
+        $mock.enableTableTriggers("Orders")
+        $t.assert.areEqual($t; 1; $mock.triggersEnabledTables.length; "Should avoid duplicate tracking entries")
+
+Function test_enable_table_triggers_escapes_quotes($t : cs:C1710.Testing)
+
+        var $mock : cs:C1710._TestingTriggerMock
+        $mock:=cs:C1710._TestingTriggerMock.new()
+        $mock.executedStatements:=[]
+
+        $mock.enableTableTriggers("Order\"Detail")
+
+        $t.assert.areEqual($t; "ALTER TABLE \"Order\"\"Detail\" ENABLE TRIGGERS;"; $mock.executedStatements[0]; "Should escape embedded quotes")
+
+Function test_disable_table_triggers_updates_tracking($t : cs:C1710.Testing)
+
+        var $mock : cs:C1710._TestingTriggerMock
+        $mock:=cs:C1710._TestingTriggerMock.new()
+        $mock.executedStatements:=[]
+
+        $mock.enableTableTriggers("Orders")
+        $mock.executedStatements:=[]
+
+        $mock.disableTableTriggers("Orders")
+
+        $t.assert.areEqual($t; 1; $mock.executedStatements.length; "Should execute table disable SQL")
+        $t.assert.areEqual($t; "ALTER TABLE \"Orders\" DISABLE TRIGGERS;"; $mock.executedStatements[0]; "Should disable triggers for table")
+        $t.assert.areEqual($t; 0; $mock.triggersEnabledTables.length; "Should remove table from tracking")
+
+Function test_disable_all_triggers_resets_tracking($t : cs:C1710.Testing)
+
+        var $mock : cs:C1710._TestingTriggerMock
+        $mock:=cs:C1710._TestingTriggerMock.new()
+        $mock.executedStatements:=[]
+
+        $mock.enableTableTriggers("Orders")
+        $mock.enableTableTriggers("Customers")
+        $mock.executedStatements:=[]
+
+        $mock.disableAllTriggers()
+
+        $t.assert.areEqual($t; 3; $mock.executedStatements.length; "Should disable database and tracked tables")
+        $t.assert.areEqual($t; "ALTER DATABASE DISABLE TRIGGERS;"; $mock.executedStatements[0]; "Should disable globally")
+        $t.assert.areEqual($t; "ALTER TABLE \"Orders\" DISABLE TRIGGERS;"; $mock.executedStatements[1]; "Should disable first table")
+        $t.assert.areEqual($t; "ALTER TABLE \"Customers\" DISABLE TRIGGERS;"; $mock.executedStatements[2]; "Should disable second table")
+        $t.assert.areEqual($t; 0; $mock.triggersEnabledTables.length; "Should clear table tracking")
+        $t.assert.isFalse($t; $mock.triggersGloballyEnabled; "Should reset global flag")
+
+Function test_restore_trigger_defaults_disables_triggers($t : cs:C1710.Testing)
+
+        var $mock : cs:C1710._TestingTriggerMock
+        $mock:=cs:C1710._TestingTriggerMock.new()
+        $mock.executedStatements:=[]
+
+        $mock.enableAllTriggers()
+        $mock.executedStatements:=[]
+
+        $mock.restoreTriggerDefaults()
+
+        $t.assert.areEqual($t; 1; $mock.executedStatements.length; "Should call disable when restoring defaults")
+        $t.assert.areEqual($t; "ALTER DATABASE DISABLE TRIGGERS;"; $mock.executedStatements[0]; "Should disable triggers when restoring")
+        $t.assert.isFalse($t; $mock.triggersGloballyEnabled; "Should clear global state on restore")
+
+Function test_reset_for_new_test_restores_trigger_state($t : cs:C1710.Testing)
+
+        var $mock : cs:C1710._TestingTriggerMock
+        $mock:=cs:C1710._TestingTriggerMock.new()
+        $mock.executedStatements:=[]
+
+        $mock.enableTableTriggers("Orders")
+        $mock.enableAllTriggers()
+        $mock.executedStatements:=[]
+
+        $mock.resetForNewTest()
+
+        $t.assert.areEqual($t; 2; $mock.executedStatements.length; "Reset should disable database and tracked tables")
+        $t.assert.areEqual($t; "ALTER DATABASE DISABLE TRIGGERS;"; $mock.executedStatements[0]; "Reset should disable globally")
+        $t.assert.areEqual($t; "ALTER TABLE \"Orders\" DISABLE TRIGGERS;"; $mock.executedStatements[1]; "Reset should disable tracked table")
+        $t.assert.areEqual($t; 0; $mock.triggersEnabledTables.length; "Reset should clear tracking")
+        $t.assert.isFalse($t; $mock.triggersGloballyEnabled; "Reset should clear global trigger flag")
+
 Function _addOneCase($t : cs:C1710.Testing; $case : Object)
 
         var $got : Integer

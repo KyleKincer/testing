@@ -10,6 +10,7 @@ A comprehensive unit testing framework for the 4D platform with test tagging, fi
 - **Multiple output formats** - Human-readable and JSON output
 - **CI/CD ready** - Structured JSON output for automated testing
 - **Transaction management** - Automatic test isolation with rollback
+- **Trigger control** - Database triggers disabled by default with opt-in helpers
 - **Subtests** - Run table-driven tests with `t.run`
 
 ## Quick Example
