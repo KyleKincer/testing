@@ -10,17 +10,29 @@ property skipped : Boolean
 property tags : Collection  // Collection of tag strings
 property useTransactions : Boolean  // Whether to auto-manage transactions for this test
 
-Class constructor($class : 4D:C1709.Class; $classInstance : 4D:C1709.Object; $function : 4D:C1709.Function; $name : Text; $classCode : Text)
-	This:C1470.class:=$class
-	This:C1470.classInstance:=$classInstance
-	This:C1470.function:=$function
+Class constructor($class : 4D:C1709.Class; $classInstance : 4D:C1709.Object; $function : 4D:C1709.Function; $name : Text; $classCode : Text; $tags : Collection; $useTransactions : Boolean)
+        This:C1470.class:=$class
+        This:C1470.classInstance:=$classInstance
+        This:C1470.function:=$function
         This:C1470.functionName:=$name
         This:C1470.t:=cs:C1710.Testing.new()
         This:C1470.t.classInstance:=$classInstance
         This:C1470.runtimeErrors:=[]
         This:C1470.skipped:=False:C215
-        This:C1470.tags:=This:C1470._parseTags($classCode || "")
-        This:C1470.useTransactions:=This:C1470._shouldUseTransactions($classCode || "")
+
+        var $paramCount : Integer
+        $paramCount:=Count parameters:C259
+        If ($paramCount>=6) && ($tags#Null:C1517)
+                This:C1470.tags:=$tags
+        Else
+                This:C1470.tags:=This:C1470._parseTags($classCode || "")
+        End if
+
+        If ($paramCount>=7)
+                This:C1470.useTransactions:=$useTransactions
+        Else
+                This:C1470.useTransactions:=This:C1470._shouldUseTransactions($classCode || "")
+        End if
 	
 Function run()
         This:C1470.startTime:=Milliseconds:C459

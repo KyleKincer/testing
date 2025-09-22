@@ -32,31 +32,73 @@ Function run()
         This:C1470._callTeardown()
 	
 Function discoverTests()
-	var $testFunctions : Collection
-	$testFunctions:=This:C1470._getTestClassFunctions()
-	
-	// Get class source code once for all functions
-	var $classCode : Text
-	$classCode:=This:C1470._getClassCode()
-	
-	var $function : Object
-	For each ($function; $testFunctions)
-		// Filter individual test methods based on patterns
-		If (This:C1470._shouldIncludeTestMethod($function.name))
-			var $testFunction : cs:C1710._TestFunction
-			$testFunction:=cs:C1710._TestFunction.new(This:C1470.class; This:C1470.classInstance; $function.function; $function.name; $classCode)
-			
-			// Apply tag filtering if TestRunner is available
-			If (This:C1470.testRunner#Null:C1517)
-				If (This:C1470.testRunner._shouldIncludeTestByTags($testFunction))
-					This:C1470.testFunctions.push($testFunction)
-				End if 
-			Else 
-				// If no TestRunner reference, include all tests that pass pattern filtering
-				This:C1470.testFunctions.push($testFunction)
-			End if 
-		End if 
-	End for each 
+        var $cachedFunctions : Collection
+        If (This:C1470.testRunner#Null:C1517)
+                $cachedFunctions:=This:C1470.testRunner._getCachedFunctionsForClass(This:C1470.class)
+        End if
+
+        If ($cachedFunctions#Null:C1517)
+                var $info : Object
+                For each ($info; $cachedFunctions)
+                        If (This:C1470._shouldIncludeTestMethod($info.name))
+                                var $func : 4D:C1709.Function
+                                $func:=This:C1470.classInstance[$info.name]
+                                If ($func#Null:C1517) && (OB Instance of:C1731($func; 4D:C1709.Function))
+                                        var $cachedTest : cs:C1710._TestFunction
+                                        $cachedTest:=cs:C1710._TestFunction.new(This:C1470.class; This:C1470.classInstance; $func; $info.name; ""; $info.tags; $info.useTransactions)
+                                        If (This:C1470.testRunner#Null:C1517)
+                                                If (This:C1470.testRunner._shouldIncludeTestByTags($cachedTest))
+                                                        This:C1470.testFunctions.push($cachedTest)
+                                                End if
+                                        Else
+                                                This:C1470.testFunctions.push($cachedTest)
+                                        End if
+                                End if
+                        End if
+                End for each
+                return
+        End if
+
+        var $testFunctions : Collection
+        $testFunctions:=This:C1470._getTestClassFunctions()
+
+        // Get class source code once for all functions
+        var $classCode : Text
+        $classCode:=This:C1470._getClassCode()
+
+        var $allWrappers : Collection
+        $allWrappers:=[]
+
+        var $function : Object
+        For each ($function; $testFunctions)
+                var $testFunction : cs:C1710._TestFunction
+                $testFunction:=cs:C1710._TestFunction.new(This:C1470.class; This:C1470.classInstance; $function.function; $function.name; $classCode)
+
+                // Always retain complete discovery set for caching
+                If ($allWrappers#Null:C1517)
+                        $allWrappers.push($testFunction)
+                End if
+
+                // Filter individual test methods based on patterns
+                If (This:C1470._shouldIncludeTestMethod($function.name))
+                        // Apply tag filtering if TestRunner is available
+                        If (This:C1470.testRunner#Null:C1517)
+                                If (This:C1470.testRunner._shouldIncludeTestByTags($testFunction))
+                                        This:C1470.testFunctions.push($testFunction)
+                                End if
+                        Else
+                                // If no TestRunner reference, include all tests that pass pattern filtering
+                                This:C1470.testFunctions.push($testFunction)
+                        End if
+                End if
+        End for each
+
+        If ($allWrappers#Null:C1517)
+                var $sig : Text
+                $sig:=This:C1470.testRunner._classFileSignature(This:C1470.class.name)
+                // Cache the complete set of discovered test functions so filters don't drop entries
+                This:C1470.testRunner._updateFunctionCache(This:C1470.class.name; $sig; $allWrappers)
+        End if
 	
 Function _getTestClassFunctions() : Collection
 	// Returns collection of {function: 4D.Function; name: String}

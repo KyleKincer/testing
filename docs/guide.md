@@ -78,7 +78,12 @@ tool4d --project YourProject.4DProject --startup-method "test" --user-param "exc
 
 # Combine multiple parameters
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json tags=unit,integration verbose=true"
+
+# Force the runner to ignore cached discovery data on this run
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "refreshCache=true"
 ```
+
+`refreshCache` accepts `true`/`false` (any casing) or `1`/`0` so you can script cache refreshes without clearing files manually.
 
 ## Required Setup
 

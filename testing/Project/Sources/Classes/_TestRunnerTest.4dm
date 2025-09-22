@@ -75,7 +75,7 @@ Function test_filter_test_classes($t : cs:C1710.Testing)
 		)
 	
 	var $testClasses : Collection
-	$testClasses:=$runner._filterTestClasses($mockClassStore)
+        $testClasses:=$runner._filterTestClasses($mockClassStore; Null:C1517)
 	
 	// Should find ExampleTest and ErrorHandlingTest from the mock
 	var $foundNames : Collection
@@ -112,9 +112,35 @@ Function test_test_class_discovery($t : cs:C1710.Testing)
 	
 	// Verify that all returned classes have names ending with "Test"
 	var $class : 4D:C1709.Class
-	For each ($class; $testClasses)
-		$t.assert.isTrue($t; $class.name="@Test"; "All discovered classes should end with 'Test', found: "+$class.name)
-	End for each 
+        For each ($class; $testClasses)
+                $t.assert.isTrue($t; $class.name="@Test"; "All discovered classes should end with 'Test', found: "+$class.name)
+        End for each
+
+Function test_persistent_class_cache($t : cs:C1710.Testing)
+
+        var $runner : cs:C1710.TestRunner
+        $runner:=cs:C1710.TestRunner.new()
+
+        // Ensure cache file is removed before testing
+        var $cacheFile : 4D:C1709.File
+        $cacheFile:=$runner._cacheFile()
+        If ($cacheFile.exists)
+                $cacheFile.delete()
+        End if
+
+        // First run should create the cache file
+        var $classes : Collection
+        $classes:=$runner._getTestClasses()
+        $t.assert.isTrue($t; $cacheFile.exists; "Cache file should be created on first run")
+
+        // Clear in-memory cache to simulate fresh run
+        $runner._cachedTestClasses:=Null:C1517
+        $runner._classStoreSignature:=""
+
+        // Second run should load from disk and return same number of classes
+        var $classes2 : Collection
+        $classes2:=$runner._getTestClasses()
+        $t.assert.areEqual($t; $classes.length; $classes2.length; "Cache should provide same classes on subsequent runs")
 	
 Function test_pattern_matching_exact($t : cs:C1710.Testing)
 	
@@ -239,7 +265,7 @@ Function test_filterTestClasses_comprehensive($t : cs:C1710.Testing)
 		)
 	
 	var $testClasses : Collection
-	$testClasses:=$runner._filterTestClasses($mockClassStore)
+    $testClasses:=$runner._filterTestClasses($mockClassStore; Null:C1517)
 	
 	// Should find all test classes (ExampleTest, ErrorHandlingTest, TestRunnerTest, ComprehensiveErrorTest)
 	$t.assert.isTrue($t; $testClasses.length>=4; "Should find at least 4 test classes")
@@ -283,7 +309,7 @@ Function test_dependency_injection_pattern($t : cs:C1710.Testing)
 	var $emptyStore : Object
 	$emptyStore:=New object:C1471
 	var $noClasses : Collection
-	$noClasses:=$runner._filterTestClasses($emptyStore)
+    $noClasses:=$runner._filterTestClasses($emptyStore; Null:C1517)
 	$t.assert.areEqual($t; 0; $noClasses.length; "Should handle empty class store")
 	
 Function test_pattern_matching_with_dependency_extraction($t : cs:C1710.Testing)
@@ -323,7 +349,7 @@ Function test_error_handling_in_extracted_methods($t : cs:C1710.Testing)
 		"ValidTest"; New object:C1471("name"; "ValidTest"; "superclass"; New object:C1471("name"; "Object"))\
 		)
         var $filteredClasses : Collection
-        $filteredClasses:=$runner._filterTestClasses($malformedStore)
+        $filteredClasses:=$runner._filterTestClasses($malformedStore; Null:C1517)
         // Should find ValidTest but skip InvalidTest (missing superclass)
         $t.assert.areEqual($t; 1; $filteredClasses.length; "Should handle classes without superclass gracefully")
         $t.assert.areEqual($t; "ValidTest"; $filteredClasses[0].name; "Should include ValidTest")
@@ -345,3 +371,115 @@ Function test_skip_tag_counts_as_skipped($t : cs:C1710.Testing)
         $t.assert.areEqual($t; 1; $results.skipped; "Skipped test should be counted")
         $t.assert.areEqual($t; 0; $results.failed; "Skipped test should not fail")
         $t.assert.areEqual($t; 0; $results.passed; "Skipped test should not pass")
+
+Function test_function_cache_persistence($t : cs:C1710.Testing)
+
+        var $runner : cs:C1710.TestRunner
+        $runner:=cs:C1710.TestRunner.new()
+
+        // Remove existing cache file
+        var $cacheFile : 4D:C1709.File
+        $cacheFile:=$runner._cacheFile()
+        If ($cacheFile.exists)
+                $cacheFile.delete()
+        End if
+
+        // Build a suite to populate function cache
+        var $class : 4D:C1709.Class
+        $class:=cs:C1710._ExampleTest
+        var $suite : cs:C1710._TestSuite
+        $suite:=cs:C1710._TestSuite.new($class; "human"; []; $runner)
+
+        $t.assert.isTrue($t; $cacheFile.exists; "Cache file should be created after suite discovery")
+
+        // Clear in-memory cache and ensure functions load from disk
+        $runner._functionCache:=Null:C1517
+        var $cached : Collection
+        $cached:=$runner._getCachedFunctionsForClass($class)
+        $t.assert.isNotNull($t; $cached; "Cached functions should be loaded from disk")
+        $t.assert.isTrue($t; $cached.length>0; "Cached functions should be present")
+
+Function test_function_cache_retains_unfiltered_functions_with_patterns($t : cs:C1710.Testing)
+
+        var $runner : cs:C1710.TestRunner
+        $runner:=cs:C1710.TestRunner.new()
+
+        var $cacheFile : 4D:C1709.File
+        $cacheFile:=$runner._cacheFile()
+        If ($cacheFile.exists)
+                $cacheFile.delete()
+        End if
+
+        var $class : 4D:C1709.Class
+        $class:=cs:C1710._ExampleTest
+
+        // Populate cache using a restrictive pattern filter
+        var $filteredSuite : cs:C1710._TestSuite
+        $filteredSuite:=cs:C1710._TestSuite.new($class; "human"; ["*areEqual*"]; $runner)
+        $t.assert.areEqual($t; 1; $filteredSuite.testFunctions.length; "Pattern filter should limit discovered tests")
+
+        var $cachedAfterFilter : Collection
+        $cachedAfterFilter:=$runner._getCachedFunctionsForClass($class)
+        $t.assert.isNotNull($t; $cachedAfterFilter; "Cache should exist after filtered discovery")
+
+        // A fresh runner without patterns should still see every test via the cache
+        var $runnerAll : cs:C1710.TestRunner
+        $runnerAll:=cs:C1710.TestRunner.new()
+        var $suiteAll : cs:C1710._TestSuite
+        $suiteAll:=cs:C1710._TestSuite.new($class; "human"; []; $runnerAll)
+
+        $t.assert.isTrue($t; $suiteAll.testFunctions.length>$filteredSuite.testFunctions.length; "Unfiltered run should include more tests than filtered run")
+        $t.assert.areEqual($t; $suiteAll.testFunctions.length; $cachedAfterFilter.length; "Cache should retain all test functions even when initial discovery used patterns")
+
+Function test_function_cache_retains_unfiltered_functions_with_tag_filters($t : cs:C1710.Testing)
+
+        var $runner : cs:C1710.TestRunner
+        $runner:=cs:C1710.TestRunner.new()
+
+        var $cacheFile : 4D:C1709.File
+        $cacheFile:=$runner._cacheFile()
+        If ($cacheFile.exists)
+                $cacheFile.delete()
+        End if
+
+        // Restrict discovery to tests tagged as "unit"
+        $runner.includeTags:=["unit"]
+
+        var $class : 4D:C1709.Class
+        $class:=cs:C1710._TaggingExampleTest
+
+        var $tagFilteredSuite : cs:C1710._TestSuite
+        $tagFilteredSuite:=cs:C1710._TestSuite.new($class; "human"; []; $runner)
+        $t.assert.areEqual($t; 3; $tagFilteredSuite.testFunctions.length; "Include tag filter should limit discovered tests")
+
+        var $cachedAfterTags : Collection
+        $cachedAfterTags:=$runner._getCachedFunctionsForClass($class)
+        $t.assert.isNotNull($t; $cachedAfterTags; "Cache should exist after tag-filtered discovery")
+
+        var $runnerNoTags : cs:C1710.TestRunner
+        $runnerNoTags:=cs:C1710.TestRunner.new()
+        $runnerNoTags.excludeTags:=[]
+        var $suiteAll : cs:C1710._TestSuite
+        $suiteAll:=cs:C1710._TestSuite.new($class; "human"; []; $runnerNoTags)
+
+        $t.assert.isTrue($t; $suiteAll.testFunctions.length>$tagFilteredSuite.testFunctions.length; "Removing tag filters should expose additional tests")
+        $t.assert.areEqual($t; $suiteAll.testFunctions.length; $cachedAfterTags.length; "Cache should retain every test regardless of tag filters")
+
+Function test_force_cache_refresh_option($t : cs:C1710.Testing)
+
+        var $runner : cs:C1710.TestRunner
+        $runner:=cs:C1710.TestRunner.new()
+
+        var $class : 4D:C1709.Class
+        $class:=cs:C1710._ExampleTest
+
+        // Populate cache
+        var $suite : cs:C1710._TestSuite
+        $suite:=cs:C1710._TestSuite.new($class; "human"; []; $runner)
+
+        // Force refresh
+        $runner.forceCacheRefresh:=True:C214
+        $runner._functionCache:=Null:C1517
+        var $cached : Collection
+        $cached:=$runner._getCachedFunctionsForClass($class)
+        $t.assert.areEqual($t; Null:C1517; $cached; "Cache should be ignored when refresh is forced")
