@@ -31,12 +31,6 @@ Function _prepareErrorHandlingStorage()
                 Else
                         Storage:C1525.testErrors.clear()
                 End if
-
-                If (Storage:C1525.testErrorHandlerProcesses=Null:C1517)
-                        Storage:C1525.testErrorHandlerProcesses:=New shared collection:C1527
-                Else
-                        Storage:C1525.testErrorHandlerProcesses.clear()
-                End if
         End use
 
 Function _runInternal()
@@ -70,7 +64,6 @@ Function _installErrorHandler() : Object
         var $previousGlobalHandler : Text
         var $shouldInstallLocal : Boolean
         var $shouldInstallGlobal : Boolean
-        var $currentProcess : Integer
 
         $previousErrorHandler:=Method called on error:C704
         $shouldInstallLocal:=($previousErrorHandler#"TestErrorHandler")
@@ -80,33 +73,23 @@ Function _installErrorHandler() : Object
         End if
 
         $previousGlobalHandler:=Method called on error:C704(1)
-        $shouldInstallGlobal:=($previousGlobalHandler#"TestErrorHandler")
-
-        $currentProcess:=Current process:C322
-
-        TestErrorHandlerRegisterProcess($currentProcess)
+        $shouldInstallGlobal:=($previousGlobalHandler#"TestGlobalErrorHandler")
 
         If ($shouldInstallGlobal)
-                ON ERR CALL:C155("TestErrorHandler"; 1)
+                ON ERR CALL:C155("TestGlobalErrorHandler"; 1)
         End if
 
         return New object:C1471(\
                 "previousHandler"; $previousErrorHandler; \
                 "installedLocalHandler"; $shouldInstallLocal; \
                 "previousGlobalHandler"; $previousGlobalHandler; \
-                "installedGlobalHandler"; $shouldInstallGlobal; \
-                "processNumber"; $currentProcess\
+                "installedGlobalHandler"; $shouldInstallGlobal\
                 )
 
 Function _restoreErrorHandler($handlerState : Object)
         If ($handlerState=Null:C1517)
                 return
         End if
-
-        var $processNumber : Integer
-        $processNumber:=$handlerState.processNumber || Current process:C322
-
-        TestErrorHandlerUnregister($processNumber)
 
         If (Bool:C1537($handlerState.installedLocalHandler))
                 var $previousErrorHandler : Text
@@ -288,7 +271,7 @@ Function _drainGlobalErrorsFromStorage() : Collection
                                 var $context : Text
                                 $context:=$error.context || ""
 
-                                If ($context#"local")
+                                If ($context="global")
                                         $globalErrors.push(OB Copy:C1225($error))
                                         Storage:C1525.testErrors.remove($index)
                                 End if

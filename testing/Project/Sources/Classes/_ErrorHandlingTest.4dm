@@ -11,10 +11,6 @@ Function test_error_handler_initialization($t : cs:C1710.Testing)
         $t.assert.isNotNull($t; Storage:C1525.testErrors; "Error storage should be initialized")
         $t.assert.areEqual($t; Is collection:K8:32; Value type:C1509(Storage:C1525.testErrors); "Error storage should be a collection")
 
-        // Ensure local process tracking is available
-        $t.assert.isNotNull($t; Storage:C1525.testErrorHandlerProcesses; "Process tracking should be initialized")
-        $t.assert.areEqual($t; Is collection:K8:32; Value type:C1509(Storage:C1525.testErrorHandlerProcesses); "Process tracking should be a collection")
-
 Function test_error_information_structure($t : cs:C1710.Testing)
 	
 	// Create a mock error info structure like the error handler would
@@ -94,40 +90,51 @@ Function test_global_error_collection($t : cs:C1710.Testing)
                 $t.assert.areEqual($t; 0; Storage:C1525.testErrors.length; "Global errors should be drained from storage")
         End use
 
-Function test_register_process_tracking($t : cs:C1710.Testing)
+Function test_local_errors_remain_in_storage($t : cs:C1710.Testing)
+
+        Use (Storage:C1525)
+                Storage:C1525.testErrors:=New shared collection:C1527
+        End use
+
+        var $localError : Object
+        $localError:=New object:C1471(\
+                "code"; 123; \
+                "text"; "LocalFailure"; \
+                "method"; "DoLocalThing"; \
+                "line"; 21; \
+                "timestamp"; Milliseconds:C459; \
+                "processNumber"; 7; \
+                "context"; "local"; \
+                "isLocal"; True:C214\
+                )
+
+        var $globalError : Object
+        $globalError:=New object:C1471(\
+                "code"; 456; \
+                "text"; "GlobalFailure"; \
+                "method"; "DoGlobalThing"; \
+                "line"; 33; \
+                "timestamp"; Milliseconds:C459; \
+                "processNumber"; 42; \
+                "context"; "global"; \
+                "isLocal"; False:C215\
+                )
+
+        Use (Storage:C1525.testErrors)
+                Storage:C1525.testErrors.push(OB Copy:C1225($localError; ck shared:K85:29))
+                Storage:C1525.testErrors.push(OB Copy:C1225($globalError; ck shared:K85:29))
+        End use
 
         var $runner : cs:C1710.TestRunner
         $runner:=cs:C1710.TestRunner.new()
-        $runner._prepareErrorHandlingStorage()
 
-        var $processNumber : Integer
-        $processNumber:=98765
+        $runner._captureGlobalErrors()
 
-        TestErrorHandlerRegisterProcess($processNumber)
+        $t.assert.areEqual($t; 1; $runner.results.globalErrorCount; "Runner should capture one global error")
 
-        Use (Storage:C1525.testErrorHandlerProcesses)
-                $t.assert.isTrue($t; Storage:C1525.testErrorHandlerProcesses.indexOf($processNumber)>=0; "Should register process for local error tracking")
-        End use
-
-        // Registering again should not duplicate entries
-        TestErrorHandlerRegisterProcess($processNumber)
-
-        Use (Storage:C1525.testErrorHandlerProcesses)
-                var $occurrences : Integer
-                $occurrences:=0
-                var $index : Integer
-                For ($index; 0; Storage:C1525.testErrorHandlerProcesses.length-1)
-                        If (Storage:C1525.testErrorHandlerProcesses[$index]=$processNumber)
-                                $occurrences+=1
-                        End if
-                End for
-                $t.assert.areEqual($t; 1; $occurrences; "Process should only be tracked once")
-        End use
-
-        TestErrorHandlerUnregister($processNumber)
-
-        Use (Storage:C1525.testErrorHandlerProcesses)
-                $t.assert.isFalse($t; Storage:C1525.testErrorHandlerProcesses.indexOf($processNumber)>=0; "Should remove process from tracking after unregister")
+        Use (Storage:C1525.testErrors)
+                $t.assert.areEqual($t; 1; Storage:C1525.testErrors.length; "Local errors should remain in storage")
+                $t.assert.areEqual($t; "local"; Storage:C1525.testErrors[0].context; "Remaining error should be local")
         End use
 
 Function test_testing_context_properties($t : cs:C1710.Testing)

@@ -42,8 +42,6 @@ Case of
                         End if
                 End use
 
-                TestErrorHandlerRegisterProcess(Current process:C322)
-
                 Use ($handlerState)
                         If (Not:C34($handlerState.installed))
                                 $handlerState.previousHandler:=$previousErrorHandler
@@ -168,8 +166,6 @@ Case of
                                 End if
                         End if
                 End use
-
-                TestErrorHandlerUnregister(Current process:C322)
 
                 If ($handlerState#Null:C1517)
                         var $shouldRestore : Boolean
