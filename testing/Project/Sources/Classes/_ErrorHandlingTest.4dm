@@ -2,16 +2,14 @@
 Class constructor()
 
 Function test_error_handler_initialization($t : cs:C1710.Testing)
-	
-	// Verify that Storage.testErrors exists and can be initialized
-	If (Storage:C1525.testErrors=Null:C1517)
-		Use (Storage:C1525)
-			Storage:C1525.testErrors:=New shared collection:C1527
-		End use 
-	End if 
-	
-	$t.assert.isNotNull($t; Storage:C1525.testErrors; "Error storage should be initialized")
-	$t.assert.areEqual($t; Is collection:K8:32; Value type:C1509(Storage:C1525.testErrors); "Error storage should be a collection")
+
+        var $runner : cs:C1710.TestRunner
+        $runner:=cs:C1710.TestRunner.new()
+        $runner._prepareErrorHandlingStorage()
+
+        // Verify that Storage.testErrors exists and can be initialized
+        $t.assert.isNotNull($t; Storage:C1525.testErrors; "Error storage should be initialized")
+        $t.assert.areEqual($t; Is collection:K8:32; Value type:C1509(Storage:C1525.testErrors); "Error storage should be a collection")
 
 Function test_error_information_structure($t : cs:C1710.Testing)
 	
@@ -21,20 +19,26 @@ Function test_error_information_structure($t : cs:C1710.Testing)
 	var $errorLine : Integer
 	$errorCode:=-10716
 	$errorLine:=42
-	$errorInfo:=New object:C1471(\
-		"code"; $errorCode; \
-		"text"; "TestMethod"; \
-		"method"; "someFormula"; \
-		"line"; $errorLine; \
-		"timestamp"; Milliseconds:C459\
-		)
-	
-	// Verify the error structure has all required fields
-	$t.assert.isNotNull($t; $errorInfo.code; "Error should have code field")
-	$t.assert.isNotNull($t; $errorInfo.text; "Error should have text field")
-	$t.assert.isNotNull($t; $errorInfo.method; "Error should have method field")
-	$t.assert.isNotNull($t; $errorInfo.line; "Error should have line field")
-	$t.assert.isNotNull($t; $errorInfo.timestamp; "Error should have timestamp field")
+        $errorInfo:=New object:C1471(\
+                "code"; $errorCode; \
+                "text"; "TestMethod"; \
+                "method"; "someFormula"; \
+                "line"; $errorLine; \
+                "timestamp"; Milliseconds:C459; \
+                "processNumber"; 5; \
+                "context"; "global"; \
+                "isLocal"; False:C215\
+                )
+
+        // Verify the error structure has all required fields
+        $t.assert.isNotNull($t; $errorInfo.code; "Error should have code field")
+        $t.assert.isNotNull($t; $errorInfo.text; "Error should have text field")
+        $t.assert.isNotNull($t; $errorInfo.method; "Error should have method field")
+        $t.assert.isNotNull($t; $errorInfo.line; "Error should have line field")
+        $t.assert.isNotNull($t; $errorInfo.timestamp; "Error should have timestamp field")
+        $t.assert.areEqual($t; 5; $errorInfo.processNumber; "Error should store process number")
+        $t.assert.areEqual($t; "global"; $errorInfo.context; "Error should store context")
+        $t.assert.isFalse($t; $errorInfo.isLocal; "Global errors should not be marked local")
 	
 	// Verify data types - 4D may store integers as reals in objects
 	$t.assert.areEqual($t; Is real:K8:4; Value type:C1509($errorInfo.code); "Error code should be real")
@@ -42,13 +46,96 @@ Function test_error_information_structure($t : cs:C1710.Testing)
 	$t.assert.areEqual($t; Is real:K8:4; Value type:C1509($errorInfo.line); "Error line should be real")
 
 Function test_method_called_on_error_setup($t : cs:C1710.Testing)
-	
-	// Verify that Method called on error can be queried
-	var $currentHandler : Text
-	$currentHandler:=Method called on error:C704
-	
-	// The current handler should be either empty or "TestErrorHandler"
-	$t.assert.isTrue($t; ($currentHandler="") || ($currentHandler="TestErrorHandler"); "Method called on error should be manageable")
+
+        // Verify that Method called on error can be queried
+        var $currentHandler : Text
+        $currentHandler:=Method called on error:C704
+
+        // The current handler should be either empty or "TestErrorHandler"
+        $t.assert.isTrue($t; ($currentHandler="") || ($currentHandler="TestErrorHandler"); "Method called on error should be manageable")
+
+Function test_global_error_collection($t : cs:C1710.Testing)
+
+        // Prepare shared error storage with a simulated global error
+        Use (Storage:C1525)
+                Storage:C1525.testErrors:=New shared collection:C1527
+        End use
+
+        var $globalError : Object
+        $globalError:=New object:C1471(\
+                "code"; 512; \
+                "text"; "GlobalFailure"; \
+                "method"; "DoSomething"; \
+                "line"; 9; \
+                "timestamp"; Milliseconds:C459; \
+                "processNumber"; 42; \
+                "context"; "global"; \
+                "isLocal"; False:C215\
+                )
+
+        Use (Storage:C1525.testErrors)
+                Storage:C1525.testErrors.push(OB Copy:C1225($globalError; ck shared:K85:29))
+        End use
+
+        var $runner : cs:C1710.TestRunner
+        $runner:=cs:C1710.TestRunner.new()
+
+        $runner._captureGlobalErrors()
+
+        $t.assert.areEqual($t; 1; $runner.results.globalErrors.length; "Runner should capture global errors")
+        $t.assert.isTrue($t; $runner.results.hasGlobalErrors; "Runner should flag presence of global errors")
+        $t.assert.areEqual($t; 1; $runner.results.globalErrorCount; "Runner should count global errors")
+
+        Use (Storage:C1525.testErrors)
+                $t.assert.areEqual($t; 0; Storage:C1525.testErrors.length; "Global errors should be drained from storage")
+        End use
+
+Function test_local_errors_remain_in_storage($t : cs:C1710.Testing)
+
+        Use (Storage:C1525)
+                Storage:C1525.testErrors:=New shared collection:C1527
+        End use
+
+        var $localError : Object
+        $localError:=New object:C1471(\
+                "code"; 123; \
+                "text"; "LocalFailure"; \
+                "method"; "DoLocalThing"; \
+                "line"; 21; \
+                "timestamp"; Milliseconds:C459; \
+                "processNumber"; 7; \
+                "context"; "local"; \
+                "isLocal"; True:C214\
+                )
+
+        var $globalError : Object
+        $globalError:=New object:C1471(\
+                "code"; 456; \
+                "text"; "GlobalFailure"; \
+                "method"; "DoGlobalThing"; \
+                "line"; 33; \
+                "timestamp"; Milliseconds:C459; \
+                "processNumber"; 42; \
+                "context"; "global"; \
+                "isLocal"; False:C215\
+                )
+
+        Use (Storage:C1525.testErrors)
+                Storage:C1525.testErrors.push(OB Copy:C1225($localError; ck shared:K85:29))
+                Storage:C1525.testErrors.push(OB Copy:C1225($globalError; ck shared:K85:29))
+        End use
+
+        var $runner : cs:C1710.TestRunner
+        $runner:=cs:C1710.TestRunner.new()
+
+        $runner._captureGlobalErrors()
+
+        $t.assert.areEqual($t; 1; $runner.results.globalErrorCount; "Runner should capture one global error")
+
+        Use (Storage:C1525.testErrors)
+                $t.assert.areEqual($t; 1; Storage:C1525.testErrors.length; "Local errors should remain in storage")
+                $t.assert.areEqual($t; "local"; Storage:C1525.testErrors[0].context; "Remaining error should be local")
+        End use
 
 Function test_testing_context_properties($t : cs:C1710.Testing)
 	

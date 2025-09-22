@@ -1,7 +1,7 @@
 //%attributes = {}
-// TestErrorHandler
-// Local error handler for the testing framework
-// Captures runtime errors and records minimal metadata for later reporting
+// TestGlobalErrorHandler
+// Global error handler for the testing framework
+// Captures runtime errors from processes without the local test handler
 
 var $errorCode : Integer
 var $errorText : Text
@@ -16,10 +16,9 @@ $errorText:=Error method
 $errorMethod:=Error formula
 $errorLine:=Error line
 $processNumber:=Current process:C322
-$context:="local"
-$isLocalProcess:=True:C214
+$context:="global"
+$isLocalProcess:=False:C215
 
-// Store error information in Storage for later retrieval
 If (Storage:C1525.testErrors=Null:C1517)
         Use (Storage:C1525)
                 Storage:C1525.testErrors:=New shared collection:C1527
@@ -42,4 +41,4 @@ Use (Storage:C1525.testErrors)
         Storage:C1525.testErrors.push(OB Copy:C1225($errorInfo; ck shared:K85:29))
 End use
 
-// Continue execution - don't interrupt the test
+// Allow execution to continue so the runner can report the failure

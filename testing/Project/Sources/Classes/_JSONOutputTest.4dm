@@ -167,21 +167,27 @@ Function test_output_format_setting($t : cs:C1710.Testing)
 Function test_error_object_structure($t : cs:C1710.Testing)
 	
 	// Test runtime error object structure (as created by error handler)
-	var $errorInfo : Object
-	$errorInfo:=New object:C1471(\
-		"code"; -1; \
-		"text"; "Test error"; \
-		"method"; "test_method"; \
-		"line"; 42; \
-		"timestamp"; Milliseconds:C459\
-		)
-	
-	// Verify structure matches what TestErrorHandler creates
-	$t.assert.isNotNull($t; $errorInfo.code; "Error should have code")
-	$t.assert.isNotNull($t; $errorInfo.text; "Error should have text")
-	$t.assert.isNotNull($t; $errorInfo.method; "Error should have method")
-	$t.assert.isNotNull($t; $errorInfo.line; "Error should have line")
-	$t.assert.isNotNull($t; $errorInfo.timestamp; "Error should have timestamp")
+        var $errorInfo : Object
+        $errorInfo:=New object:C1471(\
+                "code"; -1; \
+                "text"; "Test error"; \
+                "method"; "test_method"; \
+                "line"; 42; \
+                "timestamp"; Milliseconds:C459; \
+                "processNumber"; 1; \
+                "context"; "local"; \
+                "isLocal"; True:C214\
+                )
+
+        // Verify structure matches what TestErrorHandler creates
+        $t.assert.isNotNull($t; $errorInfo.code; "Error should have code")
+        $t.assert.isNotNull($t; $errorInfo.text; "Error should have text")
+        $t.assert.isNotNull($t; $errorInfo.method; "Error should have method")
+        $t.assert.isNotNull($t; $errorInfo.line; "Error should have line")
+        $t.assert.isNotNull($t; $errorInfo.timestamp; "Error should have timestamp")
+        $t.assert.areEqual($t; 1; $errorInfo.processNumber; "Error should capture process number")
+        $t.assert.areEqual($t; "local"; $errorInfo.context; "Error should capture context")
+        $t.assert.isTrue($t; $errorInfo.isLocal; "Error should flag local context")
 	
 	// Test JSON serialization of error object
 	var $errorJson : Text

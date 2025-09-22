@@ -28,12 +28,18 @@ Function run()
         // Reset the testing context for this test
         This:C1470.t.resetForNewTest()
 
-        // Clear any existing test errors
-        If (Storage:C1525.testErrors#Null:C1517)
+        var $processNumber : Integer
+        $processNumber:=Current process:C322
+
+        // Ensure shared error storage exists
+        If (Storage:C1525.testErrors=Null:C1517)
                 Use (Storage:C1525)
-                        Storage:C1525.testErrors.clear()
+                        Storage:C1525.testErrors:=New shared collection:C1527
                 End use
         End if
+
+        // Clear any existing errors recorded for this process
+        This:C1470._clearProcessErrors($processNumber)
 
         // Skip test early if tagged to skip
         If (This:C1470.shouldSkip())
@@ -52,16 +58,19 @@ Function run()
 	
         This:C1470.function.apply(This:C1470.classInstance; [This:C1470.t])
 	
-	// Capture any runtime errors that occurred
-	If (Storage:C1525.testErrors#Null:C1517) && (Storage:C1525.testErrors.length>0)
-		var $error : Object
-		For each ($error; Storage:C1525.testErrors)
-			This:C1470.runtimeErrors.push(OB Copy:C1225($error))
-		End for each 
-		
-		// Mark test as failed if runtime errors occurred
-		This:C1470.t.fail()
-	End if 
+        // Capture any runtime errors that occurred in this process
+        var $processErrors : Collection
+        $processErrors:=This:C1470._collectProcessErrors($processNumber)
+
+        If ($processErrors.length>0)
+                var $error : Object
+                For each ($error; $processErrors)
+                        This:C1470.runtimeErrors.push($error)
+                End for each
+
+                // Mark test as failed if runtime errors occurred
+                This:C1470.t.fail()
+        End if
 	
 	// Handle transaction cleanup
 	If ($transactionStarted)
@@ -274,5 +283,60 @@ Function _shouldUseTransactions($classCode : Text) : Boolean
 		End for 
 	End if 
 	
-	// Default to using transactions for test isolation
-	return True
+        // Default to using transactions for test isolation
+        return True
+
+Function _clearProcessErrors($processNumber : Integer)
+        If (Storage:C1525.testErrors#Null:C1517)
+                Use (Storage:C1525.testErrors)
+                        var $index : Integer
+                        For ($index; Storage:C1525.testErrors.length-1; 0; -1)
+                                var $error : Object
+                                $error:=Storage:C1525.testErrors[$index]
+
+                                If (This:C1470._errorBelongsToProcess($error; $processNumber))
+                                        Storage:C1525.testErrors.remove($index)
+                                End if
+                        End for
+                End use
+        End if
+
+Function _collectProcessErrors($processNumber : Integer) : Collection
+        var $processErrors : Collection
+        $processErrors:=New collection:C1472
+
+        If (Storage:C1525.testErrors#Null:C1517)
+                Use (Storage:C1525.testErrors)
+                        var $index : Integer
+                        For ($index; Storage:C1525.testErrors.length-1; 0; -1)
+                                var $error : Object
+                                $error:=Storage:C1525.testErrors[$index]
+
+                                If (This:C1470._errorBelongsToProcess($error; $processNumber))
+                                        $processErrors.push(OB Copy:C1225($error))
+                                        Storage:C1525.testErrors.remove($index)
+                                End if
+                        End for
+                End use
+        End if
+
+        return $processErrors
+
+Function _errorBelongsToProcess($error : Object; $processNumber : Integer) : Boolean
+        If ($error=Null:C1517)
+                return False:C215
+        End if
+
+        var $context : Text
+        $context:=$error.context || ""
+
+        If ($context="global")
+                return False:C215
+        End if
+
+        If ($error.processNumber#Null:C1517)
+                return ($error.processNumber=$processNumber)
+        End if
+
+        // Legacy support: assume errors without process information belong to the current process
+        return True:C214
