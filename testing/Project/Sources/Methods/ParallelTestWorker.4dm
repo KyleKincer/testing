@@ -49,7 +49,7 @@ Case of
                                 $handlerState.changed:=$shouldInstallHandler
                                 $handlerState.installed:=True:C214
                                 If (Not:C34($handlerState.registered))
-                                        TestErrorHandlerRegisterProcess(Current process:C322; $handlerState.previousHandler; $handlerState.changed)
+                                        TestErrorHandlerRegisterProcess(Current process:C322)
                                         $handlerState.registered:=True:C214
                                 End if
                         End if

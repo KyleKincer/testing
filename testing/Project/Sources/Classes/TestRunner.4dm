@@ -37,13 +37,6 @@ Function _prepareErrorHandlingStorage()
                 Else
                         Storage:C1525.testErrorHandlerProcesses.clear()
                 End if
-
-                Storage:C1525.testErrorHandlerState:=New shared object:C1526(\
-                        "globalHandlerChanged"; False:C215; \
-                        "previousGlobalHandler"; ""; \
-                        "localHandlers"; New shared object:C1526(); \
-                        "localHandlerChanges"; New shared object:C1526()\
-                        )
         End use
 
 Function _runInternal()
@@ -87,20 +80,13 @@ Function _installErrorHandler() : Object
         End if
 
         $currentProcess:=Current process:C322
-        TestErrorHandlerRegisterProcess($currentProcess; $previousErrorHandler; $shouldInstallLocal)
+        TestErrorHandlerRegisterProcess($currentProcess)
 
         $previousGlobalHandler:=Method called on error:C704(1)
         $shouldInstallGlobal:=($previousGlobalHandler#"TestErrorHandler")
 
         If ($shouldInstallGlobal)
                 ON ERR CALL:C155("TestErrorHandler"; 1)
-        End if
-
-        If (Storage:C1525.testErrorHandlerState#Null:C1517)
-                Use (Storage:C1525.testErrorHandlerState)
-                        Storage:C1525.testErrorHandlerState.previousGlobalHandler:=$previousGlobalHandler
-                        Storage:C1525.testErrorHandlerState.globalHandlerChanged:=$shouldInstallGlobal
-                End use
         End if
 
         return New object:C1471(\
@@ -146,13 +132,6 @@ Function _restoreErrorHandler($handlerState : Object)
                 End if
         End if
 
-        If (Storage:C1525.testErrorHandlerState#Null:C1517)
-                Use (Storage:C1525.testErrorHandlerState)
-                        Storage:C1525.testErrorHandlerState.previousGlobalHandler:=""
-                        Storage:C1525.testErrorHandlerState.globalHandlerChanged:=False:C215
-                End use
-        End if
-	
 Function discoverTests()
 	var $class : 4D:C1709.Class
 	For each ($class; This:C1470._getTestClasses())

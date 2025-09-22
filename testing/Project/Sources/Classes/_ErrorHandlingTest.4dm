@@ -92,7 +92,7 @@ Function test_global_error_collection($t : cs:C1710.Testing)
                 $t.assert.areEqual($t; 0; Storage:C1525.testErrors.length; "Global errors should be drained from storage")
         End use
 
-Function test_register_process_tracks_previous_handler($t : cs:C1710.Testing)
+Function test_register_process_tracking($t : cs:C1710.Testing)
 
         var $runner : cs:C1710.TestRunner
         $runner:=cs:C1710.TestRunner.new()
@@ -101,27 +101,16 @@ Function test_register_process_tracks_previous_handler($t : cs:C1710.Testing)
         var $processNumber : Integer
         $processNumber:=98765
 
-        TestErrorHandlerRegisterProcess($processNumber; "LegacyHandler"; True:C214)
+        TestErrorHandlerRegisterProcess($processNumber)
 
-        var $processKey : Text
-        $processKey:=String:C10($processNumber)
-
-        Use (Storage:C1525.testErrorHandlerState.localHandlers)
-                $t.assert.areEqual($t; "LegacyHandler"; Storage:C1525.testErrorHandlerState.localHandlers[$processKey]; "Should track previous local handler")
-        End use
-
-        Use (Storage:C1525.testErrorHandlerState.localHandlerChanges)
-                $t.assert.isTrue($t; Storage:C1525.testErrorHandlerState.localHandlerChanges[$processKey]; "Should mark handler change")
+        Use (Storage:C1525.testErrorHandlerProcesses)
+                $t.assert.isTrue($t; Storage:C1525.testErrorHandlerProcesses.indexOf($processNumber)>=0; "Should register process for local error tracking")
         End use
 
         TestErrorHandlerUnregister($processNumber)
 
-        Use (Storage:C1525.testErrorHandlerState.localHandlers)
-                $t.assert.isNull($t; Storage:C1525.testErrorHandlerState.localHandlers[$processKey]; "Should clear local handler after unregister")
-        End use
-
-        Use (Storage:C1525.testErrorHandlerState.localHandlerChanges)
-                $t.assert.isFalse($t; Storage:C1525.testErrorHandlerState.localHandlerChanges[$processKey]; "Should reset handler change flag after unregister")
+        Use (Storage:C1525.testErrorHandlerProcesses)
+                $t.assert.isFalse($t; Storage:C1525.testErrorHandlerProcesses.indexOf($processNumber)>=0; "Should remove process from tracking after unregister")
         End use
 
 Function test_testing_context_properties($t : cs:C1710.Testing)

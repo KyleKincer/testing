@@ -12,19 +12,3 @@ If (Storage:C1525.testErrorHandlerProcesses#Null:C1517)
         End use
 End if
 
-If (Storage:C1525.testErrorHandlerState#Null:C1517)
-        var $processKey : Text
-        $processKey:=String:C10($processNumber)
-
-        If (Storage:C1525.testErrorHandlerState.localHandlers#Null:C1517)
-                Use (Storage:C1525.testErrorHandlerState.localHandlers)
-                        Storage:C1525.testErrorHandlerState.localHandlers[$processKey]:=Null:C1517
-                End use
-        End if
-
-        If (Storage:C1525.testErrorHandlerState.localHandlerChanges#Null:C1517)
-                Use (Storage:C1525.testErrorHandlerState.localHandlerChanges)
-                        Storage:C1525.testErrorHandlerState.localHandlerChanges[$processKey]:=False:C215
-                End use
-        End if
-End if
