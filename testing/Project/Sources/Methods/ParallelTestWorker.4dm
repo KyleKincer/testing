@@ -24,14 +24,6 @@ Case of
                 $previousErrorHandler:=Method called on error:C704
                 $shouldInstallHandler:=($previousErrorHandler#"TestErrorHandler")
 
-                var $registerOptions : Object
-                $registerOptions:=New object:C1471(\
-                        "previousLocalHandler"; $previousErrorHandler; \
-                        "forwardLocal"; $shouldInstallHandler; \
-                        "previousGlobalHandler"; ""; \
-                        "forwardGlobal"; False:C215\
-                )
-
                 var $handlerState : Object
                 Use (Storage:C1525)
                         If (Storage:C1525.parallelWorkerHandlerStates=Null:C1517)
@@ -44,22 +36,19 @@ Case of
                                 $handlerState:=New shared object:C1526(\
                                         "installed"; False:C215; \
                                         "changed"; False:C215; \
-                                        "previousHandler"; ""; \
-                                        "registered"; False:C215\
+                                        "previousHandler"; ""\
                                         )
                                 Storage:C1525.parallelWorkerHandlerStates[$workerKey]:=$handlerState
                         End if
                 End use
+
+                TestErrorHandlerRegisterProcess(Current process:C322)
 
                 Use ($handlerState)
                         If (Not:C34($handlerState.installed))
                                 $handlerState.previousHandler:=$previousErrorHandler
                                 $handlerState.changed:=$shouldInstallHandler
                                 $handlerState.installed:=True:C214
-                                If (Not:C34($handlerState.registered))
-                                        TestErrorHandlerRegisterProcess(Current process:C322; $registerOptions)
-                                        $handlerState.registered:=True:C214
-                                End if
                         End if
                 End use
 
@@ -180,25 +169,18 @@ Case of
                         End if
                 End use
 
+                TestErrorHandlerUnregister(Current process:C322)
+
                 If ($handlerState#Null:C1517)
                         var $shouldRestore : Boolean
                         var $previousHandler : Text
-                        var $wasRegistered : Boolean
 
                         Use ($handlerState)
                                 $shouldRestore:=$handlerState.changed
                                 $previousHandler:=$handlerState.previousHandler
                                 $handlerState.installed:=False:C215
                                 $handlerState.changed:=False:C215
-                                $wasRegistered:=$handlerState.registered
-                                If ($handlerState.registered)
-                                        $handlerState.registered:=False:C215
-                                End if
                         End use
-
-                        If ($wasRegistered)
-                                TestErrorHandlerUnregister(Current process:C322)
-                        End if
 
                         If ($shouldRestore)
                                 If ($previousHandler#"")

@@ -37,15 +37,6 @@ Function _prepareErrorHandlingStorage()
                 Else
                         Storage:C1525.testErrorHandlerProcesses.clear()
                 End if
-
-                Storage:C1525.testErrorHandlerForwarding:=New shared object:C1526(\
-                        "local"; New shared object:C1526; \
-                        "global"; New shared object:C1526(\
-                                "handler"; ""; \
-                                "shouldForward"; False:C215; \
-                                "installedProcess"; 0\
-                        )\
-                )
         End use
 
 Function _runInternal()
@@ -93,15 +84,7 @@ Function _installErrorHandler() : Object
 
         $currentProcess:=Current process:C322
 
-        var $registerOptions : Object
-        $registerOptions:=New object:C1471(\
-                "previousLocalHandler"; $previousErrorHandler; \
-                "forwardLocal"; $shouldInstallLocal; \
-                "previousGlobalHandler"; $previousGlobalHandler; \
-                "forwardGlobal"; $shouldInstallGlobal\
-        )
-
-        TestErrorHandlerRegisterProcess($currentProcess; $registerOptions)
+        TestErrorHandlerRegisterProcess($currentProcess)
 
         If ($shouldInstallGlobal)
                 ON ERR CALL:C155("TestErrorHandler"; 1)
@@ -112,7 +95,6 @@ Function _installErrorHandler() : Object
                 "installedLocalHandler"; $shouldInstallLocal; \
                 "previousGlobalHandler"; $previousGlobalHandler; \
                 "installedGlobalHandler"; $shouldInstallGlobal; \
-                "installedNewHandler"; $shouldInstallLocal; \
                 "processNumber"; $currentProcess\
                 )
 
@@ -124,17 +106,9 @@ Function _restoreErrorHandler($handlerState : Object)
         var $processNumber : Integer
         $processNumber:=$handlerState.processNumber || Current process:C322
 
-        var $unregisterOptions : Object
-        $unregisterOptions:=New object:C1471(\
-                "clearGlobal"; $handlerState.installedGlobalHandler\
-        )
+        TestErrorHandlerUnregister($processNumber)
 
-        TestErrorHandlerUnregister($processNumber; $unregisterOptions)
-
-        var $restoreLocal : Boolean
-        $restoreLocal:=($handlerState.installedLocalHandler#Null:C1517) ? $handlerState.installedLocalHandler : $handlerState.installedNewHandler
-
-        If ($restoreLocal)
+        If (Bool:C1537($handlerState.installedLocalHandler))
                 var $previousErrorHandler : Text
                 $previousErrorHandler:=$handlerState.previousHandler
 
@@ -145,7 +119,7 @@ Function _restoreErrorHandler($handlerState : Object)
                 End if
         End if
 
-        If ($handlerState.installedGlobalHandler)
+        If (Bool:C1537($handlerState.installedGlobalHandler))
                 var $previousGlobalHandler : Text
                 $previousGlobalHandler:=$handlerState.previousGlobalHandler
 
