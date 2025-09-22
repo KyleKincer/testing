@@ -805,6 +805,32 @@ Function _checkMathCase($t : cs.Testing.Testing; $case : Object)
     $t.assert.areEqual($t; $case.want; $case.in+1; "math works")
 ```
 
+## Trigger Management
+
+Database triggers are disabled for every test context by default. The framework issues `ALTER DATABASE DISABLE TRIGGERS` whenever a `Testing` instance is created or reset so tests begin from a consistent state without trigger side effects. Any table-level trigger overrides are tracked and reverted automatically before the next test runs.
+
+Use the following helpers on the `$t` context when a test needs trigger support:
+
+- `$t.disableAllTriggers()` – Explicitly disable triggers for the current session and clear any table overrides
+- `$t.enableAllTriggers()` – Re-enable triggers for all tables in the current session
+- `$t.enableTableTriggers(tableName)` – Enable triggers for a single table while keeping others disabled
+- `$t.disableTableTriggers(tableName)` – Disable triggers for a specific table and remove it from the override list
+- `$t.restoreTriggerDefaults()` – Convenience wrapper that restores the default “all triggers disabled” state
+
+Table names are quoted automatically, so you can enable triggers on tables with spaces or special characters without additional escaping. Any double quotes inside the name are doubled per SQL rules.
+
+```4d
+Function test_trigger_callbacks($t : cs.Testing.Testing)
+    // Enable triggers only for the tables needed by this scenario
+    $t.enableTableTriggers("AuditLog")
+
+    // Execute behavior that relies on table triggers
+    This._performOperation()
+
+    // Return to the default trigger state for the remainder of the test
+    $t.restoreTriggerDefaults()
+```
+
 ## Transaction Management
 
 The framework provides automatic transaction management for test isolation and manual transaction control for advanced scenarios.
