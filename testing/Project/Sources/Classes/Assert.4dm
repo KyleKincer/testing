@@ -105,43 +105,31 @@ Function contains($t : Object; $container : Variant; $value : Variant; $message 
 	End if 
 	
 Function _recordAssertion($t : Object; $passed : Boolean; $expected : Variant; $actual : Variant; $message : Text; $callChain : Collection)
-	var $cc : Collection
-	var $line : Variant
-	
-	// Use provided call chain if available, otherwise capture it
-	If (Count parameters>=6) && ($callChain#Null)
-		$cc:=$callChain
-	Else 
-		$cc:=Get call chain:C1662
-	End if 
-	
-	$line:=Null:C1517
-	If ($cc.length>2) && ($cc[2].line#Null:C1517)
-		$line:=$cc[2].line
-	End if 
+	// Note: Line numbers from 4D's call chain are not reliable for showing source line locations
+	// They reference internal function offsets rather than actual source lines
+	// Therefore, we omit line numbers from assertion records
+
 	var $assertInfo : Object
 	$assertInfo:=New object:C1471(\
 		"passed"; $passed; \
 		"expected"; This:C1470._sanitizeValue($expected); \
 		"actual"; This:C1470._sanitizeValue($actual); \
-		"message"; $message; \
-		"line"; $line\
+		"message"; $message\
 		)
 	$t.assertions.push($assertInfo)
-	
+
 Function _sanitizeValue($value : Variant) : Variant
 	var $type : Integer
 	$type:=Value type:C1509($value)
-	
+
 	// Use placeholders for complex structures to avoid serialization errors
-	Case of 
+	Case of
 		: ($type=Is object:K8:27)
 			return "<object>"
 		: ($type=Is collection:K8:32)
 			return "<collection>"
-		Else 
+		Else
 			return $value
-	End case 
-	
-	
-	
+	End case
+
+
