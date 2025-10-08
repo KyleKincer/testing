@@ -113,7 +113,7 @@ Function run($name : Text; $subtest : 4D:C1709.Function; $data : Variant) : Bool
 
         // If the subtest failed, mark parent as failed and capture call chain
         If ($subT.failed)
-                This:C1470.fail()
+                This:C1470.failed:=True:C214
                 If ($subT.failureCallChain#Null)
                         This:C1470.failureCallChain:=$subT.failureCallChain
                 End if
