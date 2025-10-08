@@ -188,6 +188,34 @@ Function test_run_subtest_stats_isolated($t : cs:C1710.Testing)
         $parentStat:=$testing.stats.getStat("mocked")
         $t.assert.areEqual($t; 0; $parentStat.getNumberOfCalls(); "Parent stats should remain unaffected")
 
+Function test_run_propagates_assertions($t : cs:C1710.Testing)
+
+        var $testing : cs:C1710.Testing
+        $testing:=cs:C1710.Testing.new()
+
+        var $cases : Collection
+        $cases:=[\
+                New object("name"; "case1"; "value"; 1);\
+                New object("name"; "case2"; "value"; 2);\
+                New object("name"; "case3"; "value"; 3)\
+        ]
+
+        var $case : Object
+        For each ($case; $cases)
+                $testing.run($case.name; This._assertionSubtest; $case)
+        End for each
+
+        // Each subtest makes 1 assertion, so we should have 3 assertions total
+        $t.assert.areEqual($t; 3; $testing.assertions.length; "Parent should capture all subtest assertions")
+
+        // Verify parent did not fail (all assertions passed)
+        $t.assert.isFalse($t; $testing.failed; "Parent should not fail when subtests pass")
+
+Function _assertionSubtest($t : cs:C1710.Testing; $case : Object)
+
+        // Make one assertion per subtest
+        $t.assert.isTrue($t; $case.value>0; "Value should be positive")
+
 Function _addOneCase($t : cs:C1710.Testing; $case : Object)
 
         var $got : Integer

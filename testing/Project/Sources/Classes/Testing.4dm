@@ -105,6 +105,12 @@ Function run($name : Text; $subtest : 4D:C1709.Function; $data : Variant) : Bool
                 This:C1470.log($name+": "+$message)
         End for each
 
+        // Propagate assertions from subtest to parent
+        var $assertion : Object
+        For each ($assertion; $subT.assertions)
+                This:C1470.assertions.push($assertion)
+        End for each
+
         // If the subtest failed, mark parent as failed and capture call chain
         If ($subT.failed)
                 This:C1470.fail()

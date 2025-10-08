@@ -651,13 +651,13 @@
 			],
 			"Summary": ""
 		},
-		"run()": {
-			"Syntax": "**.run**()",
+		"discoverTests()": {
+			"Syntax": "**.discoverTests**()",
 			"Params": [],
 			"Summary": ""
 		},
-		"discoverTests()": {
-			"Syntax": "**.discoverTests**()",
+		"run()": {
+			"Syntax": "**.run**()",
 			"Params": [],
 			"Summary": ""
 		},
@@ -1042,11 +1042,6 @@
 		}
 	},
 	"ParallelTestRunner": {
-		"run()": {
-			"Syntax": "**.run**()",
-			"Params": [],
-			"Summary": ""
-		},
 		"completedSuites": {
 			"Syntax": "completedSuites : Integer"
 		},
@@ -1424,21 +1419,40 @@
 			"Summary": ""
 		},
 		"fail()": {
-			"Syntax": "**.fail**()",
-			"Params": [],
+			"Syntax": "**.fail**( *expected* : Variant; *actual* : Variant; *message* : Text )",
+			"Params": [
+				[
+					"expected",
+					"Variant",
+					"->"
+				],
+				[
+					"actual",
+					"Variant",
+					"->"
+				],
+				[
+					"message",
+					"Text",
+					"->"
+				]
+			],
 			"Summary": ""
-		},
-		"classInstance": {
-			"Syntax": "classInstance : 4D.Object"
-		},
-		"assert": {
-			"Syntax": "assert : cs.Testing.Assert"
 		},
 		"failureCallChain": {
 			"Syntax": "failureCallChain : Collection"
 		},
 		"stats": {
 			"Syntax": "stats : cs.Testing.UnitStatsTracker"
+		},
+		"assert": {
+			"Syntax": "assert : cs.Testing.Assert"
+		},
+		"classInstance": {
+			"Syntax": "classInstance : 4D.Object"
+		},
+		"assertions": {
+			"Syntax": "assertions : Collection"
 		},
 		"logMessages": {
 			"Syntax": "logMessages : Collection"
@@ -2022,7 +2036,7 @@
 			"Summary": ""
 		},
 		"fail()": {
-			"Syntax": "**.fail**( *t* : Object; *message* : Text )",
+			"Syntax": "**.fail**( *t* : Object; *message* : Text; *expected* : Variant; *actual* : Variant )",
 			"Params": [
 				[
 					"t",
@@ -2032,6 +2046,16 @@
 				[
 					"message",
 					"Text",
+					"->"
+				],
+				[
+					"expected",
+					"Variant",
+					"->"
+				],
+				[
+					"actual",
+					"Variant",
 					"->"
 				]
 			],
@@ -2139,8 +2163,8 @@
 			],
 			"Summary": ""
 		},
-		"test_error_information_structure()": {
-			"Syntax": "**.test_error_information_structure**( *t* : cs.Testing.Testing )",
+		"test_testing_context_properties()": {
+			"Syntax": "**.test_testing_context_properties**( *t* : cs.Testing.Testing )",
 			"Params": [
 				[
 					"t",
@@ -2150,8 +2174,30 @@
 			],
 			"Summary": ""
 		},
-		"test_testing_context_properties()": {
-			"Syntax": "**.test_testing_context_properties**( *t* : cs.Testing.Testing )",
+		"test_local_errors_remain_in_storage()": {
+			"Syntax": "**.test_local_errors_remain_in_storage**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_global_error_collection()": {
+			"Syntax": "**.test_global_error_collection**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"test_error_information_structure()": {
+			"Syntax": "**.test_error_information_structure**( *t* : cs.Testing.Testing )",
 			"Params": [
 				[
 					"t",
