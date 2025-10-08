@@ -903,6 +903,17 @@
 			],
 			"Summary": ""
 		},
+		"test_run_propagates_assertions()": {
+			"Syntax": "**.test_run_propagates_assertions**( *t* : cs.Testing.Testing )",
+			"Params": [
+				[
+					"t",
+					"cs.Testing.Testing",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
 		"test_fatal_method()": {
 			"Syntax": "**.test_fatal_method**( *t* : cs.Testing.Testing )",
 			"Params": [
