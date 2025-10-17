@@ -5,7 +5,7 @@ Function test_parameter_parsing_with_equals($t : cs:C1710.Testing)
 	
 	// Create a TestRunner instance to test parameter parsing
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test basic initialization
 	$t.assert.isNotNull($t; $runner; "TestRunner should initialize")
@@ -15,7 +15,7 @@ Function test_parameter_parsing_with_equals($t : cs:C1710.Testing)
 Function test_parse_param_string_with_equals($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test the extracted _parseParamString method directly
 	var $params : Object
@@ -27,7 +27,7 @@ Function test_parse_param_string_with_equals($t : cs:C1710.Testing)
 Function test_parse_param_string_with_colons($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test colon-separated parameters
 	var $params : Object
@@ -39,7 +39,7 @@ Function test_parse_param_string_with_colons($t : cs:C1710.Testing)
 Function test_parse_param_string_empty($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test empty parameter string
 	var $params : Object
@@ -52,7 +52,7 @@ Function test_parse_param_string_empty($t : cs:C1710.Testing)
 Function test_parse_param_string_malformed($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test malformed parameters (no values)
 	var $params : Object
@@ -63,7 +63,7 @@ Function test_parse_param_string_malformed($t : cs:C1710.Testing)
 Function test_filter_test_classes($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Create a mock class store
 	var $mockClassStore : Object
@@ -92,7 +92,7 @@ Function test_filter_test_classes($t : cs:C1710.Testing)
 Function test_output_format_defaults_to_human($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Note: Output format depends on current user parameters when running tests
 	// This test verifies the outputFormat property exists and has a valid value
@@ -101,7 +101,7 @@ Function test_output_format_defaults_to_human($t : cs:C1710.Testing)
 Function test_test_class_discovery($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test that it finds test classes
 	var $testClasses : Collection
@@ -119,7 +119,7 @@ Function test_test_class_discovery($t : cs:C1710.Testing)
 Function test_pattern_matching_exact($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test exact pattern matching
 	$t.assert.isTrue($t; $runner._matchesPattern("ExampleTest"; "ExampleTest"); "Should match exactly")
@@ -128,7 +128,7 @@ Function test_pattern_matching_exact($t : cs:C1710.Testing)
 Function test_pattern_matching_wildcards($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test wildcard pattern matching
 	$t.assert.isTrue($t; $runner._matchesPattern("ExampleTest"; "*Example*"); "Should match with wildcards")
@@ -140,7 +140,7 @@ Function test_pattern_matching_wildcards($t : cs:C1710.Testing)
 Function test_pattern_matching_universal($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test universal pattern
 	$t.assert.isTrue($t; $runner._matchesPattern("anything"; "*"); "Universal pattern should match anything")
@@ -149,7 +149,7 @@ Function test_pattern_matching_universal($t : cs:C1710.Testing)
 Function test_results_initialization($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	var $results : Object
 	$results:=$runner.getResults()
@@ -166,7 +166,7 @@ Function test_results_initialization($t : cs:C1710.Testing)
 Function test_test_patterns_initialization($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	$t.assert.isNotNull($t; $runner.testPatterns; "Test patterns should be initialized")
 	// Note: Test patterns may be populated from user parameters during testing
@@ -176,7 +176,7 @@ Function test_test_patterns_initialization($t : cs:C1710.Testing)
 Function test_getUserParam_basic_functionality($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test the extracted method directly
 	// We can't easily mock Get database parameter, but we can test that the method works
@@ -190,7 +190,7 @@ Function test_getUserParam_basic_functionality($t : cs:C1710.Testing)
 Function test_parseParamString_comprehensive($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test comprehensive parameter parsing scenarios
 	var $params : Object
@@ -209,7 +209,7 @@ Function test_parseParamString_comprehensive($t : cs:C1710.Testing)
 Function test_getClassStore_basic_functionality($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test that _getClassStore returns the classStore property
 	var $classStore : Object
@@ -223,7 +223,7 @@ Function test_getClassStore_basic_functionality($t : cs:C1710.Testing)
 Function test_filterTestClasses_comprehensive($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Create comprehensive mock class store with various scenarios
 	var $mockClassStore : Object
@@ -268,7 +268,7 @@ Function test_dependency_injection_pattern($t : cs:C1710.Testing)
 	
 	// Test that we can successfully test the dependency extraction pattern
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Verify that extracted methods are independently testable
 	var $emptyParams : Object
@@ -289,7 +289,7 @@ Function test_dependency_injection_pattern($t : cs:C1710.Testing)
 Function test_pattern_matching_with_dependency_extraction($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test that pattern matching works independently of parameter parsing
 	var $matches : Boolean
@@ -305,7 +305,7 @@ Function test_pattern_matching_with_dependency_extraction($t : cs:C1710.Testing)
 Function test_error_handling_in_extracted_methods($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test that extracted methods handle edge cases gracefully
 	var $result : Object
@@ -332,7 +332,7 @@ Function test_skip_tag_counts_as_skipped($t : cs:C1710.Testing)
 
         // Run TestRunner on a class that should be skipped
         var $runner : cs:C1710.TestRunner
-        $runner:=cs:C1710.TestRunner.new()
+        $runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
         // Suppress output during this internal test run
         $runner.outputFormat:="none"
         $runner.testPatterns:=["_SkipTaggedTest*"]

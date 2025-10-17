@@ -44,18 +44,18 @@ Function discoverTests()
 		// Filter individual test methods based on patterns
 		If (This:C1470._shouldIncludeTestMethod($function.name))
 			var $testFunction : cs:C1710._TestFunction
-			$testFunction:=cs:C1710._TestFunction.new(This:C1470.class; This:C1470.classInstance; $function.function; $function.name; $classCode)
-			
+			$testFunction:=cs:C1710._TestFunction.new(This:C1470.class; This:C1470.classInstance; $function.function; $function.name; $classCode; This:C1470.testRunner)
+
 			// Apply tag filtering if TestRunner is available
 			If (This:C1470.testRunner#Null:C1517)
 				If (This:C1470.testRunner._shouldIncludeTestByTags($testFunction))
 					This:C1470.testFunctions.push($testFunction)
-				End if 
-			Else 
+				End if
+			Else
 				// If no TestRunner reference, include all tests that pass pattern filtering
 				This:C1470.testFunctions.push($testFunction)
-			End if 
-		End if 
+			End if
+		End if
 	End for each 
 	
 Function _getTestClassFunctions() : Collection

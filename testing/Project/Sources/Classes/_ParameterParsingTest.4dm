@@ -8,7 +8,7 @@ Function test_parse_single_parameter($t : cs:C1710.Testing)
 	
 	// Create a TestRunner to test parameter-dependent behavior
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test that output format is set (depends on current user parameters)
 	$t.assert.isTrue($t; ($runner.outputFormat="human") || ($runner.outputFormat="json") || ($runner.outputFormat="junit"); "Output format should be human, json, or junit")
@@ -17,7 +17,7 @@ Function test_parse_single_parameter($t : cs:C1710.Testing)
 Function test_pattern_parsing_logic($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test pattern matching behavior
 	$t.assert.isTrue($t; $runner._matchesPattern("test"; "test"); "Should match exact string")
@@ -29,7 +29,7 @@ Function test_pattern_parsing_logic($t : cs:C1710.Testing)
 Function test_empty_pattern_handling($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test empty pattern behavior
 	$t.assert.isFalse($t; $runner._matchesPattern("test"; ""); "Empty pattern should not match")
@@ -38,7 +38,7 @@ Function test_empty_pattern_handling($t : cs:C1710.Testing)
 Function test_case_sensitivity($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// 4D's @ operator is case-insensitive by default
 	$t.assert.isTrue($t; $runner._matchesPattern("Test"; "test"); "4D pattern matching is case insensitive")
@@ -48,7 +48,7 @@ Function test_case_sensitivity($t : cs:C1710.Testing)
 Function test_special_characters_in_patterns($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test patterns with special characters
 	$t.assert.isTrue($t; $runner._matchesPattern("test_method"; "test_method"); "Should handle underscores")
@@ -59,7 +59,7 @@ Function test_special_characters_in_patterns($t : cs:C1710.Testing)
 Function test_multiple_wildcard_patterns($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test complex wildcard patterns
 	$t.assert.isTrue($t; $runner._matchesPattern("test_method_example"; "*method*"); "Should match middle wildcard")
@@ -69,7 +69,7 @@ Function test_multiple_wildcard_patterns($t : cs:C1710.Testing)
 Function test_edge_case_patterns($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test edge cases
 	$t.assert.isTrue($t; $runner._matchesPattern("anything"; "*"); "Universal wildcard should match anything")
@@ -80,7 +80,7 @@ Function test_parameter_validation($t : cs:C1710.Testing)
 	
 	// Test that TestRunner handles invalid parameters gracefully
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Should not crash with default initialization
 	$t.assert.isNotNull($t; $runner.outputFormat; "Output format should be initialized")
@@ -95,7 +95,7 @@ Function test_parameter_validation($t : cs:C1710.Testing)
 Function test_suite_filtering_logic($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Manually set test patterns to test filtering logic
 	$runner.testPatterns:=["_ExampleTest"]
@@ -112,7 +112,7 @@ Function test_suite_filtering_logic($t : cs:C1710.Testing)
 Function test_wildcard_suite_filtering($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test wildcard filtering
 	$runner.testPatterns:=["*Error*"]

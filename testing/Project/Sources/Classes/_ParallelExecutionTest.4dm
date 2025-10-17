@@ -7,7 +7,7 @@ Function test_parallel_mode_detection($t : cs:C1710.Testing)
 	
 	// Test that parallel mode is properly detected from parameters
 	var $runner : cs:C1710.ParallelTestRunner
-	$runner:=cs:C1710.ParallelTestRunner.new()
+	$runner:=cs:C1710.ParallelTestRunner.new(Null:C1517; Null:C1517)
 	
 	// Mock user parameters for parallel execution
 	$runner.parallelMode:=True:C214
@@ -21,7 +21,7 @@ Function test_default_worker_count($t : cs:C1710.Testing)
 	
 	// Test default worker count calculation
 	var $runner : cs:C1710.ParallelTestRunner
-	$runner:=cs:C1710.ParallelTestRunner.new()
+	$runner:=cs:C1710.ParallelTestRunner.new(Null:C1517; Null:C1517)
 	
 	var $defaultCount : Integer
 	$defaultCount:=$runner._getDefaultWorkerCount()
@@ -34,7 +34,7 @@ Function test_parallel_suite_filtering($t : cs:C1710.Testing)
 	
 	// Test that suites can opt out of parallel execution
 	var $runner : cs:C1710.ParallelTestRunner
-	$runner:=cs:C1710.ParallelTestRunner.new()
+	$runner:=cs:C1710.ParallelTestRunner.new(Null:C1517; Null:C1517)
 	
 	// Create a test suite that should run in parallel
 	var $parallelSuite : cs:C1710._TestSuite
@@ -50,7 +50,7 @@ Function test_shared_storage_initialization($t : cs:C1710.Testing)
 	
 	// Test shared storage initialization
 	var $runner : cs:C1710.ParallelTestRunner
-	$runner:=cs:C1710.ParallelTestRunner.new()
+	$runner:=cs:C1710.ParallelTestRunner.new(Null:C1517; Null:C1517)
 	$runner.testSuites:=[cs:C1710._TestSuite.new(cs:C1710._ExampleTest; "human"; []; $runner)]
 	
 	// Initialize and verify shared storage
@@ -64,7 +64,7 @@ Function test_sequential_fallback($t : cs:C1710.Testing)
 	
 	// Test that single suites fall back to sequential execution
 	var $runner : cs:C1710.ParallelTestRunner
-	$runner:=cs:C1710.ParallelTestRunner.new()
+	$runner:=cs:C1710.ParallelTestRunner.new(Null:C1517; Null:C1517)
 	$runner.parallelMode:=True:C214
 	
 	// Mock a single test suite scenario
@@ -78,7 +78,7 @@ Function test_worker_process_management($t : cs:C1710.Testing)
 	
 	// Test worker process creation and management
 	var $runner : cs:C1710.ParallelTestRunner
-	$runner:=cs:C1710.ParallelTestRunner.new()
+	$runner:=cs:C1710.ParallelTestRunner.new(Null:C1517; Null:C1517)
 	$runner.parallelMode:=True:C214
 	$runner.maxWorkers:=2
 	
@@ -93,7 +93,7 @@ Function test_parallel_opt_out_parsing($t : cs:C1710.Testing)
 	
 	// Test parsing of parallel opt-out comments
 	var $runner : cs:C1710.ParallelTestRunner
-	$runner:=cs:C1710.ParallelTestRunner.new()
+	$runner:=cs:C1710.ParallelTestRunner.new(Null:C1517; Null:C1517)
 	
 	// Mock class code with parallel opt-out
 	var $classCode : Text

@@ -9,8 +9,8 @@ property sharedResults : Object        // Shared storage for collecting results
 property completedSuites : Integer     // Counter for completed suites
 property sequentialSuites : Collection // Suites that opted out of parallel execution
 
-Class constructor($cs : 4D:C1709.Object)
-	Super:C1705($cs)
+Class constructor($cs : 4D:C1709.Object; $hostStorage : 4D:C1709.Object; $userParams : 4D:C1709.Object)
+	Super:C1705($cs; $hostStorage; $userParams)
 	This:C1470.parallelMode:=False:C215
         This:C1470.maxWorkers:=This:C1470._getDefaultWorkerCount()
         This:C1470.workerProcesses:=[]
