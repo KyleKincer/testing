@@ -1,4 +1,5 @@
 property classStore : 4D:C1709.Object  // Class store from the calling project
+property hostStorage : 4D:C1709.Object  // Host project's Storage for trigger control
 property testSuites : Collection  // Collection of cs._TestSuite
 property results : Object  // Test results summary
 property outputFormat : Text  // "human", "json", "junit"
@@ -7,22 +8,92 @@ property testPatterns : Collection  // Collection of test patterns to match
 property includeTags : Collection  // Tags to include (OR logic)
 property excludeTags : Collection  // Tags to exclude
 property requireAllTags : Collection  // Tags that must all be present (AND logic)
+property userParams : Object  // User parameters passed to the runner
+property disableTriggersByDefault : Boolean  // Whether triggers are disabled by default
 
-Class constructor($cs : 4D:C1709.Object)
+Class constructor($cs : 4D:C1709.Object; $hostStorage : 4D:C1709.Object; $userParams : Object)
 	This:C1470.classStore:=$cs || cs:C1710
+	This:C1470.hostStorage:=$hostStorage  // Can be Null for component-only testing
+	This:C1470.userParams:=$userParams || This:C1470._parseUserParams()  // Use provided params or parse from command line
 	This:C1470.testSuites:=[]
 	This:C1470._initializeResults()
 	This:C1470._determineOutputFormat()
 	This:C1470._parseTestPatterns()
 	This:C1470._parseTagFilters()
+	This:C1470._determineTriggerDefaultBehavior()
 	
 Function run()
+        This:C1470._initializeTriggerControl()
         This:C1470._prepareErrorHandlingStorage()
         var $handlerState : Object
         $handlerState:=This:C1470._installErrorHandler()
         This:C1470._runInternal()
         This:C1470._captureGlobalErrors()
         This:C1470._restoreErrorHandler($handlerState)
+
+Function _determineTriggerDefaultBehavior()
+        // Determine the default trigger behavior based on user parameters
+        // Default is to disable triggers (testMode=true) unless explicitly enabled
+        var $triggerParam : Text
+        $triggerParam:=This:C1470.userParams.triggers || ""
+
+        // triggers=enabled means triggers are ON by default (testMode=false)
+        // triggers=disabled (or omitted) means triggers are OFF by default (testMode=true)
+        This:C1470.disableTriggersByDefault:=($triggerParam#"enabled")
+
+Function _initializeTriggerControl()
+        // Initialize trigger control flag in the appropriate Storage
+        var $storageToUse : 4D:C1709.Object
+        $storageToUse:=(This:C1470.hostStorage#Null:C1517) ? This:C1470.hostStorage : Storage:C1525
+
+        Use ($storageToUse)
+                If ($storageToUse.triggersDisabled=Null:C1517)
+                        $storageToUse.triggersDisabled:=New shared object:C1526("testMode"; This:C1470.disableTriggersByDefault)
+                Else
+                        Use ($storageToUse.triggersDisabled)
+                                $storageToUse.triggersDisabled.testMode:=This:C1470.disableTriggersByDefault
+                        End use
+                End if
+        End use
+
+Function enableTriggersForTest()
+        // Enable triggers for the current test (sets testMode=false)
+        var $storageToUse : 4D:C1709.Object
+        $storageToUse:=(This:C1470.hostStorage#Null:C1517) ? This:C1470.hostStorage : Storage:C1525
+
+        Use ($storageToUse)
+                If ($storageToUse.triggersDisabled#Null:C1517)
+                        Use ($storageToUse.triggersDisabled)
+                                $storageToUse.triggersDisabled.testMode:=False:C215
+                        End use
+                End if
+        End use
+
+Function disableTriggersForTest()
+        // Disable triggers for the current test (sets testMode=true)
+        var $storageToUse : 4D:C1709.Object
+        $storageToUse:=(This:C1470.hostStorage#Null:C1517) ? This:C1470.hostStorage : Storage:C1525
+
+        Use ($storageToUse)
+                If ($storageToUse.triggersDisabled#Null:C1517)
+                        Use ($storageToUse.triggersDisabled)
+                                $storageToUse.triggersDisabled.testMode:=True:C214
+                        End use
+                End if
+        End use
+
+Function restoreDefaultTriggerBehavior()
+        // Restore the default trigger behavior after a test
+        var $storageToUse : 4D:C1709.Object
+        $storageToUse:=(This:C1470.hostStorage#Null:C1517) ? This:C1470.hostStorage : Storage:C1525
+
+        Use ($storageToUse)
+                If ($storageToUse.triggersDisabled#Null:C1517)
+                        Use ($storageToUse.triggersDisabled)
+                                $storageToUse.triggersDisabled.testMode:=This:C1470.disableTriggersByDefault
+                        End use
+                End if
+        End use
 
 Function _prepareErrorHandlingStorage()
         Use (Storage:C1525)

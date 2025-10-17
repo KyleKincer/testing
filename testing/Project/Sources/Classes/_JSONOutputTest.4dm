@@ -4,7 +4,7 @@ Class constructor()
 Function test_results_object_structure($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	var $results : Object
 	$results:=$runner.getResults()
@@ -24,7 +24,7 @@ Function test_results_object_structure($t : cs:C1710.Testing)
 Function test_results_object_types($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	var $results : Object
 	$results:=$runner.getResults()
@@ -44,7 +44,7 @@ Function test_results_object_types($t : cs:C1710.Testing)
 Function test_initial_results_values($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	var $results : Object
 	$results:=$runner.getResults()
@@ -94,7 +94,7 @@ Function test_test_result_object_structure($t : cs:C1710.Testing)
 Function test_suite_result_structure($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// We can't easily test the internal _collectSuiteResults method directly
 	// but we can verify that suite results have the expected structure
@@ -121,7 +121,7 @@ Function test_suite_result_structure($t : cs:C1710.Testing)
 Function test_json_serialization_compatibility($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	var $results : Object
 	$results:=$runner.getResults()
@@ -137,7 +137,7 @@ Function test_json_serialization_compatibility($t : cs:C1710.Testing)
 Function test_json_parsing_roundtrip($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	var $results : Object
 	$results:=$runner.getResults()
@@ -156,7 +156,7 @@ Function test_json_parsing_roundtrip($t : cs:C1710.Testing)
 Function test_output_format_setting($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test that output format is set (depends on current user parameters)
 	$t.assert.isTrue($t; ($runner.outputFormat="human") || ($runner.outputFormat="json") || ($runner.outputFormat="junit"); "Output format should be human, json, or junit")

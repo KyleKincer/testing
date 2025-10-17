@@ -26,7 +26,7 @@ Function test_empty_test_class($t : cs:C1710.Testing)
 	// then filtering to ensure no methods match
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	$runner.testPatterns:=["nonexistent_pattern"]
 	
 	var $suite : cs:C1710._TestSuite
@@ -119,7 +119,7 @@ Function test_very_long_log_messages($t : cs:C1710.Testing)
 Function test_pattern_edge_cases($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test various edge case patterns
 	$t.assert.isFalse($t; $runner._matchesPattern("test"; ""); "Empty pattern should not match")
@@ -133,7 +133,7 @@ Function test_pattern_edge_cases($t : cs:C1710.Testing)
 Function test_class_discovery_edge_cases($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	var $testClasses : Collection
 	$testClasses:=$runner._getTestClasses()
@@ -191,7 +191,7 @@ Function test_memory_and_cleanup($t : cs:C1710.Testing)
 	
 	// Test that objects are properly initialized and don't leak references
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	var $initialSuites : Integer
 	$initialSuites:=$runner.testSuites.length
