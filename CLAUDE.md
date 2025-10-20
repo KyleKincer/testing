@@ -6,7 +6,7 @@ A comprehensive unit testing framework for the 4D 4GL platform with test tagging
 
 This project provides a complete testing framework for 4D applications featuring:
 
-- **Auto test discovery** - Finds test classes ending with "Test"  
+- **Auto test discovery** - Finds test classes ending with "Test"
 - **Comment-based tagging** - Organize tests with `// #tags: unit, integration, slow`
 - **Flexible filtering** - Run specific test subsets by name, pattern, or tags
 - **Multiple output formats** - Human-readable and JSON output with terse/verbose modes
@@ -14,6 +14,7 @@ This project provides a complete testing framework for 4D applications featuring
 - **Parallel test execution** - Run test suites concurrently for improved performance
 - **Automatic transaction management** - Test isolation with automatic rollback
 - **Manual transaction control** - Full transaction lifecycle management for advanced scenarios
+- **Trigger control** - Automatically skip database triggers during tests for true isolation
 
 ## Running Tests
 
@@ -95,13 +96,18 @@ If you need more control or the Makefile doesn't meet your needs:
 --user-param "parallel=true"
 --user-param "parallel=true maxWorkers=4"
 --user-param "parallel=true format=json tags=unit"
+
+# Trigger control
+--user-param "triggers=enabled"   # Enable triggers for all tests
+--user-param "triggers=disabled"  # Disable triggers (default)
+--user-param "triggers=enabled tags=integration"  # Enable triggers for integration tests
 ```
 
 ### Current Test Status
 
-- **Total Tests**: 121 tests across 14 test suites
-- **Pass Rate**: 100% 
-- **Key Test Classes**: TaggingSystemTest, TaggingExampleTest, TestRunnerTest, TestSuiteTest
+- **Total Tests**: 165 tests across 16 test suites
+- **Pass Rate**: 100% (164 passed, 1 skipped)
+- **Key Test Classes**: TaggingSystemTest, TriggerControlTest, TestRunnerTest, TransactionExampleTest
 
 ## Project Structure
 
@@ -310,3 +316,163 @@ Function test_transactionWrapper($t : cs:C1710.Testing)
 | ------------------------ | ---------------------------------------- |
 | `// #transaction: false` | Disables automatic transactions          |
 | No comment               | Enables automatic transactions (default) |
+
+## Trigger Control During Tests
+
+The framework automatically disables database triggers during test execution to ensure true unit test isolation. This prevents external dependencies and side effects from interfering with tests.
+
+### How It Works
+
+When tests run (either via `tool4d` or from a host project), the framework sets a flag in 4D's shared `Storage`:
+
+```4d
+Storage.triggersDisabled.testMode = True
+```
+
+This flag remains set for the duration of the test run, allowing triggers in the host project to check and skip execution during testing.
+
+### Running Tests from a Host Project
+
+When running tests from a host project (not standalone), you **must** pass the host project's Storage object to enable trigger control:
+
+```4d
+// In your host project's method to run tests
+var $hostStorage : Object
+var $userParams : Object
+
+$hostStorage:=Storage  // Pass the host project's Storage
+$userParams:=New object  // Optional parameters (e.g., "triggers"; "enabled")
+
+// Call the testing component method with cs, Storage, and optional user params
+Testing_RunTestsWithCs(cs; $hostStorage; $userParams)
+```
+
+**Important:** Components have separate Storage objects from their host projects. By passing the host's Storage, the test framework can set flags that your host project's triggers can check.
+
+### Implementing Trigger Control in Host Projects
+
+To make triggers skip execution during tests, add this check at the beginning of each trigger:
+
+```4d
+// At the start of your trigger code
+If (Storage.triggersDisabled#Null) && (Storage.triggersDisabled.testMode=True)
+    return  // Skip trigger execution during tests
+End if
+
+// Normal trigger logic continues here...
+```
+
+### Example: Complete Trigger Implementation
+
+```4d
+// Table trigger with test mode support
+If (Storage.triggersDisabled#Null) && (Storage.triggersDisabled.testMode=True)
+    return
+End if
+
+// Normal trigger logic
+Case of
+    : (Trigger event=On Saving New Record Event)
+        // Validate and set default values
+        If ([MyTable]requiredField="")
+            [MyTable]requiredField:="DefaultValue"
+        End if
+
+    : (Trigger event=On Saving Existing Record Event)
+        // Update modification timestamp
+        [MyTable]modifiedAt:=Current date
+End case
+```
+
+### Benefits of Trigger Control
+
+- **True Unit Testing**: Tests can focus on business logic without trigger side effects
+- **Faster Tests**: Skipping triggers reduces test execution time
+- **Test Isolation**: Each test runs in a clean state without trigger interference
+- **Flexibility**: Easily enable triggers for integration tests when needed
+
+### Configuring Trigger Behavior
+
+The framework provides flexible control over when triggers execute:
+
+#### Global Trigger Control via User Parameters
+
+Control the default trigger behavior for all tests using the `triggers` parameter:
+
+```bash
+# Enable triggers for all tests (default is disabled)
+make test triggers=enabled
+
+# Explicitly disable triggers (default behavior)
+make test triggers=disabled
+
+# With other parameters
+make test format=json triggers=enabled tags=integration
+```
+
+**Default Behavior**: Triggers are **disabled by default** (`triggers=disabled`) to ensure true unit test isolation.
+
+#### Per-Test Trigger Control via Comments
+
+Individual tests can override the global setting using comment annotations:
+
+```4d
+// #triggers: enabled
+Function test_withTriggersEnabled($t : cs.Testing)
+    // This test will have triggers enabled regardless of global setting
+    // Useful for integration tests that need to verify trigger behavior
+
+// #triggers: disabled
+Function test_withTriggersDisabled($t : cs.Testing)
+    // This test will have triggers disabled regardless of global setting
+    // Useful for unit tests that need isolation
+
+Function test_defaultBehavior($t : cs.Testing)
+    // No annotation - uses global setting from triggers parameter
+```
+
+#### Use Cases
+
+**Unit Tests (triggers disabled):**
+```4d
+// #triggers: disabled
+Function test_calculateTotal($t : cs.Testing)
+    // Test business logic without trigger side effects
+    // Default behavior - no annotation needed
+```
+
+**Integration Tests (triggers enabled):**
+```4d
+// #tags: integration
+// #triggers: enabled
+Function test_orderProcessingWithTriggers($t : cs.Testing)
+    // Test complete flow including trigger execution
+```
+
+**Hybrid Approach:**
+```bash
+# Run unit tests with triggers disabled (default)
+make test-unit
+
+# Run integration tests with triggers enabled
+make test-integration triggers=enabled
+```
+
+### When to Allow Triggers
+
+For integration tests that specifically need to test trigger behavior:
+
+1. **Use per-test annotations** with `// #triggers: enabled`
+2. **Enable globally** with `triggers=enabled` parameter for integration test suites
+3. **Tag appropriately** using `// #tags: integration` for filtering
+4. **Test trigger logic directly** by extracting it into testable functions
+5. **Mock trigger behavior** in unit tests using test doubles
+
+### Implementation Notes
+
+- The `Storage.triggersDisabled.testMode` flag is automatically managed by the test framework
+- Per-test trigger control automatically restores the default behavior after each test
+- No manual cleanup is required - flags persist only for the test process lifetime
+- Works in both interpreted and compiled modes
+- Compatible with parallel test execution - each worker process has its own Storage state
+- Test-level annotations take precedence over global `triggers` parameter

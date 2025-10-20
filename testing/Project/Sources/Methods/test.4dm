@@ -15,23 +15,25 @@ For each ($part; $parts)
 	$part:=Replace string:C233($part; " "; "")  // Remove any extra spaces
 	If ($part#"")
 		var $keyValue : Collection
-		
+
 		// Try = separator first
 		If (Position:C15("="; $part)>0)
 			$keyValue:=Split string:C1554($part; "=")
 			If ($keyValue.length=2)
 				$params[$keyValue[0]]:=$keyValue[1]
-			End if 
-		End if 
-	End if 
+			End if
+		End if
+	End if
 End for each
 
 // Determine which runner to use
+// Note: For standalone testing, we pass Null for hostStorage since there's no host project
+// Pass params object to runner so it can control trigger initialization
 var $runner : Object
 If ($params.parallel="true")
-	$runner:=cs:C1710.ParallelTestRunner.new()
+	$runner:=cs:C1710.ParallelTestRunner.new(Null:C1517; Null:C1517; $params)
 Else
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517; $params)
 End if
 
 If (Application info:C1599.headless)

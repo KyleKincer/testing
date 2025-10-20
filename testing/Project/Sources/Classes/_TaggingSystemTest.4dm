@@ -5,7 +5,7 @@ Function test_tag_filtering_include($t : cs:C1710.Testing)
 	
 	// Test that tag filtering works for include tags
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Manually set include tags to test filtering logic
 	$runner.includeTags:=["fast"]
@@ -37,7 +37,7 @@ Function test_tag_filtering_include($t : cs:C1710.Testing)
 Function test_tag_filtering_exclude($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Set exclude tags
 	$runner.includeTags:=[]
@@ -115,7 +115,7 @@ Function test_default_unit_tag($t : cs:C1710.Testing)
 Function test_tag_parameter_parsing($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// Test tag list parsing
 	var $tags : Collection
@@ -137,7 +137,7 @@ Function test_tag_parameter_parsing($t : cs:C1710.Testing)
 Function test_tag_filtering_no_filters($t : cs:C1710.Testing)
 	
 	var $runner : cs:C1710.TestRunner
-	$runner:=cs:C1710.TestRunner.new()
+	$runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 	
 	// No filters set - should include all tests
 	$runner.includeTags:=[]

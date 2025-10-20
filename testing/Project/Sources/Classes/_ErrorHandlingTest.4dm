@@ -4,7 +4,7 @@ Class constructor()
 Function test_error_handler_initialization($t : cs:C1710.Testing)
 
         var $runner : cs:C1710.TestRunner
-        $runner:=cs:C1710.TestRunner.new()
+        $runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
         $runner._prepareErrorHandlingStorage()
 
         // Verify that Storage.testErrors exists and can be initialized
@@ -78,7 +78,7 @@ Function test_global_error_collection($t : cs:C1710.Testing)
         End use
 
         var $runner : cs:C1710.TestRunner
-        $runner:=cs:C1710.TestRunner.new()
+        $runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 
         $runner._captureGlobalErrors()
 
@@ -126,7 +126,7 @@ Function test_local_errors_remain_in_storage($t : cs:C1710.Testing)
         End use
 
         var $runner : cs:C1710.TestRunner
-        $runner:=cs:C1710.TestRunner.new()
+        $runner:=cs:C1710.TestRunner.new(Null:C1517; Null:C1517)
 
         $runner._captureGlobalErrors()
 
