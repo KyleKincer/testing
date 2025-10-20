@@ -337,11 +337,14 @@ When running tests from a host project (not standalone), you **must** pass the h
 
 ```4d
 // In your host project's method to run tests
-var $testStorage : Object
-$testStorage:=Storage  // Pass the host project's Storage
+var $hostStorage : Object
+var $userParams : Object
 
-// Call the testing component method with both cs and Storage
-Testing_RunTestsWithCs(cs; $testStorage)
+$hostStorage:=Storage  // Pass the host project's Storage
+$userParams:=New object  // Optional parameters (e.g., "triggers"; "enabled")
+
+// Call the testing component method with cs, Storage, and optional user params
+Testing_RunTestsWithCs(cs; $hostStorage; $userParams)
 ```
 
 **Important:** Components have separate Storage objects from their host projects. By passing the host's Storage, the test framework can set flags that your host project's triggers can check.
