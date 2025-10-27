@@ -1,15 +1,5 @@
 {
 	"_method_": {
-		"TestGlobalErrorHandler": {
-			"Syntax": "**TestGlobalErrorHandler**()",
-			"Params": [],
-			"Summary": ""
-		},
-		"TestErrorHandler": {
-			"Syntax": "**TestErrorHandler**()",
-			"Params": [],
-			"Summary": ""
-		},
 		"Testing_RunTestsWithCs": {
 			"Syntax": "**Testing_RunTestsWithCs**( *cs* : 4D.Object; *hostStorage* : 4D.Object; *userParams* : 4D.Object )",
 			"Params": [

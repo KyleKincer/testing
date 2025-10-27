@@ -23,167 +23,167 @@ Class constructor($cs : 4D:C1709.Object; $hostStorage : 4D:C1709.Object; $userPa
 	This:C1470._determineTriggerDefaultBehavior()
 	
 Function run()
-        This:C1470._initializeTriggerControl()
-        This:C1470._prepareErrorHandlingStorage()
-        var $handlerState : Object
-        $handlerState:=This:C1470._installErrorHandler()
-        This:C1470._runInternal()
-        This:C1470._captureGlobalErrors()
-        This:C1470._restoreErrorHandler($handlerState)
-
+	This:C1470._initializeTriggerControl()
+	This:C1470._prepareErrorHandlingStorage()
+	var $handlerState : Object
+	$handlerState:=This:C1470._installErrorHandler()
+	This:C1470._runInternal()
+	This:C1470._captureGlobalErrors()
+	This:C1470._restoreErrorHandler($handlerState)
+	
 Function _determineTriggerDefaultBehavior()
-        // Determine the default trigger behavior based on user parameters
-        // Default is to disable triggers (testMode=true) unless explicitly enabled
-        var $triggerParam : Text
-        $triggerParam:=This:C1470.userParams.triggers || ""
-
-        // triggers=enabled means triggers are ON by default (testMode=false)
-        // triggers=disabled (or omitted) means triggers are OFF by default (testMode=true)
-        This:C1470.disableTriggersByDefault:=($triggerParam#"enabled")
-
+	// Determine the default trigger behavior based on user parameters
+	// Default is to disable triggers (testMode=true) unless explicitly enabled
+	var $triggerParam : Text
+	$triggerParam:=This:C1470.userParams.triggers || ""
+	
+	// triggers=enabled means triggers are ON by default (testMode=false)
+	// triggers=disabled (or omitted) means triggers are OFF by default (testMode=true)
+	This:C1470.disableTriggersByDefault:=($triggerParam#"enabled")
+	
 Function _initializeTriggerControl()
-        // Initialize trigger control flag in the appropriate Storage
-        var $storageToUse : 4D:C1709.Object
-        $storageToUse:=(This:C1470.hostStorage#Null:C1517) ? This:C1470.hostStorage : Storage:C1525
-
-        Use ($storageToUse)
-                If ($storageToUse.triggersDisabled=Null:C1517)
-                        $storageToUse.triggersDisabled:=New shared object:C1526("testMode"; This:C1470.disableTriggersByDefault)
-                Else
-                        Use ($storageToUse.triggersDisabled)
-                                $storageToUse.triggersDisabled.testMode:=This:C1470.disableTriggersByDefault
-                        End use
-                End if
-        End use
-
+	// Initialize trigger control flag in the appropriate Storage
+	var $storageToUse : 4D:C1709.Object
+	$storageToUse:=(This:C1470.hostStorage#Null:C1517) ? This:C1470.hostStorage : Storage:C1525
+	
+	Use ($storageToUse)
+		If ($storageToUse.triggersDisabled=Null:C1517)
+			$storageToUse.triggersDisabled:=New shared object:C1526("testMode"; This:C1470.disableTriggersByDefault)
+		Else 
+			Use ($storageToUse.triggersDisabled)
+				$storageToUse.triggersDisabled.testMode:=This:C1470.disableTriggersByDefault
+			End use 
+		End if 
+	End use 
+	
 Function enableTriggersForTest()
-        // Enable triggers for the current test (sets testMode=false)
-        var $storageToUse : 4D:C1709.Object
-        $storageToUse:=(This:C1470.hostStorage#Null:C1517) ? This:C1470.hostStorage : Storage:C1525
-
-        Use ($storageToUse)
-                If ($storageToUse.triggersDisabled#Null:C1517)
-                        Use ($storageToUse.triggersDisabled)
-                                $storageToUse.triggersDisabled.testMode:=False:C215
-                        End use
-                End if
-        End use
-
+	// Enable triggers for the current test (sets testMode=false)
+	var $storageToUse : 4D:C1709.Object
+	$storageToUse:=(This:C1470.hostStorage#Null:C1517) ? This:C1470.hostStorage : Storage:C1525
+	
+	Use ($storageToUse)
+		If ($storageToUse.triggersDisabled#Null:C1517)
+			Use ($storageToUse.triggersDisabled)
+				$storageToUse.triggersDisabled.testMode:=False:C215
+			End use 
+		End if 
+	End use 
+	
 Function disableTriggersForTest()
-        // Disable triggers for the current test (sets testMode=true)
-        var $storageToUse : 4D:C1709.Object
-        $storageToUse:=(This:C1470.hostStorage#Null:C1517) ? This:C1470.hostStorage : Storage:C1525
-
-        Use ($storageToUse)
-                If ($storageToUse.triggersDisabled#Null:C1517)
-                        Use ($storageToUse.triggersDisabled)
-                                $storageToUse.triggersDisabled.testMode:=True:C214
-                        End use
-                End if
-        End use
-
+	// Disable triggers for the current test (sets testMode=true)
+	var $storageToUse : 4D:C1709.Object
+	$storageToUse:=(This:C1470.hostStorage#Null:C1517) ? This:C1470.hostStorage : Storage:C1525
+	
+	Use ($storageToUse)
+		If ($storageToUse.triggersDisabled#Null:C1517)
+			Use ($storageToUse.triggersDisabled)
+				$storageToUse.triggersDisabled.testMode:=True:C214
+			End use 
+		End if 
+	End use 
+	
 Function restoreDefaultTriggerBehavior()
-        // Restore the default trigger behavior after a test
-        var $storageToUse : 4D:C1709.Object
-        $storageToUse:=(This:C1470.hostStorage#Null:C1517) ? This:C1470.hostStorage : Storage:C1525
-
-        Use ($storageToUse)
-                If ($storageToUse.triggersDisabled#Null:C1517)
-                        Use ($storageToUse.triggersDisabled)
-                                $storageToUse.triggersDisabled.testMode:=This:C1470.disableTriggersByDefault
-                        End use
-                End if
-        End use
-
+	// Restore the default trigger behavior after a test
+	var $storageToUse : 4D:C1709.Object
+	$storageToUse:=(This:C1470.hostStorage#Null:C1517) ? This:C1470.hostStorage : Storage:C1525
+	
+	Use ($storageToUse)
+		If ($storageToUse.triggersDisabled#Null:C1517)
+			Use ($storageToUse.triggersDisabled)
+				$storageToUse.triggersDisabled.testMode:=This:C1470.disableTriggersByDefault
+			End use 
+		End if 
+	End use 
+	
 Function _prepareErrorHandlingStorage()
-        Use (Storage:C1525)
-                If (Storage:C1525.testErrors=Null:C1517)
-                        Storage:C1525.testErrors:=New shared collection:C1527
-                Else
-                        Storage:C1525.testErrors.clear()
-                End if
-        End use
-
+	Use (Storage:C1525)
+		If (Storage:C1525.testErrors=Null:C1517)
+			Storage:C1525.testErrors:=New shared collection:C1527
+		Else 
+			Storage:C1525.testErrors.clear()
+		End if 
+	End use 
+	
 Function _runInternal()
-        This:C1470._prepareSuites()
-        This:C1470._runSuitesSequentially()
-
+	This:C1470._prepareSuites()
+	This:C1470._runSuitesSequentially()
+	
 Function _prepareSuites()
-        This:C1470._initializeResults()
-        This:C1470.testSuites:=[]
-        This:C1470.discoverTests()
-
+	This:C1470._initializeResults()
+	This:C1470.testSuites:=[]
+	This:C1470.discoverTests()
+	
 Function _runSuitesSequentially()
-        This:C1470.results.startTime:=Milliseconds:C459
-
-        If (This:C1470.outputFormat="human")
-                This:C1470._logHeader()
-        End if
-
-        var $testSuite : cs:C1710._TestSuite
-        For each ($testSuite; This:C1470.testSuites)
-                $testSuite.run()
-                This:C1470._collectSuiteResults($testSuite)
-        End for each
-
-        This:C1470.results.endTime:=Milliseconds:C459
-        This:C1470.results.duration:=This:C1470.results.endTime-This:C1470.results.startTime
-        This:C1470._generateReport()
-
+	This:C1470.results.startTime:=Milliseconds:C459
+	
+	If (This:C1470.outputFormat="human")
+		This:C1470._logHeader()
+	End if 
+	
+	var $testSuite : cs:C1710._TestSuite
+	For each ($testSuite; This:C1470.testSuites)
+		$testSuite.run()
+		This:C1470._collectSuiteResults($testSuite)
+	End for each 
+	
+	This:C1470.results.endTime:=Milliseconds:C459
+	This:C1470.results.duration:=This:C1470.results.endTime-This:C1470.results.startTime
+	This:C1470._generateReport()
+	
 Function _installErrorHandler() : Object
-        var $previousErrorHandler : Text
-        var $previousGlobalHandler : Text
-        var $shouldInstallLocal : Boolean
-        var $shouldInstallGlobal : Boolean
-
-        $previousErrorHandler:=Method called on error:C704
-        $shouldInstallLocal:=($previousErrorHandler#"TestErrorHandler")
-
-        If ($shouldInstallLocal)
-                ON ERR CALL:C155("TestErrorHandler")
-        End if
-
-        $previousGlobalHandler:=Method called on error:C704(1)
-        $shouldInstallGlobal:=($previousGlobalHandler#"TestGlobalErrorHandler")
-
-        If ($shouldInstallGlobal)
-                ON ERR CALL:C155("TestGlobalErrorHandler"; 1)
-        End if
-
-        return New object:C1471(\
-                "previousHandler"; $previousErrorHandler; \
-                "installedLocalHandler"; $shouldInstallLocal; \
-                "previousGlobalHandler"; $previousGlobalHandler; \
-                "installedGlobalHandler"; $shouldInstallGlobal\
-                )
-
+	var $previousErrorHandler : Text
+	var $previousGlobalHandler : Text
+	var $shouldInstallLocal : Boolean
+	var $shouldInstallGlobal : Boolean
+	
+	$previousErrorHandler:=Method called on error:C704
+	$shouldInstallLocal:=($previousErrorHandler#"TestErrorHandler")
+	
+	If ($shouldInstallLocal)
+		ON ERR CALL:C155("TestErrorHandler")
+	End if 
+	
+	$previousGlobalHandler:=Method called on error:C704(1)
+	$shouldInstallGlobal:=($previousGlobalHandler#"TestGlobalErrorHandler")
+	
+	If ($shouldInstallGlobal)
+		ON ERR CALL:C155("TestGlobalErrorHandler"; 1)
+	End if 
+	
+	return New object:C1471(\
+		"previousHandler"; $previousErrorHandler; \
+		"installedLocalHandler"; $shouldInstallLocal; \
+		"previousGlobalHandler"; $previousGlobalHandler; \
+		"installedGlobalHandler"; $shouldInstallGlobal\
+		)
+	
 Function _restoreErrorHandler($handlerState : Object)
-        If ($handlerState=Null:C1517)
-                return
-        End if
-
-        If (Bool:C1537($handlerState.installedLocalHandler))
-                var $previousErrorHandler : Text
-                $previousErrorHandler:=$handlerState.previousHandler
-
-                If ($previousErrorHandler#"")
-                        ON ERR CALL:C155($previousErrorHandler)
-                Else
-                        ON ERR CALL:C155("")
-                End if
-        End if
-
-        If (Bool:C1537($handlerState.installedGlobalHandler))
-                var $previousGlobalHandler : Text
-                $previousGlobalHandler:=$handlerState.previousGlobalHandler
-
-                If ($previousGlobalHandler#"")
-                        ON ERR CALL:C155($previousGlobalHandler; 1)
-                Else
-                        ON ERR CALL:C155(""; 1)
-                End if
-        End if
-
+	If ($handlerState=Null:C1517)
+		return 
+	End if 
+	
+	If (Bool:C1537($handlerState.installedLocalHandler))
+		var $previousErrorHandler : Text
+		$previousErrorHandler:=$handlerState.previousHandler
+		
+		If ($previousErrorHandler#"")
+			ON ERR CALL:C155($previousErrorHandler)
+		Else 
+			ON ERR CALL:C155("")
+		End if 
+	End if 
+	
+	If (Bool:C1537($handlerState.installedGlobalHandler))
+		var $previousGlobalHandler : Text
+		$previousGlobalHandler:=$handlerState.previousGlobalHandler
+		
+		If ($previousGlobalHandler#"")
+			ON ERR CALL:C155($previousGlobalHandler; 1)
+		Else 
+			ON ERR CALL:C155(""; 1)
+		End if 
+	End if 
+	
 Function discoverTests()
 	var $class : 4D:C1709.Class
 	For each ($class; This:C1470._getTestClasses())
@@ -231,21 +231,21 @@ Function _filterTestClasses($classStore : Object) : Collection
 	return $classes
 	
 Function _initializeResults()
-        This:C1470.results:=New object:C1471(\
-                "totalTests"; 0; \
-                "passed"; 0; \
-                "failed"; 0; \
-                "skipped"; 0; \
-                "startTime"; 0; \
-                "endTime"; 0; \
-                "duration"; 0; \
-                "suites"; []; \
-                "failedTests"; []; \
-                "assertions"; 0; \
-                "globalErrors"; []; \
-                "hasGlobalErrors"; False:C215; \
-                "globalErrorCount"; 0\
-                )
+	This:C1470.results:=New object:C1471(\
+		"totalTests"; 0; \
+		"passed"; 0; \
+		"failed"; 0; \
+		"skipped"; 0; \
+		"startTime"; 0; \
+		"endTime"; 0; \
+		"duration"; 0; \
+		"suites"; []; \
+		"failedTests"; []; \
+		"assertions"; 0; \
+		"globalErrors"; []; \
+		"hasGlobalErrors"; False:C215; \
+		"globalErrorCount"; 0\
+		)
 	
 Function _logHeader()
 	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
@@ -259,15 +259,15 @@ Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
 		return 
 	End if 
 	
-        var $suiteResult : Object
-        $suiteResult:=New object:C1471(\
-                "name"; $testSuite.class.name; \
-                "tests"; []; \
-                "passed"; 0; \
-                "failed"; 0; \
-                "skipped"; 0; \
-                "assertions"; 0\
-                )
+	var $suiteResult : Object
+	$suiteResult:=New object:C1471(\
+		"name"; $testSuite.class.name; \
+		"tests"; []; \
+		"passed"; 0; \
+		"failed"; 0; \
+		"skipped"; 0; \
+		"assertions"; 0\
+		)
 	
 	var $testFunction : cs:C1710._TestFunction
 	For each ($testFunction; $testSuite.testFunctions)
@@ -276,150 +276,150 @@ Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
 		
 		This:C1470.results.totalTests+=1
 		
-                If ($testResult.skipped)
-                        This:C1470.results.skipped+=1
-                        $suiteResult.skipped+=1
-                        If (This:C1470.outputFormat="human")
-                                LOG EVENT:C667(Into system standard outputs:K38:9; "  - "+$testResult.name+" (skipped)\r\n"; Information message:K38:1)
-                        End if
-                Else
-                        If ($testResult.passed)
-                                This:C1470.results.passed+=1
-                                $suiteResult.passed+=1
-                                If (This:C1470.outputFormat="human")
-                                        LOG EVENT:C667(Into system standard outputs:K38:9; "  ✓ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)\r\n"; Information message:K38:1)
-                                End if
-                        Else
-                                This:C1470.results.failed+=1
-                                $suiteResult.failed+=1
-                                This:C1470.results.failedTests.push($testResult)
-                                If (This:C1470.outputFormat="human")
-                                        var $errorDetails : Text
-                                        $errorDetails:=""
-                                        If ($testResult.runtimeErrors.length>0)
-                                                $errorDetails:=" [Runtime Error: "+$testResult.runtimeErrors[0].text+"]"
-                                        Else
-                                                If ($testResult.logMessages.length>0)
-                                                        $errorDetails:=" ["+$testResult.logMessages[0]+"]"
-                                                End if
-                                        End if
-                                        
-                                        // Add call chain information if available
-                                        If ($testResult.callChain#Null)
-                                                $errorDetails:=$errorDetails+"\r\n"+This:C1470._formatCallChain($testResult.callChain)
-                                        End if
-                                        LOG EVENT:C667(Into system standard outputs:K38:9; "  ✗ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)"+$errorDetails+"\r\n"; Error message:K38:3)
-                                End if
-                        End if
-                End if
+		If ($testResult.skipped)
+			This:C1470.results.skipped+=1
+			$suiteResult.skipped+=1
+			If (This:C1470.outputFormat="human")
+				LOG EVENT:C667(Into system standard outputs:K38:9; "  - "+$testResult.name+" (skipped)\r\n"; Information message:K38:1)
+			End if 
+		Else 
+			If ($testResult.passed)
+				This:C1470.results.passed+=1
+				$suiteResult.passed+=1
+				If (This:C1470.outputFormat="human")
+					LOG EVENT:C667(Into system standard outputs:K38:9; "  ✓ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)\r\n"; Information message:K38:1)
+				End if 
+			Else 
+				This:C1470.results.failed+=1
+				$suiteResult.failed+=1
+				This:C1470.results.failedTests.push($testResult)
+				If (This:C1470.outputFormat="human")
+					var $errorDetails : Text
+					$errorDetails:=""
+					If ($testResult.runtimeErrors.length>0)
+						$errorDetails:=" [Runtime Error: "+$testResult.runtimeErrors[0].text+"]"
+					Else 
+						If ($testResult.logMessages.length>0)
+							$errorDetails:=" ["+$testResult.logMessages[0]+"]"
+						End if 
+					End if 
+					
+					// Add call chain information if available
+					If ($testResult.callChain#Null:C1517)
+						$errorDetails:=$errorDetails+"\r\n"+This:C1470._formatCallChain($testResult.callChain)
+					End if 
+					LOG EVENT:C667(Into system standard outputs:K38:9; "  ✗ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)"+$errorDetails+"\r\n"; Error message:K38:3)
+				End if 
+			End if 
+		End if 
 		
-                $suiteResult.tests.push($testResult)
-                This:C1470.results.assertions+=($testResult.assertionCount)
-                $suiteResult.assertions+=($testResult.assertionCount)
-        End for each
+		$suiteResult.tests.push($testResult)
+		This:C1470.results.assertions+=($testResult.assertionCount)
+		$suiteResult.assertions+=($testResult.assertionCount)
+	End for each 
 	
-        This:C1470.results.suites.push($suiteResult)
-
+	This:C1470.results.suites.push($suiteResult)
+	
 Function _captureGlobalErrors()
-        var $globalErrors : Collection
-        $globalErrors:=This:C1470._drainGlobalErrorsFromStorage()
-
-        This:C1470.results.globalErrors:=$globalErrors
-        This:C1470.results.globalErrorCount:=$globalErrors.length
-        This:C1470.results.hasGlobalErrors:=Bool:C1537($globalErrors.length>0)
-
+	var $globalErrors : Collection
+	$globalErrors:=This:C1470._drainGlobalErrorsFromStorage()
+	
+	This:C1470.results.globalErrors:=$globalErrors
+	This:C1470.results.globalErrorCount:=$globalErrors.length
+	This:C1470.results.hasGlobalErrors:=Bool:C1537($globalErrors.length>0)
+	
 Function _drainGlobalErrorsFromStorage() : Collection
-        var $globalErrors : Collection
-        $globalErrors:=New collection:C1472
-
-        If (Storage:C1525.testErrors#Null:C1517)
-                Use (Storage:C1525.testErrors)
-                        var $index : Integer
-                        For ($index; Storage:C1525.testErrors.length-1; 0; -1)
-                                var $error : Object
-                                $error:=Storage:C1525.testErrors[$index]
-
-                                var $context : Text
-                                $context:=$error.context || ""
-
-                                If ($context="global")
-                                        $globalErrors.push(OB Copy:C1225($error))
-                                        Storage:C1525.testErrors.remove($index)
-                                End if
-                        End for
-                End use
-        End if
-
-        return $globalErrors
-
+	var $globalErrors : Collection
+	$globalErrors:=New collection:C1472
+	
+	If (Storage:C1525.testErrors#Null:C1517)
+		Use (Storage:C1525.testErrors)
+			var $index : Integer
+			For ($index; Storage:C1525.testErrors.length-1; 0; -1)
+				var $error : Object
+				$error:=Storage:C1525.testErrors[$index]
+				
+				var $context : Text
+				$context:=$error.context || ""
+				
+				If ($context="global")
+					$globalErrors.push(OB Copy:C1225($error))
+					Storage:C1525.testErrors.remove($index)
+				End if 
+			End for 
+		End use 
+	End if 
+	
+	return $globalErrors
+	
 Function _formatGlobalErrorForLog($error : Object) : Text
-        var $codeText : Text
-        var $processText : Text
-        var $methodText : Text
-        var $lineText : Text
-        var $formulaText : Text
-        var $message : Text
-
-        $codeText:=($error.code#Null:C1517) ? String:C10($error.code) : "?"
-        $processText:=($error.processNumber#Null:C1517) ? String:C10($error.processNumber) : "?"
-        $methodText:=$error.text || "Unknown location"
-
-        If ($error.line#Null:C1517)
-                $lineText:=" line "+String:C10($error.line)
-        Else
-                $lineText:=""
-        End if
-
-        $formulaText:=$error.method || ""
-
-        $message:="- ["+$codeText+"] Process "+$processText+": "+$methodText+$lineText
-
-        If ($formulaText#"")
-                $message:=$message+"\r\n      "+$formulaText
-        End if
-
-        return $message
-
+	var $codeText : Text
+	var $processText : Text
+	var $methodText : Text
+	var $lineText : Text
+	var $formulaText : Text
+	var $message : Text
+	
+	$codeText:=($error.code#Null:C1517) ? String:C10($error.code) : "?"
+	$processText:=($error.processNumber#Null:C1517) ? String:C10($error.processNumber) : "?"
+	$methodText:=$error.text || "Unknown location"
+	
+	If ($error.line#Null:C1517)
+		$lineText:=" line "+String:C10($error.line)
+	Else 
+		$lineText:=""
+	End if 
+	
+	$formulaText:=$error.method || ""
+	
+	$message:="- ["+$codeText+"] Process "+$processText+": "+$methodText+$lineText
+	
+	If ($formulaText#"")
+		$message:=$message+"\r\n      "+$formulaText
+	End if 
+	
+	return $message
+	
 Function _generateReport()
-        If (This:C1470.outputFormat="json")
-                This:C1470._generateJSONReport()
-        Else
-                If (This:C1470.outputFormat="junit")
-                        This:C1470._generateJUnitXMLReport()
-                Else
-                        If (This:C1470.outputFormat#"none")
-                                This:C1470._generateHumanReport()
-                        End if
-                End if
-        End if
+	If (This:C1470.outputFormat="json")
+		This:C1470._generateJSONReport()
+	Else 
+		If (This:C1470.outputFormat="junit")
+			This:C1470._generateJUnitXMLReport()
+		Else 
+			If (This:C1470.outputFormat#"none")
+				This:C1470._generateHumanReport()
+			End if 
+		End if 
+	End if 
 	
 Function _generateHumanReport()
 	var $passRate : Real
-        var $effectiveTotal : Integer
-        $effectiveTotal:=This:C1470.results.totalTests-This:C1470.results.skipped
-        If ($effectiveTotal>0)
-                $passRate:=(This:C1470.results.passed/$effectiveTotal)*100
-        Else
-                $passRate:=0
-        End if
+	var $effectiveTotal : Integer
+	$effectiveTotal:=This:C1470.results.totalTests-This:C1470.results.skipped
+	If ($effectiveTotal>0)
+		$passRate:=(This:C1470.results.passed/$effectiveTotal)*100
+	Else 
+		$passRate:=0
+	End if 
 	
 	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
 	LOG EVENT:C667(Into system standard outputs:K38:9; "=== Test Results Summary ===\r\n"; Information message:K38:1)
-        LOG EVENT:C667(Into system standard outputs:K38:9; "Total Tests: "+String:C10(This:C1470.results.totalTests)+"\r\n"; Information message:K38:1)
-        LOG EVENT:C667(Into system standard outputs:K38:9; "Passed: "+String:C10(This:C1470.results.passed)+"\r\n"; Information message:K38:1)
-        LOG EVENT:C667(Into system standard outputs:K38:9; "Failed: "+String:C10(This:C1470.results.failed)+"\r\n"; Information message:K38:1)
-        LOG EVENT:C667(Into system standard outputs:K38:9; "Skipped: "+String:C10(This:C1470.results.skipped)+"\r\n"; Information message:K38:1)
-        LOG EVENT:C667(Into system standard outputs:K38:9; "Assertions: "+String:C10(This:C1470.results.assertions)+"\r\n"; Information message:K38:1)
-        LOG EVENT:C667(Into system standard outputs:K38:9; "Pass Rate: "+String:C10($passRate; "##0.0")+"%\r\n"; Information message:K38:1)
-        LOG EVENT:C667(Into system standard outputs:K38:9; "Duration: "+String:C10(This:C1470.results.duration)+"ms\r\n"; Information message:K38:1)
-
-        var $externalMessageType : Integer
-        $externalMessageType:=Choose:C955(This:C1470.results.globalErrorCount>0; Error message:K38:3; Information message:K38:1)
-        LOG EVENT:C667(Into system standard outputs:K38:9; "External Errors: "+String:C10(This:C1470.results.globalErrorCount)+"\r\n"; $externalMessageType)
-
-        If (This:C1470.results.failed>0)
-                LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
-                LOG EVENT:C667(Into system standard outputs:K38:9; "=== Failed Tests ===\r\n"; Error message:K38:3)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "Total Tests: "+String:C10(This:C1470.results.totalTests)+"\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "Passed: "+String:C10(This:C1470.results.passed)+"\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "Failed: "+String:C10(This:C1470.results.failed)+"\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "Skipped: "+String:C10(This:C1470.results.skipped)+"\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "Assertions: "+String:C10(This:C1470.results.assertions)+"\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "Pass Rate: "+String:C10($passRate; "##0.0")+"%\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "Duration: "+String:C10(This:C1470.results.duration)+"ms\r\n"; Information message:K38:1)
+	
+	var $externalMessageType : Integer
+	$externalMessageType:=Choose:C955(This:C1470.results.globalErrorCount>0; Error message:K38:3; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "External Errors: "+String:C10(This:C1470.results.globalErrorCount)+"\r\n"; $externalMessageType)
+	
+	If (This:C1470.results.failed>0)
+		LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
+		LOG EVENT:C667(Into system standard outputs:K38:9; "=== Failed Tests ===\r\n"; Error message:K38:3)
 		
 		var $failedTest : Object
 		For each ($failedTest; This:C1470.results.failedTests)
@@ -437,123 +437,123 @@ Function _generateHumanReport()
 			LOG EVENT:C667(Into system standard outputs:K38:9; "- "+$failedTest.name+$failureReason+"\r\n"; Error message:K38:3)
 			
 			// Add detailed call chain if available
-			If ($failedTest.callChain#Null)
+			If ($failedTest.callChain#Null:C1517)
 				LOG EVENT:C667(Into system standard outputs:K38:9; This:C1470._formatCallChain($failedTest.callChain)+"\r\n"; Error message:K38:3)
-			End if
-                End for each
-        End if
-
-        If (This:C1470.results.hasGlobalErrors)
-                LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
-                LOG EVENT:C667(Into system standard outputs:K38:9; "=== Runtime Errors Outside Test Processes ===\r\n"; Error message:K38:3)
-
-                var $globalError : Object
-                For each ($globalError; This:C1470.results.globalErrors)
-                        LOG EVENT:C667(Into system standard outputs:K38:9; This:C1470._formatGlobalErrorForLog($globalError)+"\r\n"; Error message:K38:3)
-                End for each
-        End if
-
-        This:C1470._logFooter()
+			End if 
+		End for each 
+	End if 
+	
+	If (This:C1470.results.hasGlobalErrors)
+		LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
+		LOG EVENT:C667(Into system standard outputs:K38:9; "=== Runtime Errors Outside Test Processes ===\r\n"; Error message:K38:3)
+		
+		var $globalError : Object
+		For each ($globalError; This:C1470.results.globalErrors)
+			LOG EVENT:C667(Into system standard outputs:K38:9; This:C1470._formatGlobalErrorForLog($globalError)+"\r\n"; Error message:K38:3)
+		End for each 
+	End if 
+	
+	This:C1470._logFooter()
 	
 Function _generateJSONReport()
-        var $passRate : Real
-        var $effectiveTotal : Integer
-        $effectiveTotal:=This:C1470.results.totalTests-This:C1470.results.skipped
-        If ($effectiveTotal>0)
-                $passRate:=(This:C1470.results.passed/$effectiveTotal)*100
-        Else
-                $passRate:=0
-        End if
+	var $passRate : Real
+	var $effectiveTotal : Integer
+	$effectiveTotal:=This:C1470.results.totalTests-This:C1470.results.skipped
+	If ($effectiveTotal>0)
+		$passRate:=(This:C1470.results.passed/$effectiveTotal)*100
+	Else 
+		$passRate:=0
+	End if 
 	
-        var $jsonReport : Object
-
-        var $hasFailures : Boolean
-        $hasFailures:=(This:C1470.results.failed>0) || This:C1470.results.hasGlobalErrors
-
-        If (This:C1470.verboseOutput)
-                // Verbose mode: include all details (original format)
-                $jsonReport:=OB Copy:C1225(This:C1470.results)
-                $jsonReport.passRate:=$passRate
-                $jsonReport.status:=$hasFailures ? "failure" : "success"
-        Else
-                // Terse mode: minimal information
-                $jsonReport:=New object:C1471(\
-                        "tests"; This:C1470.results.totalTests; \
-                        "passed"; This:C1470.results.passed; \
-                        "failed"; This:C1470.results.failed; \
-                        "skipped"; This:C1470.results.skipped; \
-                        "assertions"; This:C1470.results.assertions; \
-                        "rate"; Round:C94($passRate; 1); \
-                        "duration"; This:C1470.results.duration; \
-                        "globalErrors"; This:C1470.results.globalErrors; \
-                        "globalErrorCount"; This:C1470.results.globalErrorCount; \
-                        "hasGlobalErrors"; This:C1470.results.hasGlobalErrors; \
-                        "status"; $hasFailures ? "fail" : "ok"\
-                )
-
-                // Include individual test results with assertions
-                var $testResults : Collection
-                $testResults:=[]
-                var $suite : Object
-                var $test : Object
-                For each ($suite; This:C1470.results.suites)
-                        For each ($test; $suite.tests)
-                                $testResults.push(New object:C1471(\
-                                        "name"; $test.name; \
-                                        "suite"; $test.suite; \
-                                        "passed"; Not:C34($test.failed) && Not:C34($test.skipped); \
-                                        "failed"; $test.failed; \
-                                        "skipped"; $test.skipped; \
-                                        "duration"; $test.duration; \
-                                        "assertions"; $test.assertions; \
-                                        "assertionCount"; $test.assertionCount\
-                                ))
-                        End for each
-                End for each
-                $jsonReport.testResults:=$testResults
-
-                // Only include failed tests if there are any
-                If (This:C1470.results.failed>0)
-                        var $failedTests : Collection
-                        $failedTests:=[]
-                        var $failedTest : Object
-                        For each ($failedTest; This:C1470.results.failedTests)
-                                var $terseFailure : Object
-                                $terseFailure:=New object:C1471("test"; $failedTest.name; "suite"; $failedTest.suite)
-                                // Only include error details if they exist and are different
-                                If ($failedTest.runtimeErrors.length>0)
-                                        $terseFailure.error:=$failedTest.runtimeErrors[0].text
-                                Else
-                                        If ($failedTest.logMessages.length>0)
-                                                $terseFailure.reason:=$failedTest.logMessages[0]
-                                        End if
-                                End if
-
-                                // Include call chain in verbose JSON output
-                                If (This:C1470.verboseOutput) && ($failedTest.callChain#Null)
-                                        $terseFailure.callChain:=$failedTest.callChain
-                                End if
-                                $failedTests.push($terseFailure)
-                        End for each
-                        $jsonReport.failures:=$failedTests
-                End if
-
-                // Only include suite summary if there are multiple suites
-                If (This:C1470.results.suites.length>1)
-                        var $suiteSummary : Collection
-                        $suiteSummary:=[]
-                        For each ($suite; This:C1470.results.suites)
-                                $suiteSummary.push(New object:C1471(\
-                                        "name"; $suite.name; \
-                                        "passed"; $suite.passed; \
-                                        "failed"; $suite.failed; \
-                                        "skipped"; $suite.skipped; \
-                                        "assertions"; $suite.assertions\
-                                ))
-                        End for each
-                        $jsonReport.suites:=$suiteSummary
-                End if
-        End if
+	var $jsonReport : Object
+	
+	var $hasFailures : Boolean
+	$hasFailures:=(This:C1470.results.failed>0) || This:C1470.results.hasGlobalErrors
+	
+	If (This:C1470.verboseOutput)
+		// Verbose mode: include all details (original format)
+		$jsonReport:=OB Copy:C1225(This:C1470.results)
+		$jsonReport.passRate:=$passRate
+		$jsonReport.status:=$hasFailures ? "failure" : "success"
+	Else 
+		// Terse mode: minimal information
+		$jsonReport:=New object:C1471(\
+			"tests"; This:C1470.results.totalTests; \
+			"passed"; This:C1470.results.passed; \
+			"failed"; This:C1470.results.failed; \
+			"skipped"; This:C1470.results.skipped; \
+			"assertions"; This:C1470.results.assertions; \
+			"rate"; Round:C94($passRate; 1); \
+			"duration"; This:C1470.results.duration; \
+			"globalErrors"; This:C1470.results.globalErrors; \
+			"globalErrorCount"; This:C1470.results.globalErrorCount; \
+			"hasGlobalErrors"; This:C1470.results.hasGlobalErrors; \
+			"status"; $hasFailures ? "fail" : "ok"\
+			)
+		
+		// Include individual test results with assertions
+		var $testResults : Collection
+		$testResults:=[]
+		var $suite : Object
+		var $test : Object
+		For each ($suite; This:C1470.results.suites)
+			For each ($test; $suite.tests)
+				$testResults.push(New object:C1471(\
+					"name"; $test.name; \
+					"suite"; $test.suite; \
+					"passed"; Not:C34($test.failed) && Not:C34($test.skipped); \
+					"failed"; $test.failed; \
+					"skipped"; $test.skipped; \
+					"duration"; $test.duration; \
+					"assertions"; $test.assertions; \
+					"assertionCount"; $test.assertionCount\
+					))
+			End for each 
+		End for each 
+		$jsonReport.testResults:=$testResults
+		
+		// Only include failed tests if there are any
+		If (This:C1470.results.failed>0)
+			var $failedTests : Collection
+			$failedTests:=[]
+			var $failedTest : Object
+			For each ($failedTest; This:C1470.results.failedTests)
+				var $terseFailure : Object
+				$terseFailure:=New object:C1471("test"; $failedTest.name; "suite"; $failedTest.suite)
+				// Only include error details if they exist and are different
+				If ($failedTest.runtimeErrors.length>0)
+					$terseFailure.error:=$failedTest.runtimeErrors[0].text
+				Else 
+					If ($failedTest.logMessages.length>0)
+						$terseFailure.reason:=$failedTest.logMessages[0]
+					End if 
+				End if 
+				
+				// Include call chain in verbose JSON output
+				If (This:C1470.verboseOutput) && ($failedTest.callChain#Null:C1517)
+					$terseFailure.callChain:=$failedTest.callChain
+				End if 
+				$failedTests.push($terseFailure)
+			End for each 
+			$jsonReport.failures:=$failedTests
+		End if 
+		
+		// Only include suite summary if there are multiple suites
+		If (This:C1470.results.suites.length>1)
+			var $suiteSummary : Collection
+			$suiteSummary:=[]
+			For each ($suite; This:C1470.results.suites)
+				$suiteSummary.push(New object:C1471(\
+					"name"; $suite.name; \
+					"passed"; $suite.passed; \
+					"failed"; $suite.failed; \
+					"skipped"; $suite.skipped; \
+					"assertions"; $suite.assertions\
+					))
+			End for each 
+			$jsonReport.suites:=$suiteSummary
+		End if 
+	End if 
 	
 	var $jsonString : Text
 	$jsonString:=JSON Stringify:C1217($jsonReport; *)
@@ -575,24 +575,18 @@ Function _generateJUnitXMLReport()
 	// Write XML to file
 	This:C1470._writeJUnitXMLToFile($xmlContent; $outputPath)
 	
-	// Log file location for CI visibility
-	LOG EVENT:C667(Into system standard outputs:K38:9; "JUnit XML written to: "+$outputPath+"\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; \
-	    "Summary: "+String(This:C1470.results.totalTests)+" tests, "+String(This:C1470.results.passed)+" passed, "+String(This:C1470.results.failed)+" failed"+Char(13)+Char(10); \
-		Information message:K38:1)
-	
 Function _buildJUnitXML() : Text
 	var $xml : Text
 	var $totalTime : Real
 	$totalTime:=This:C1470.results.duration/1000  // Convert ms to seconds
 	
 	// Calculate errors and failures separately
-        var $totalErrors; $totalFailures : Integer
-        var $globalErrorCount : Integer
-        $totalErrors:=This:C1470._countTestsWithRuntimeErrors()
-        $globalErrorCount:=This:C1470.results.globalErrorCount
-        $totalErrors:=$totalErrors+$globalErrorCount
-        $totalFailures:=This:C1470.results.failed-$totalErrors  // Failures are failed tests without runtime errors
+	var $totalErrors; $totalFailures : Integer
+	var $globalErrorCount : Integer
+	$totalErrors:=This:C1470._countTestsWithRuntimeErrors()
+	$globalErrorCount:=This:C1470.results.globalErrorCount
+	$totalErrors:=$totalErrors+$globalErrorCount
+	$totalFailures:=This:C1470.results.failed-$totalErrors  // Failures are failed tests without runtime errors
 	
 	// XML header and root testsuites element
 	$xml:="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
@@ -604,16 +598,16 @@ Function _buildJUnitXML() : Text
 	$xml:=$xml+" timestamp=\""+This:C1470._formatTimestamp(This:C1470.results.startTime)+"\">\r\n"
 	
 	// Build testsuite elements
-        var $suite : Object
-        For each ($suite; This:C1470.results.suites)
-                $xml:=$xml+This:C1470._buildTestSuiteXML($suite)
-        End for each
-
-        If (This:C1470.results.hasGlobalErrors)
-                $xml:=$xml+This:C1470._buildGlobalErrorsSystemErr()
-        End if
-
-        $xml:=$xml+"</testsuites>\r\n"
+	var $suite : Object
+	For each ($suite; This:C1470.results.suites)
+		$xml:=$xml+This:C1470._buildTestSuiteXML($suite)
+	End for each 
+	
+	If (This:C1470.results.hasGlobalErrors)
+		$xml:=$xml+This:C1470._buildGlobalErrorsSystemErr()
+	End if 
+	
+	$xml:=$xml+"</testsuites>\r\n"
 	
 	return $xml
 	
@@ -674,10 +668,10 @@ Function _buildTestCaseXML($test : Object) : Text
 	return $xml
 	
 Function _buildFailureXML($test : Object) : Text
-        var $xml : Text
-        var $failureMessage : Text
-        var $failureDetails : Text
-        var $elementType : Text
+	var $xml : Text
+	var $failureMessage : Text
+	var $failureDetails : Text
+	var $elementType : Text
 	
 	// Extract failure message and details, determine element type
 	If ($test.runtimeErrors.length>0)
@@ -699,30 +693,30 @@ Function _buildFailureXML($test : Object) : Text
 	$xml:=$xml+"<![CDATA[\n"+$failureDetails+"\nLocation: "+$test.suite+"."+$test.name
 	
 	// Include call chain in JUnit XML if available
-	If ($test.callChain#Null)
+	If ($test.callChain#Null:C1517)
 		$xml:=$xml+"\n\n"+This:C1470._formatCallChain($test.callChain)
 	End if 
 	
 	$xml:=$xml+"\n]]>"
-        $xml:=$xml+"</"+$elementType+">\r\n"
-
-        return $xml
-
+	$xml:=$xml+"</"+$elementType+">\r\n"
+	
+	return $xml
+	
 Function _buildGlobalErrorsSystemErr() : Text
-        var $xml : Text
-
-        $xml:="  <system-err><![CDATA[\n"
-        $xml:=$xml+"External runtime errors detected: "+String:C10(This:C1470.results.globalErrorCount)+"\n"
-
-        var $error : Object
-        For each ($error; This:C1470.results.globalErrors)
-                $xml:=$xml+This:C1470._formatGlobalErrorForLog($error)+"\n"
-        End for each
-
-        $xml:=$xml+"]]></system-err>\r\n"
-
-        return $xml
-
+	var $xml : Text
+	
+	$xml:="  <system-err><![CDATA[\n"
+	$xml:=$xml+"External runtime errors detected: "+String:C10(This:C1470.results.globalErrorCount)+"\n"
+	
+	var $error : Object
+	For each ($error; This:C1470.results.globalErrors)
+		$xml:=$xml+This:C1470._formatGlobalErrorForLog($error)+"\n"
+	End for each 
+	
+	$xml:=$xml+"]]></system-err>\r\n"
+	
+	return $xml
+	
 Function _writeJUnitXMLToFile($xmlContent : Text; $outputPath : Text)
 	// Parse the path to determine folder and filename
 	var $pathParts : Collection
@@ -733,9 +727,9 @@ Function _writeJUnitXMLToFile($xmlContent : Text; $outputPath : Text)
 	If ($pathParts.length>1)
 		var $folderPath : Text
 		$folderPath:=$pathParts.slice(0; $pathParts.length-1).join("/")
-		$outputFolder:=Folder:C1567(fk database folder:K87:14).folder($folderPath)
+		$outputFolder:=Folder:C1567(fk database folder:K87:14; *).folder($folderPath)
 	Else 
-		$outputFolder:=Folder:C1567(fk database folder:K87:14)
+		$outputFolder:=Folder:C1567(fk database folder:K87:14; *)
 	End if 
 	
 	// Create output folder if it doesn't exist
@@ -751,6 +745,12 @@ Function _writeJUnitXMLToFile($xmlContent : Text; $outputPath : Text)
 	var $xmlFile : 4D:C1709.File
 	$xmlFile:=$outputFolder.file($filename)
 	$xmlFile.setText($xmlContent; "UTF-8")
+	
+	// Log file location for CI visibility
+	LOG EVENT:C667(Into system standard outputs:K38:9; "JUnit XML written to: "+$xmlFile.platformPath+"\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; \
+		"Summary: "+String:C10(This:C1470.results.totalTests)+" tests, "+String:C10(This:C1470.results.passed)+" passed, "+String:C10(This:C1470.results.failed)+" failed"+Char:C90(13)+Char:C90(10); \
+		Information message:K38:1)
 	
 Function _escapeXMLAttribute($text : Text) : Text
 	var $escaped : Text
@@ -772,27 +772,27 @@ Function _formatTimestamp($milliseconds : Integer) : Text
 	return $timestamp
 	
 Function _logFooter()
-        LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
-        If ((This:C1470.results.failed=0) && Not:C34(This:C1470.results.hasGlobalErrors))
-                LOG EVENT:C667(Into system standard outputs:K38:9; "All tests passed! 🎉\r\n"; Information message:K38:1)
-        Else
-                var $summaryMessage : Text
-                $summaryMessage:=""
-
-                If (This:C1470.results.failed>0)
-                        $summaryMessage:=String:C10(This:C1470.results.failed)+" test(s) failed"
-                End if
-
-                If (This:C1470.results.hasGlobalErrors)
-                        If ($summaryMessage#"")
-                                $summaryMessage:=$summaryMessage+"; "
-                        End if
-                        $summaryMessage:=$summaryMessage+String:C10(This:C1470.results.globalErrorCount)+" external runtime error(s)"
-                End if
-
-                LOG EVENT:C667(Into system standard outputs:K38:9; $summaryMessage+"\r\n"; Error message:K38:3)
-        End if
-        LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
+	If ((This:C1470.results.failed=0) && Not:C34(This:C1470.results.hasGlobalErrors))
+		LOG EVENT:C667(Into system standard outputs:K38:9; "All tests passed! 🎉\r\n"; Information message:K38:1)
+	Else 
+		var $summaryMessage : Text
+		$summaryMessage:=""
+		
+		If (This:C1470.results.failed>0)
+			$summaryMessage:=String:C10(This:C1470.results.failed)+" test(s) failed"
+		End if 
+		
+		If (This:C1470.results.hasGlobalErrors)
+			If ($summaryMessage#"")
+				$summaryMessage:=$summaryMessage+"; "
+			End if 
+			$summaryMessage:=$summaryMessage+String:C10(This:C1470.results.globalErrorCount)+" external runtime error(s)"
+		End if 
+		
+		LOG EVENT:C667(Into system standard outputs:K38:9; $summaryMessage+"\r\n"; Error message:K38:3)
+	End if 
+	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
 	
 Function getResults() : Object
 	return This:C1470.results
@@ -809,10 +809,10 @@ Function _determineOutputFormat()
 		Else 
 			This:C1470.outputFormat:="human"
 		End if 
-	End if
+	End if 
 	
 	// Check for verbose flag
-	This:C1470.verboseOutput:=($params.verbose="true") 
+	This:C1470.verboseOutput:=($params.verbose="true")
 	
 Function _parseTestPatterns()
 	var $params : Object
@@ -942,7 +942,7 @@ Function _parseParamString($userParam : Text) : Object
 	End for each 
 	
 	return $params
-
+	
 Function _parseTagFilters()
 	// Parse tag filters from user parameters
 	var $params : Object
@@ -951,7 +951,7 @@ Function _parseTagFilters()
 	This:C1470.includeTags:=This:C1470._parseTagList($params.tags)
 	This:C1470.excludeTags:=This:C1470._parseTagList($params.excludeTags)
 	This:C1470.requireAllTags:=This:C1470._parseTagList($params.requireTags)
-
+	
 Function _parseTagList($tagString : Text) : Collection
 	// Parse comma-separated tag list
 	var $tags : Collection
@@ -970,7 +970,7 @@ Function _parseTagList($tagString : Text) : Collection
 	End if 
 	
 	return $tags
-
+	
 Function _countTestsWithRuntimeErrors() : Integer
 	// Count total tests that have runtime errors (not assertion failures)
 	var $errorCount : Integer
@@ -1026,7 +1026,7 @@ Function _shouldIncludeTestByTags($testFunction : cs:C1710._TestFunction) : Bool
 	
 	// If we have exclude or require filters but no include filters, default to true
 	return True:C214
-
+	
 Function _formatCallChain($callChain : Collection) : Text
 	// Format the call chain into a readable string for debugging
 	var $result : Text
@@ -1035,28 +1035,28 @@ Function _formatCallChain($callChain : Collection) : Text
 	
 	$result:=""
 	
-	If ($callChain#Null)
+	If ($callChain#Null:C1517)
 		$result:="Call Stack:"
 		
 		For ($i; 0; $callChain.length-1)
 			$callInfo:=$callChain[$i]
 			$result:=$result+"\r\n  "+String:C10($i+1)+". "
 			
-			If ($callInfo.name#Null)
+			If ($callInfo.name#Null:C1517)
 				$result:=$result+$callInfo.name
 			Else 
 				$result:=$result+"<unnamed>"
 			End if 
 			
-			If ($callInfo.type#Null)
+			If ($callInfo.type#Null:C1517)
 				$result:=$result+" ("+$callInfo.type+")"
 			End if 
 			
-			If ($callInfo.line#Null)
+			If ($callInfo.line#Null:C1517)
 				$result:=$result+" at line "+String:C10($callInfo.line)
 			End if 
 			
-			If ($callInfo.database#Null)
+			If ($callInfo.database#Null:C1517)
 				$result:=$result+" in "+$callInfo.database
 			End if 
 		End for 
