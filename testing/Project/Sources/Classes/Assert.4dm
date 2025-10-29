@@ -106,20 +106,29 @@ Function contains($t : Object; $container : Variant; $value : Variant; $message 
 	
 Function areDeepEqual($t : Object; $expected : Variant; $actual : Variant; $message : Text)
 	// Deep equality comparison for objects and collections with circular reference detection
-	var $passed : Boolean
-	var $depth : Integer
-	
-	$depth:=0  // Start at depth 0
-	$passed:=This:C1470._deepEqual($expected; $actual; $depth)
-	
-	If ($passed)
+	var $result : Object
+	var $failureMessage : Text
+
+	$result:=This:C1470._deepEqualWithPath($expected; $actual; 0; "")
+
+	If ($result.equal)
 		This:C1470._recordAssertion($t; True:C214; $expected; $actual; $message)
-	Else 
-		If (Count parameters:C259>=4)  // message provided
-			$t.fail($expected; $actual; $message)
-		Else 
-			$t.fail($expected; $actual; "Assertion failed: values are not deeply equal")
-		End if 
+	Else
+		// Build detailed failure message with path
+		If ($result.path#"")
+			$failureMessage:="Values differ at path: "+$result.path
+			If (Count parameters:C259>=4) && ($message#"")
+				$failureMessage:=$message+" ("+$failureMessage+")"
+			End if
+		Else
+			If (Count parameters:C259>=4) && ($message#"")
+				$failureMessage:=$message
+			Else
+				$failureMessage:="Assertion failed: values are not deeply equal"
+			End if
+		End if
+
+		$t.fail($expected; $actual; $failureMessage)
 	End if 
 	
 Function _recordAssertion($t : Object; $passed : Boolean; $expected : Variant; $actual : Variant; $message : Text; $callChain : Collection)
@@ -150,94 +159,134 @@ Function _sanitizeValue($value : Variant) : Variant
 			return $value
 	End case 
 	
-Function _deepEqual($expected : Variant; $actual : Variant; $depth : Integer) : Boolean
-	// Recursive deep equality comparison with depth-based circular reference prevention
+Function _deepEqualWithPath($expected : Variant; $actual : Variant; $depth : Integer; $currentPath : Text) : Object
+	// Recursive deep equality comparison with path tracking
 	var $expectedType; $actualType : Integer
 	var $i : Integer
 	var $expectedKeys; $actualKeys : Collection
 	var $key : Text
 	var $maxDepth : Integer
-	
+	var $result : Object
+	var $newPath : Text
+
 	$maxDepth:=10  // Maximum recursion depth to prevent infinite loops from circular references
 
 	// Check depth limit (must be checked early to prevent stack overflow)
 	If ($depth>$maxDepth)
 		// Assume equal if we've gone too deep (likely circular reference)
-		return True:C214
-	End if 
-	
+		return {equal: True:C214; path: ""}
+	End if
+
 	$expectedType:=Value type:C1509($expected)
 	$actualType:=Value type:C1509($actual)
-	
+
 	// Different types are never equal
 	If ($expectedType#$actualType)
-		return False:C215
-	End if 
-	
-	Case of 
+		return {equal: False:C215; path: $currentPath}
+	End if
+
+	Case of
 		: ($expectedType=Is object:K8:27)
 			// Check for Null objects
 			If ($expected=Null:C1517) || ($actual=Null:C1517)
-				return ($expected=Null:C1517) && ($actual=Null:C1517)
-			End if 
-			
+				If (($expected=Null:C1517) && ($actual=Null:C1517))
+					return {equal: True:C214; path: ""}
+				Else
+					return {equal: False:C215; path: $currentPath}
+				End if
+			End if
+
 			// Get all keys from both objects using OB Keys
 			$expectedKeys:=OB Keys:C1719($expected)
 			$actualKeys:=OB Keys:C1719($actual)
-			
+
 			// Check if both have the same number of keys
 			If ($expectedKeys.length#$actualKeys.length)
-				return False:C215
-			End if 
-			
+				return {equal: False:C215; path: $currentPath}
+			End if
+
 			// Compare each property in expected
 			For ($i; 0; $expectedKeys.length-1)
 				$key:=$expectedKeys[$i]
-				
+
 				// Check if actual also has this key
 				If (Not:C34(OB Is defined:C1231($actual; $key)))
-					return False:C215
-				End if 
-				
+					If ($currentPath="")
+						$newPath:=$key
+					Else
+						$newPath:=$currentPath+"."+$key
+					End if
+					return {equal: False:C215; path: $newPath}
+				End if
+
+				// Build path for nested property
+				If ($currentPath="")
+					$newPath:=$key
+				Else
+					$newPath:=$currentPath+"."+$key
+				End if
+
 				// Recursively compare property values with increased depth
-				If (Not:C34(This:C1470._deepEqual(OB Get:C1224($expected; $key); OB Get:C1224($actual; $key); $depth+1)))
-					return False:C215
-				End if 
-			End for 
-			
+				$result:=This:C1470._deepEqualWithPath(OB Get:C1224($expected; $key); OB Get:C1224($actual; $key); $depth+1; $newPath)
+				If (Not:C34($result.equal))
+					return $result
+				End if
+			End for
+
 			// Check if actual has any extra keys not in expected
 			For ($i; 0; $actualKeys.length-1)
 				$key:=$actualKeys[$i]
 				If (Not:C34(OB Is defined:C1231($expected; $key)))
-					return False:C215
-				End if 
-			End for 
-			
-			return True:C214
-			
+					If ($currentPath="")
+						$newPath:=$key
+					Else
+						$newPath:=$currentPath+"."+$key
+					End if
+					return {equal: False:C215; path: $newPath}
+				End if
+			End for
+
+			return {equal: True:C214; path: ""}
+
 		: ($expectedType=Is collection:K8:32)
 			// Check for Null collections
 			If ($expected=Null:C1517) || ($actual=Null:C1517)
-				return ($expected=Null:C1517) && ($actual=Null:C1517)
-			End if 
-			
+				If (($expected=Null:C1517) && ($actual=Null:C1517))
+					return {equal: True:C214; path: ""}
+				Else
+					return {equal: False:C215; path: $currentPath}
+				End if
+			End if
+
 			// Different lengths are not equal
 			If ($expected.length#$actual.length)
-				return False:C215
-			End if 
-			
+				return {equal: False:C215; path: $currentPath}
+			End if
+
 			// Compare each element with increased depth
 			For ($i; 0; $expected.length-1)
-				If (Not:C34(This:C1470._deepEqual($expected[$i]; $actual[$i]; $depth+1)))
-					return False:C215
-				End if 
-			End for 
-			
-			return True:C214
-			
-		Else 
+				// Build path for collection element
+				If ($currentPath="")
+					$newPath:="["+String:C10($i)+"]"
+				Else
+					$newPath:=$currentPath+"["+String:C10($i)+"]"
+				End if
+
+				$result:=This:C1470._deepEqualWithPath($expected[$i]; $actual[$i]; $depth+1; $newPath)
+				If (Not:C34($result.equal))
+					return $result
+				End if
+			End for
+
+			return {equal: True:C214; path: ""}
+
+		Else
 			// For primitives (text, number, boolean, date, etc.), use standard comparison
-			return ($expected=$actual)
+			If ($expected=$actual)
+				return {equal: True:C214; path: ""}
+			Else
+				return {equal: False:C215; path: $currentPath}
+			End if
 	End case 
 	
 	
