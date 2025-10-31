@@ -112,77 +112,80 @@ Function areDeepEqual($t : Object; $expected : Variant; $actual : Variant; $mess
 	var $diff : Object
 	var $i : Integer
 
-	$result:=This:C1470._deepEqualCollectAll($expected; $actual; 0; "")
+	// Initialize to Null to clear any stale data from previous assertions
+	$t.lastDeepEqualDifferences:=Null:C1517
 
+	$result:=This:C1470._deepEqualCollectAll($expected; $actual; 0; "")
+	
 	If ($result.equal)
 		This:C1470._recordAssertion($t; True:C214; $expected; $actual; $message)
-	Else
+	Else 
 		$differences:=$result.differences
-
+		
 		// Build detailed failure message with all differences
 		If ($differences.length>0)
 			var $diffCount : Text
 			$diffCount:=String:C10($differences.length)
 			$failureMessage:="Found "+$diffCount+" difference(s):\n"
-
+			
 			For ($i; 0; $differences.length-1)
 				$diff:=$differences[$i]
-
+				
 				// Build line number
 				var $lineNum : Text
 				$lineNum:=String:C10($i+1)
-
+				
 				// Get path (already a string from our diff creation)
 				var $pathDisplay : Text
 				If ($diff.path="")
 					$pathDisplay:="<root>"
-				Else
+				Else 
 					$pathDisplay:=$diff.path
-				End if
-
+				End if 
+				
 				// Start building the line
 				var $line : Text
 				$line:="  ["+$lineNum+"] "+$diff.type+" at path: "+$pathDisplay
-
+				
 				// Add type-specific details
-				Case of
+				Case of 
 					: ($diff.type="different_value")
 						// Values are already in the diff object
 						var $expFormatted; $actFormatted : Text
 						$expFormatted:=This:C1470._formatValue($diff.expected)
 						$actFormatted:=This:C1470._formatValue($diff.actual)
 						$line:=$line+" (expected: "+$expFormatted+", actual: "+$actFormatted+")"
-
+						
 					: ($diff.type="missing_key")
 						$line:=$line+" (key missing in actual)"
-
+						
 					: ($diff.type="extra_key")
 						$line:=$line+" (extra key in actual)"
-
+						
 					: ($diff.type="different_type")
 						$line:=$line+" (expected type: "+$diff.expectedType+", actual type: "+$diff.actualType+")"
-
+						
 					: ($diff.type="different_length")
 						var $expLen; $actLen : Text
 						$expLen:=String:C10($diff.expectedLength)
 						$actLen:=String:C10($diff.actualLength)
 						$line:=$line+" (expected length: "+$expLen+", actual length: "+$actLen+")"
-				End case
-
+				End case 
+				
 				// Add to message
 				$failureMessage:=$failureMessage+$line
-
+				
 				// Add newline if not last item
 				If ($i<($differences.length-1))
 					$failureMessage:=$failureMessage+"\n"
-				End if
-			End for
-
+				End if 
+			End for 
+			
 			// Prepend custom message if provided
 			If (Count parameters:C259>=4) && ($message#"")
 				$failureMessage:=$message+"\n"+$failureMessage
-			End if
-
+			End if 
+			
 			// Store sanitized differences for programmatic access
 			// Sanitize the differences collection to avoid storing complex objects
 			var $sanitizedDifferences : Collection
@@ -191,8 +194,8 @@ Function areDeepEqual($t : Object; $expected : Variant; $actual : Variant; $mess
 				var $sanitizedDiff : Object
 				$diff:=$differences[$i]
 				$sanitizedDiff:=New object:C1471("type"; $diff.type; "path"; $diff.path)
-
-				Case of
+				
+				Case of 
 					: ($diff.type="different_value")
 						$sanitizedDiff.expected:=This:C1470._sanitizeValue($diff.expected)
 						$sanitizedDiff.actual:=This:C1470._sanitizeValue($diff.actual)
@@ -206,19 +209,19 @@ Function areDeepEqual($t : Object; $expected : Variant; $actual : Variant; $mess
 					: ($diff.type="different_length")
 						$sanitizedDiff.expectedLength:=$diff.expectedLength
 						$sanitizedDiff.actualLength:=$diff.actualLength
-				End case
-
+				End case 
+				
 				$sanitizedDifferences.push($sanitizedDiff)
-			End for
+			End for 
 			$t.lastDeepEqualDifferences:=$sanitizedDifferences
-		Else
+		Else 
 			If (Count parameters:C259>=4) && ($message#"")
 				$failureMessage:=$message
-			Else
+			Else 
 				$failureMessage:="Assertion failed: values are not deeply equal"
-			End if
-		End if
-
+			End if 
+		End if 
+		
 		// Call fail with just the message for deep equal failures
 		// The failure message already contains all the detailed information
 		$t.fail($failureMessage)
@@ -241,23 +244,23 @@ Function _recordAssertion($t : Object; $passed : Boolean; $expected : Variant; $
 Function _sanitizeValue($value : Variant) : Variant
 	var $type : Integer
 	$type:=Value type:C1509($value)
-
+	
 	// Use placeholders for complex structures to avoid serialization errors
-	Case of
+	Case of 
 		: ($type=Is object:K8:27)
 			return "<object>"
 		: ($type=Is collection:K8:32)
 			return "<collection>"
-		Else
+		Else 
 			return $value
-	End case
-
+	End case 
+	
 Function _formatValue($value : Variant) : Text
 	// Format a value for display in error messages
 	var $type : Integer
 	$type:=Value type:C1509($value)
-
-	Case of
+	
+	Case of 
 		: ($value=Null:C1517)
 			return "null"
 		: ($type=Is text:K8:3)
@@ -267,19 +270,19 @@ Function _formatValue($value : Variant) : Text
 		: ($type=Is boolean:K8:9)
 			If ($value)
 				return "true"
-			Else
+			Else 
 				return "false"
-			End if
+			End if 
 		: ($type=Is object:K8:27)
 			return "<object>"
 		: ($type=Is collection:K8:32)
 			return "<collection["+String:C10($value.length)+"]>"
 		: ($type=Is date:K8:7)
 			return String:C10($value; ISO date:K1:8)
-		Else
+		Else 
 			return String:C10($value)
-	End case
-
+	End case 
+	
 Function _deepEqualWithPath($expected : Variant; $actual : Variant; $depth : Integer; $currentPath : Text) : Object
 	// Recursive deep equality comparison with path tracking
 	var $expectedType; $actualType : Integer
@@ -289,127 +292,127 @@ Function _deepEqualWithPath($expected : Variant; $actual : Variant; $depth : Int
 	var $maxDepth : Integer
 	var $result : Object
 	var $newPath : Text
-
+	
 	$maxDepth:=10  // Maximum recursion depth to prevent infinite loops from circular references
-
+	
 	// Check depth limit (must be checked early to prevent stack overflow)
 	If ($depth>$maxDepth)
 		// Assume equal if we've gone too deep (likely circular reference)
 		return {equal: True:C214; path: ""}
-	End if
-
+	End if 
+	
 	$expectedType:=Value type:C1509($expected)
 	$actualType:=Value type:C1509($actual)
-
+	
 	// Different types are never equal
 	If ($expectedType#$actualType)
 		return {equal: False:C215; path: $currentPath}
-	End if
-
-	Case of
+	End if 
+	
+	Case of 
 		: ($expectedType=Is object:K8:27)
 			// Check for Null objects
 			If ($expected=Null:C1517) || ($actual=Null:C1517)
 				If (($expected=Null:C1517) && ($actual=Null:C1517))
 					return {equal: True:C214; path: ""}
-				Else
+				Else 
 					return {equal: False:C215; path: $currentPath}
-				End if
-			End if
-
+				End if 
+			End if 
+			
 			// Get all keys from both objects using OB Keys
 			$expectedKeys:=OB Keys:C1719($expected)
 			$actualKeys:=OB Keys:C1719($actual)
-
+			
 			// Check if both have the same number of keys
 			If ($expectedKeys.length#$actualKeys.length)
 				return {equal: False:C215; path: $currentPath}
-			End if
-
+			End if 
+			
 			// Compare each property in expected
 			For ($i; 0; $expectedKeys.length-1)
 				$key:=$expectedKeys[$i]
-
+				
 				// Check if actual also has this key
 				If (Not:C34(OB Is defined:C1231($actual; $key)))
 					If ($currentPath="")
 						$newPath:=$key
-					Else
+					Else 
 						$newPath:=$currentPath+"."+$key
-					End if
+					End if 
 					return {equal: False:C215; path: $newPath}
-				End if
-
+				End if 
+				
 				// Build path for nested property
 				If ($currentPath="")
 					$newPath:=$key
-				Else
+				Else 
 					$newPath:=$currentPath+"."+$key
-				End if
-
+				End if 
+				
 				// Recursively compare property values with increased depth
 				$result:=This:C1470._deepEqualWithPath(OB Get:C1224($expected; $key); OB Get:C1224($actual; $key); $depth+1; $newPath)
 				If (Not:C34($result.equal))
 					return $result
-				End if
-			End for
-
+				End if 
+			End for 
+			
 			// Check if actual has any extra keys not in expected
 			For ($i; 0; $actualKeys.length-1)
 				$key:=$actualKeys[$i]
 				If (Not:C34(OB Is defined:C1231($expected; $key)))
 					If ($currentPath="")
 						$newPath:=$key
-					Else
+					Else 
 						$newPath:=$currentPath+"."+$key
-					End if
+					End if 
 					return {equal: False:C215; path: $newPath}
-				End if
-			End for
-
+				End if 
+			End for 
+			
 			return {equal: True:C214; path: ""}
-
+			
 		: ($expectedType=Is collection:K8:32)
 			// Check for Null collections
 			If ($expected=Null:C1517) || ($actual=Null:C1517)
 				If (($expected=Null:C1517) && ($actual=Null:C1517))
 					return {equal: True:C214; path: ""}
-				Else
+				Else 
 					return {equal: False:C215; path: $currentPath}
-				End if
-			End if
-
+				End if 
+			End if 
+			
 			// Different lengths are not equal
 			If ($expected.length#$actual.length)
 				return {equal: False:C215; path: $currentPath}
-			End if
-
+			End if 
+			
 			// Compare each element with increased depth
 			For ($i; 0; $expected.length-1)
 				// Build path for collection element
 				If ($currentPath="")
 					$newPath:="["+String:C10($i)+"]"
-				Else
+				Else 
 					$newPath:=$currentPath+"["+String:C10($i)+"]"
-				End if
-
+				End if 
+				
 				$result:=This:C1470._deepEqualWithPath($expected[$i]; $actual[$i]; $depth+1; $newPath)
 				If (Not:C34($result.equal))
 					return $result
-				End if
-			End for
-
+				End if 
+			End for 
+			
 			return {equal: True:C214; path: ""}
-
-		Else
+			
+		Else 
 			// For primitives (text, number, boolean, date, etc.), use standard comparison
 			If ($expected=$actual)
 				return {equal: True:C214; path: ""}
-			Else
+			Else 
 				return {equal: False:C215; path: $currentPath}
-			End if
-	End case
-
+			End if 
+	End case 
+	
 Function _deepEqualCollectAll($expected : Variant; $actual : Variant; $depth : Integer; $currentPath : Text) : Object
 	// Recursive deep equality comparison that collects ALL differences
 	var $expectedType; $actualType : Integer
@@ -421,18 +424,18 @@ Function _deepEqualCollectAll($expected : Variant; $actual : Variant; $depth : I
 	var $newPath : Text
 	var $differences : Collection
 	var $diff : Object
-
+	
 	$differences:=New collection:C1472
 	$maxDepth:=10  // Maximum recursion depth to prevent infinite loops
-
+	
 	// Check depth limit
 	If ($depth>$maxDepth)
 		return New object:C1471("equal"; True:C214; "differences"; $differences)
-	End if
-
+	End if 
+	
 	$expectedType:=Value type:C1509($expected)
 	$actualType:=Value type:C1509($actual)
-
+	
 	// Different types
 	If ($expectedType#$actualType)
 		var $expectedTypeName; $actualTypeName : Text
@@ -441,69 +444,69 @@ Function _deepEqualCollectAll($expected : Variant; $actual : Variant; $depth : I
 		$diff:=New object:C1471("type"; "different_type"; "path"; $currentPath; "expectedType"; $expectedTypeName; "actualType"; $actualTypeName)
 		$differences.push($diff)
 		return New object:C1471("equal"; False:C215; "differences"; $differences)
-	End if
-
-	Case of
+	End if 
+	
+	Case of 
 		: ($expectedType=Is object:K8:27)
 			// Check for Null objects
 			If ($expected=Null:C1517) || ($actual=Null:C1517)
 				If (($expected=Null:C1517) && ($actual=Null:C1517))
 					return New object:C1471("equal"; True:C214; "differences"; $differences)
-				Else
+				Else 
 					$diff:=New object:C1471("type"; "different_value"; "path"; $currentPath; "expected"; Null:C1517; "actual"; $actual)
 					$differences.push($diff)
 					return New object:C1471("equal"; False:C215; "differences"; $differences)
-				End if
-			End if
-
+				End if 
+			End if 
+			
 			// Get all keys from both objects
 			$expectedKeys:=OB Keys:C1719($expected)
 			$actualKeys:=OB Keys:C1719($actual)
-
+			
 			// Check for missing keys in actual
 			For ($i; 0; $expectedKeys.length-1)
 				$key:=$expectedKeys[$i]
 				If (Not:C34(OB Is defined:C1231($actual; $key)))
 					If ($currentPath="")
 						$newPath:=$key
-					Else
+					Else 
 						$newPath:=$currentPath+"."+$key
-					End if
+					End if 
 					var $expectedValue : Variant
 					$expectedValue:=OB Get:C1224($expected; $key)
 					$diff:=New object:C1471("type"; "missing_key"; "path"; $newPath; "expected"; $expectedValue)
 					$differences.push($diff)
-				End if
-			End for
-
+				End if 
+			End for 
+			
 			// Check for extra keys in actual
 			For ($i; 0; $actualKeys.length-1)
 				$key:=$actualKeys[$i]
 				If (Not:C34(OB Is defined:C1231($expected; $key)))
 					If ($currentPath="")
 						$newPath:=$key
-					Else
+					Else 
 						$newPath:=$currentPath+"."+$key
-					End if
+					End if 
 					var $actualValue : Variant
 					$actualValue:=OB Get:C1224($actual; $key)
 					$diff:=New object:C1471("type"; "extra_key"; "path"; $newPath; "actual"; $actualValue)
 					$differences.push($diff)
-				End if
-			End for
-
+				End if 
+			End for 
+			
 			// Compare matching keys recursively
 			For ($i; 0; $expectedKeys.length-1)
 				$key:=$expectedKeys[$i]
-
+				
 				If (OB Is defined:C1231($actual; $key))
 					// Build path
 					If ($currentPath="")
 						$newPath:=$key
-					Else
+					Else 
 						$newPath:=$currentPath+"."+$key
-					End if
-
+					End if 
+					
 					// Recursive comparison
 					$result:=This:C1470._deepEqualCollectAll(OB Get:C1224($expected; $key); OB Get:C1224($actual; $key); $depth+1; $newPath)
 					If (Not:C34($result.equal))
@@ -511,25 +514,25 @@ Function _deepEqualCollectAll($expected : Variant; $actual : Variant; $depth : I
 						var $j : Integer
 						For ($j; 0; $result.differences.length-1)
 							$differences.push($result.differences[$j])
-						End for
-					End if
-				End if
-			End for
-
+						End for 
+					End if 
+				End if 
+			End for 
+			
 			return New object:C1471("equal"; ($differences.length=0); "differences"; $differences)
-
+			
 		: ($expectedType=Is collection:K8:32)
 			// Check for Null collections
 			If ($expected=Null:C1517) || ($actual=Null:C1517)
 				If (($expected=Null:C1517) && ($actual=Null:C1517))
 					return New object:C1471("equal"; True:C214; "differences"; $differences)
-				Else
+				Else 
 					$diff:=New object:C1471("type"; "different_value"; "path"; $currentPath; "expected"; Null:C1517; "actual"; $actual)
 					$differences.push($diff)
 					return New object:C1471("equal"; False:C215; "differences"; $differences)
-				End if
-			End if
-
+				End if 
+			End if 
+			
 			// Different lengths
 			If ($expected.length#$actual.length)
 				var $expectedLength; $actualLength : Integer
@@ -538,49 +541,49 @@ Function _deepEqualCollectAll($expected : Variant; $actual : Variant; $depth : I
 				$diff:=New object:C1471("type"; "different_length"; "path"; $currentPath; "expectedLength"; $expectedLength; "actualLength"; $actualLength)
 				$differences.push($diff)
 				// Continue comparing elements up to the shorter length
-			End if
-
+			End if 
+			
 			// Compare each element
 			var $maxLength : Integer
 			If ($expected.length<$actual.length)
 				$maxLength:=$expected.length
-			Else
+			Else 
 				$maxLength:=$actual.length
-			End if
-
+			End if 
+			
 			For ($i; 0; $maxLength-1)
 				// Build path
 				If ($currentPath="")
 					$newPath:="["+String:C10($i)+"]"
-				Else
+				Else 
 					$newPath:=$currentPath+"["+String:C10($i)+"]"
-				End if
-
+				End if 
+				
 				$result:=This:C1470._deepEqualCollectAll($expected[$i]; $actual[$i]; $depth+1; $newPath)
 				If (Not:C34($result.equal))
 					var $k : Integer
 					For ($k; 0; $result.differences.length-1)
 						$differences.push($result.differences[$k])
-					End for
-				End if
-			End for
-
+					End for 
+				End if 
+			End for 
+			
 			return New object:C1471("equal"; ($differences.length=0); "differences"; $differences)
-
-		Else
+			
+		Else 
 			// For primitives, compare directly
 			If ($expected=$actual)
 				return New object:C1471("equal"; True:C214; "differences"; $differences)
-			Else
+			Else 
 				$diff:=New object:C1471("type"; "different_value"; "path"; $currentPath; "expected"; $expected; "actual"; $actual)
 				$differences.push($diff)
 				return New object:C1471("equal"; False:C215; "differences"; $differences)
-			End if
-	End case
-
+			End if 
+	End case 
+	
 Function _getTypeName($type : Integer) : Text
 	// Convert type constant to readable name
-	Case of
+	Case of 
 		: ($type=Is text:K8:3)
 			return "text"
 		: ($type=Is real:K8:4)
@@ -597,9 +600,9 @@ Function _getTypeName($type : Integer) : Text
 			return "date"
 		: ($type=Is time:K8:8)
 			return "time"
-		Else
+		Else 
 			return "unknown"
-	End case
-
-
+	End case 
+	
+	
 	
