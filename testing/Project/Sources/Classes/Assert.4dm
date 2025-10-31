@@ -104,18 +104,27 @@ Function contains($t : Object; $container : Variant; $value : Variant; $message 
 		End if 
 	End if 
 	
-Function areDeepEqual($t : Object; $expected : Variant; $actual : Variant; $message : Text)
+Function areDeepEqual($t : Object; $expected : Variant; $actual : Variant; $message : Text; $maxDepth : Integer)
 	// Deep equality comparison for objects and collections with circular reference detection
+	// $maxDepth: Maximum recursion depth (default: 10)
 	var $result : Object
 	var $failureMessage : Text
 	var $differences : Collection
 	var $diff : Object
 	var $i : Integer
+	var $depth : Integer
 
 	// Initialize to Null to clear any stale data from previous assertions
 	$t.lastDeepEqualDifferences:=Null:C1517
 
-	$result:=This:C1470._deepEqualCollectAll($expected; $actual; 0; "")
+	// Set default max depth if not provided
+	If (Count parameters:C259>=5)
+		$depth:=$maxDepth
+	Else
+		$depth:=10
+	End if
+
+	$result:=This:C1470._deepEqualCollectAll($expected; $actual; 0; ""; $depth)
 	
 	If ($result.equal)
 		This:C1470._recordAssertion($t; True:C214; $expected; $actual; $message)
@@ -170,6 +179,12 @@ Function areDeepEqual($t : Object; $expected : Variant; $actual : Variant; $mess
 						$expLen:=String:C10($diff.expectedLength)
 						$actLen:=String:C10($diff.actualLength)
 						$line:=$line+" (expected length: "+$expLen+", actual length: "+$actLen+")"
+
+					: ($diff.type="max_depth_exceeded")
+						var $maxDepthStr; $actualDepthStr : Text
+						$maxDepthStr:=String:C10($diff.maxDepth)
+						$actualDepthStr:=String:C10($diff.actualDepth)
+						$line:=$line+" (max depth "+$maxDepthStr+" exceeded at depth "+$actualDepthStr+"). Increase maxDepth parameter to compare deeper."
 				End case 
 				
 				// Add to message
@@ -209,6 +224,9 @@ Function areDeepEqual($t : Object; $expected : Variant; $actual : Variant; $mess
 					: ($diff.type="different_length")
 						$sanitizedDiff.expectedLength:=$diff.expectedLength
 						$sanitizedDiff.actualLength:=$diff.actualLength
+					: ($diff.type="max_depth_exceeded")
+						$sanitizedDiff.maxDepth:=$diff.maxDepth
+						$sanitizedDiff.actualDepth:=$diff.actualDepth
 				End case 
 				
 				$sanitizedDifferences.push($sanitizedDiff)
@@ -413,24 +431,29 @@ Function _deepEqualWithPath($expected : Variant; $actual : Variant; $depth : Int
 			End if 
 	End case 
 	
-Function _deepEqualCollectAll($expected : Variant; $actual : Variant; $depth : Integer; $currentPath : Text) : Object
+Function _deepEqualCollectAll($expected : Variant; $actual : Variant; $depth : Integer; $currentPath : Text; $maxDepth : Integer) : Object
 	// Recursive deep equality comparison that collects ALL differences
 	var $expectedType; $actualType : Integer
 	var $i : Integer
 	var $expectedKeys; $actualKeys : Collection
 	var $key : Text
-	var $maxDepth : Integer
 	var $result : Object
 	var $newPath : Text
 	var $differences : Collection
 	var $diff : Object
-	
+
 	$differences:=New collection:C1472
-	$maxDepth:=10  // Maximum recursion depth to prevent infinite loops
-	
-	// Check depth limit
+
+	// Check depth limit - fail the comparison if exceeded
 	If ($depth>$maxDepth)
-		return New object:C1471("equal"; True:C214; "differences"; $differences)
+		$diff:=New object:C1471(\
+			"type"; "max_depth_exceeded"; \
+			"path"; $currentPath; \
+			"maxDepth"; $maxDepth; \
+			"actualDepth"; $depth\
+			)
+		$differences.push($diff)
+		return New object:C1471("equal"; False:C215; "differences"; $differences)
 	End if 
 	
 	$expectedType:=Value type:C1509($expected)
@@ -508,7 +531,7 @@ Function _deepEqualCollectAll($expected : Variant; $actual : Variant; $depth : I
 					End if 
 					
 					// Recursive comparison
-					$result:=This:C1470._deepEqualCollectAll(OB Get:C1224($expected; $key); OB Get:C1224($actual; $key); $depth+1; $newPath)
+					$result:=This:C1470._deepEqualCollectAll(OB Get:C1224($expected; $key); OB Get:C1224($actual; $key); $depth+1; $newPath; $maxDepth)
 					If (Not:C34($result.equal))
 						// Merge differences from recursive call
 						var $j : Integer
@@ -559,7 +582,7 @@ Function _deepEqualCollectAll($expected : Variant; $actual : Variant; $depth : I
 					$newPath:=$currentPath+"["+String:C10($i)+"]"
 				End if 
 				
-				$result:=This:C1470._deepEqualCollectAll($expected[$i]; $actual[$i]; $depth+1; $newPath)
+				$result:=This:C1470._deepEqualCollectAll($expected[$i]; $actual[$i]; $depth+1; $newPath; $maxDepth)
 				If (Not:C34($result.equal))
 					var $k : Integer
 					For ($k; 0; $result.differences.length-1)
