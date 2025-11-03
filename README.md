@@ -54,8 +54,11 @@ $runner.run()
 # Run all tests
 tool4d --project YourProject.4DProject --startup-method "test"
 
-# Run with JSON output
+# Run with JSON output to stdout
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json"
+
+# Write JSON output to a file (relative to project)
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json outputPath=test-results/report.json"
 
 # Run specific tests
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "test=UserServiceTest"
