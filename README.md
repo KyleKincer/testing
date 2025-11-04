@@ -25,6 +25,11 @@ Function test_user_creation($t : cs.Testing)
     
     $t.assert.isNotNull($t; $user.name; "User should have a name")
     $t.assert.areEqual($t; "John"; $user.name; "User name should be correct")
+    
+    // Compare complex objects with deep equality
+    var $expected : Object
+    $expected:=New object("name"; "John"; "email"; "john@example.com")
+    $t.assert.areDeepEqual($t; $expected; $user; "User object should match expected structure")
 
 // #tags: integration, database
 Function test_user_persistence($t : cs.Testing)
