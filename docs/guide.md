@@ -134,6 +134,7 @@ The framework includes built-in assertion methods accessible through `$t.assert`
 
 ### Basic Assertions
 - `$t.assert.areEqual($t; $expected; $actual; $message)` - Values must be equal
+- `$t.assert.areDeepEqual($t; $expected; $actual; $message; $maxDepth)` - Deep equality comparison for objects and collections (optional `$maxDepth`, default: 10)
 - `$t.assert.isTrue($t; $value; $message)` - Value must be true
 - `$t.assert.isFalse($t; $value; $message)` - Value must be false
 - `$t.assert.isNull($t; $value; $message)` - Value must be null
@@ -156,6 +157,68 @@ Function test_calculations($t : cs.Testing.Testing)
     $result:=someFunction()
     $t.assert.isNotNull($t; $result; "Function should return a result")
 ```
+
+### Deep Equality Assertions
+
+The `areDeepEqual` function performs recursive comparison of nested objects and collections, providing detailed difference reporting when values don't match. This is especially useful for testing complex data structures.
+
+**Basic Usage:**
+```4d
+Function test_object_comparison($t : cs.Testing.Testing)
+    var $expected; $actual : Object
+    $expected:={name: "John"; age: 30; address: {city: "New York"; zip: "10001"}}
+    $actual:={name: "John"; age: 30; address: {city: "New York"; zip: "10001"}}
+    
+    // Deep comparison of nested structures
+    $t.assert.areDeepEqual($t; $expected; $actual; "Objects should match")
+```
+
+**With Custom Max Depth:**
+```4d
+Function test_deep_nesting($t : cs.Testing.Testing)
+    var $expected; $actual : Object
+    // ... very deeply nested objects ...
+    
+    // Increase max depth for very deep structures (default is 10)
+    $t.assert.areDeepEqual($t; $expected; $actual; "Deep objects should match"; 20)
+```
+
+**Accessing Differences Programmatically:**
+When a deep equality assertion fails, the framework stores detailed difference information in `$t.lastDeepEqualDifferences`:
+
+```4d
+Function test_with_difference_analysis($t : cs.Testing.Testing)
+    var $expected; $actual : Object
+    $expected:={name: "John"; age: 30}
+    $actual:={name: "John"; age: 25}
+    
+    $t.assert.areDeepEqual($t; $expected; $actual; "Objects should match")
+    
+    // If assertion fails, analyze differences
+    If ($t.failed)
+        var $diff : Object
+        For each ($diff; $t.lastDeepEqualDifferences)
+            $t.log("Difference at "+$diff.path+": "+$diff.type)
+        End for each
+    End if
+```
+
+**Features:**
+- **Recursive Comparison**: Compares nested objects and collections at all levels
+- **Detailed Reporting**: Provides path-based difference reporting (e.g., `user.address.city`)
+- **Circular Reference Protection**: Max depth limit prevents infinite loops (default: 10 levels)
+- **Type Safety**: Detects type mismatches between expected and actual values
+- **Missing/Extra Keys**: Reports missing keys in actual object and extra keys not in expected
+- **Collection Support**: Handles collections with different lengths and element differences
+- **Programmatic Access**: Differences available via `$t.lastDeepEqualDifferences` collection
+
+**Difference Types:**
+- `different_value` - Values differ at a specific path
+- `missing_key` - Key exists in expected but not in actual
+- `extra_key` - Key exists in actual but not in expected
+- `different_type` - Types differ between expected and actual
+- `different_length` - Collections have different lengths
+- `max_depth_exceeded` - Recursion depth limit reached (increase `$maxDepth` if needed)
 
 ## Output Formats
 

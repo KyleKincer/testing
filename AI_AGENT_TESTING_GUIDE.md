@@ -22,6 +22,7 @@ The `$t.assert` object provides these methods:
 
 ```4d
 $t.assert.areEqual($t; expected; actual; "message")
+$t.assert.areDeepEqual($t; expected; actual; "message"; maxDepth)  // Deep equality for objects/collections (maxDepth optional, default: 10)
 $t.assert.isTrue($t; condition; "message")  
 $t.assert.isFalse($t; condition; "message")
 $t.assert.isNull($t; value; "message")
