@@ -127,6 +127,34 @@ test-parallel-unit:
 test-parallel-workers:
 	$(TOOL4D) $(BASE_OPTS) --user-param "parallel=true maxWorkers=$(WORKERS)"
 
+# Run tests with code coverage (text output to console)
+test-coverage:
+	$(TOOL4D) $(BASE_OPTS) --user-param "coverage=true"
+
+# Run tests with HTML coverage report
+test-coverage-html:
+	$(TOOL4D) $(BASE_OPTS) --user-param "coverage=true coverageFormat=html coverageOutput=coverage/report.html"
+
+# Run tests with lcov coverage report
+test-coverage-lcov:
+	$(TOOL4D) $(BASE_OPTS) --user-param "coverage=true coverageFormat=lcov coverageOutput=coverage/lcov.info"
+
+# Run tests with JSON coverage report
+test-coverage-json:
+	$(TOOL4D) $(BASE_OPTS) --user-param "coverage=true coverageFormat=json coverageOutput=coverage/coverage.json"
+
+# Run unit tests with coverage
+test-coverage-unit:
+	$(TOOL4D) $(BASE_OPTS) --user-param "coverage=true tags=unit"
+
+# Run unit tests with HTML coverage report
+test-coverage-unit-html:
+	$(TOOL4D) $(BASE_OPTS) --user-param "coverage=true tags=unit coverageFormat=html coverageOutput=coverage/unit.html"
+
+# Run integration tests with coverage
+test-coverage-integration:
+	$(TOOL4D) $(BASE_OPTS) --user-param "coverage=true tags=integration"
+
 # Show help
 help:
 	@echo "4D Unit Testing Framework Commands:"
@@ -148,6 +176,16 @@ help:
 	@echo "  test-parallel-json  - Run tests in parallel with JSON output"
 	@echo "  test-parallel-unit  - Run unit tests in parallel"
 	@echo "  test-parallel-workers - Run tests in parallel with custom worker count"
+	@echo ""
+	@echo "Coverage Commands:"
+	@echo "  test-coverage       - Run tests with coverage (text output)"
+	@echo "  test-coverage-html  - Run tests with HTML coverage report"
+	@echo "  test-coverage-lcov  - Run tests with lcov coverage report"
+	@echo "  test-coverage-json  - Run tests with JSON coverage report"
+	@echo "  test-coverage-unit  - Run unit tests with coverage"
+	@echo "  test-coverage-unit-html - Run unit tests with HTML coverage"
+	@echo "  test-coverage-integration - Run integration tests with coverage"
+	@echo ""
 	@echo "  help                - Show this help message"
 	@echo ""
 	@echo "Examples:"
@@ -167,8 +205,12 @@ help:
 	@echo "  make test-parallel-json"
 	@echo "  make test-parallel-workers WORKERS=4"
 	@echo "  make test parallel=true maxWorkers=6"
+	@echo "  make test-coverage"
+	@echo "  make test-coverage-html"
+	@echo "  make test-coverage-unit-html"
+	@echo "  make test coverage=true coverageFormat=lcov coverageOutput=coverage/lcov.info"
 
 tool4d: $(TOOL4D)
 	@echo "tool4d ready at $(TOOL4D)"
 
-.PHONY: test test-json test-junit test-ci test-class test-tags test-exclude-tags test-require-tags test-unit test-integration test-unit-json test-unit-junit test-integration-junit test-parallel test-parallel-json test-parallel-unit test-parallel-workers help tool4d
+.PHONY: test test-json test-junit test-ci test-class test-tags test-exclude-tags test-require-tags test-unit test-integration test-unit-json test-unit-junit test-integration-junit test-parallel test-parallel-json test-parallel-unit test-parallel-workers test-coverage test-coverage-html test-coverage-lcov test-coverage-json test-coverage-unit test-coverage-unit-html test-coverage-integration help tool4d
