@@ -11,6 +11,7 @@ A comprehensive unit testing framework for the 4D platform with test tagging, fi
 - **CI/CD ready** - Structured JSON output for automated testing
 - **Transaction management** - Automatic test isolation with rollback
 - **Subtests** - Run table-driven tests with `t.run`
+- **Code coverage** - Track which lines of code are executed during tests
 
 ## Quick Example
 
@@ -69,6 +70,11 @@ tool4d --project YourProject.4DProject --startup-method "test" --user-param "tes
 # Filter by tags
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "tags=unit"
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "tags=unit excludeTags=slow"
+
+# Enable code coverage
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "coverage=true"
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "coverage=true coverageFormat=json"
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "coverage=true coverageOutput=coverage/report.lcov"
 ```
 
 ## Table-Driven Tests
@@ -108,6 +114,108 @@ Function _checkMathCase($t : cs.Testing; $case : Object)
   "passRate": 100,
   "status": "success"
 }
+```
+
+## Code Coverage
+
+The framework includes built-in code coverage tracking that instruments your host project code to measure which lines are executed during tests.
+
+### How It Works
+
+Code coverage uses 4D's `METHOD GET CODE` and `METHOD SET CODE` commands to:
+1. **Instrument** - Inject tracking calls into host project methods before tests run
+2. **Track** - Record which lines are executed during test execution
+3. **Report** - Generate coverage reports showing covered/uncovered code
+4. **Restore** - Restore original code after tests complete
+
+### Enabling Coverage
+
+```bash
+# Basic coverage with text report
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "coverage=true"
+
+# Coverage with JSON output
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "coverage=true coverageFormat=json"
+
+# Coverage with LCOV format (for CI/CD integration)
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "coverage=true coverageFormat=lcov coverageOutput=coverage/lcov.info"
+```
+
+### Coverage Parameters
+
+- `coverage=true` - Enable code coverage tracking
+- `coverageFormat=text|json|lcov` - Output format (default: text)
+- `coverageOutput=path/to/file` - Write coverage report to file
+
+### Coverage Reports
+
+**Text format** (console output):
+```
+=== Code Coverage Report ===
+
+Overall Coverage: 85.5% (234/274 lines)
+
+Method Coverage:
+  MyClass.calculate: 100% (12/12 lines)
+  MyClass.validate: 75% (9/12 lines)
+    Uncovered lines: 45, 67, 89
+```
+
+**JSON format** (machine-readable):
+```json
+{
+  "summary": {
+    "totalLines": 274,
+    "coveredLines": 234,
+    "uncoveredLines": 40,
+    "coveragePercent": 85.5
+  },
+  "methods": [
+    {
+      "method": "MyClass.calculate",
+      "totalLines": 12,
+      "coveredLines": 12,
+      "coveragePercent": 100
+    }
+  ]
+}
+```
+
+**LCOV format** (for CI/CD tools like GitLab, SonarQube):
+```
+TN:
+SF:testing/Project/Sources/Classes/MyClass.4dm
+DA:10,1
+DA:11,1
+DA:12,0
+LF:12
+LH:10
+end_of_record
+```
+
+### What Gets Instrumented
+
+- **Included**: All classes in the host project
+- **Excluded**: Test classes (ending with "Test"), testing framework classes, DataClasses
+
+### Best Practices
+
+1. **Run coverage regularly** - Include in your CI/CD pipeline
+2. **Set coverage goals** - Aim for 80%+ on critical business logic
+3. **Focus on gaps** - Use uncovered line numbers to identify missing tests
+4. **Combine with filters** - Run coverage on specific test suites: `coverage=true tags=unit`
+
+### From Host Project
+
+When running tests from a host project (not standalone):
+
+```4d
+// In your host project's test method
+var $runner : cs.TestRunner
+var $userParams : Object
+
+$userParams:=New object("coverage"; "true"; "coverageFormat"; "json")
+Testing_RunTestsWithCs(cs; Storage; $userParams)
 ```
 
 ## Documentation

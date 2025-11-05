@@ -127,6 +127,22 @@ test-parallel-unit:
 test-parallel-workers:
 	$(TOOL4D) $(BASE_OPTS) --user-param "parallel=true maxWorkers=$(WORKERS)"
 
+# Run tests with code coverage (text report to console)
+test-coverage:
+	$(TOOL4D) $(BASE_OPTS) --user-param "coverage=true"
+
+# Run tests with code coverage (JSON report to console)
+test-coverage-json:
+	$(TOOL4D) $(BASE_OPTS) --user-param "coverage=true coverageFormat=json"
+
+# Run tests with code coverage (LCOV report to file)
+test-coverage-lcov:
+	$(TOOL4D) $(BASE_OPTS) --user-param "coverage=true coverageFormat=lcov coverageOutput=coverage/lcov.info"
+
+# Run unit tests with code coverage
+test-coverage-unit:
+	$(TOOL4D) $(BASE_OPTS) --user-param "coverage=true tags=unit"
+
 # Show help
 help:
 	@echo "4D Unit Testing Framework Commands:"
@@ -148,6 +164,10 @@ help:
 	@echo "  test-parallel-json  - Run tests in parallel with JSON output"
 	@echo "  test-parallel-unit  - Run unit tests in parallel"
 	@echo "  test-parallel-workers - Run tests in parallel with custom worker count"
+	@echo "  test-coverage       - Run tests with code coverage (text report)"
+	@echo "  test-coverage-json  - Run tests with coverage (JSON report)"
+	@echo "  test-coverage-lcov  - Run tests with coverage (LCOV report to file)"
+	@echo "  test-coverage-unit  - Run unit tests with code coverage"
 	@echo "  help                - Show this help message"
 	@echo ""
 	@echo "Examples:"
@@ -167,8 +187,12 @@ help:
 	@echo "  make test-parallel-json"
 	@echo "  make test-parallel-workers WORKERS=4"
 	@echo "  make test parallel=true maxWorkers=6"
+	@echo "  make test-coverage"
+	@echo "  make test-coverage-json"
+	@echo "  make test-coverage-lcov"
+	@echo "  make test coverage=true tags=unit"
 
 tool4d: $(TOOL4D)
 	@echo "tool4d ready at $(TOOL4D)"
 
-.PHONY: test test-json test-junit test-ci test-class test-tags test-exclude-tags test-require-tags test-unit test-integration test-unit-json test-unit-junit test-integration-junit test-parallel test-parallel-json test-parallel-unit test-parallel-workers help tool4d
+.PHONY: test test-json test-junit test-ci test-class test-tags test-exclude-tags test-require-tags test-unit test-integration test-unit-json test-unit-junit test-integration-junit test-parallel test-parallel-json test-parallel-unit test-parallel-workers test-coverage test-coverage-json test-coverage-lcov test-coverage-unit help tool4d
