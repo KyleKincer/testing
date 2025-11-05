@@ -84,13 +84,11 @@ Function restoreOriginalCode() : Boolean
 		var $originalCode : Text
 		$originalCode:=This.originalCode[$methodPath]
 		
-		If ($originalCode#"")
-			var $errorCode : Integer
-			METHOD SET CODE($methodPath; $originalCode; *; $errorCode)
-			
-			If ($errorCode#0)
-				$success:=False
-			End if 
+		var $errorCode : Integer
+		METHOD SET CODE($methodPath; $originalCode; *; $errorCode)
+		
+		If ($errorCode#0)
+			$success:=False
 		End if 
 	End for each 
 	
