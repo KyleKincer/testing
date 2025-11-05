@@ -103,7 +103,7 @@ Function _instrumentCodeLines($code : Text; $methodPath : Text) : Text
 	// Strategy: Add tracking call at the start of each executable line
 	
 	var $lines : Collection
-	$lines:=Split string($code; "\r"; sk ignore empty strings)
+	$lines:=Split string($code; "\r")
 	
 	var $instrumentedLines : Collection
 	$instrumentedLines:=[]
