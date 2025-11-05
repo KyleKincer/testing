@@ -412,6 +412,16 @@ Function _generateHumanReport()
 	LOG EVENT:C667(Into system standard outputs:K38:9; "Assertions: "+String:C10(This:C1470.results.assertions)+"\r\n"; Information message:K38:1)
 	LOG EVENT:C667(Into system standard outputs:K38:9; "Pass Rate: "+String:C10($passRate; "##0.0")+"%\r\n"; Information message:K38:1)
 	LOG EVENT:C667(Into system standard outputs:K38:9; "Duration: "+String:C10(This:C1470.results.duration)+"ms\r\n"; Information message:K38:1)
+
+	If (This:C1470.results.coverage#Null:C1517)
+		var $coverage : Object
+		$coverage:=This:C1470.results.coverage
+		LOG EVENT:C667(Into system standard outputs:K38:9; "Line Coverage: "+String:C10($coverage.lineCoverage; "##0.0")+"%\r\n"; Information message:K38:1)
+		LOG EVENT:C667(Into system standard outputs:K38:9; "Method Coverage: "+String:C10($coverage.methodCoverage; "##0.0")+"%\r\n"; Information message:K38:1)
+		If ($coverage.outputPath#Null:C1517)
+			LOG EVENT:C667(Into system standard outputs:K38:9; "Coverage report: "+$coverage.outputPath+"\r\n"; Information message:K38:1)
+		End if
+	End if 
 	
 	var $externalMessageType : Integer
 	$externalMessageType:=Choose:C955(This:C1470.results.globalErrorCount>0; Error message:K38:3; Information message:K38:1)
@@ -469,6 +479,8 @@ Function _generateJSONReport()
 	
 	var $hasFailures : Boolean
 	$hasFailures:=(This:C1470.results.failed>0) || This:C1470.results.hasGlobalErrors
+	var $coverageSummary : Object
+	$coverageSummary:=This:C1470.results.coverage
 	
 	If (This:C1470.verboseOutput)
 		// Verbose mode: include all details (original format)
@@ -553,6 +565,10 @@ Function _generateJSONReport()
 			End for each 
 			$jsonReport.suites:=$suiteSummary
 		End if 
+	End if 
+
+	If ($coverageSummary#Null:C1517)
+		$jsonReport.coverage:=$coverageSummary
 	End if 
 	
 	var $jsonString : Text

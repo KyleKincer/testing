@@ -10,6 +10,7 @@ A comprehensive unit testing framework for the 4D platform with enhanced reporti
 - [Writing Tests](#writing-tests)
 - [Assertion Library](#assertion-library)
 - [Output Formats](#output-formats)
+- [Coverage Reporting](#coverage-reporting)
 - [Test Filtering](#test-filtering)
 - [Test Tagging](#test-tagging)
 - [Test Lifecycle Methods](#test-lifecycle-methods)
@@ -32,6 +33,7 @@ A comprehensive unit testing framework for the 4D platform with enhanced reporti
 - **Subtest Support**: Create table-driven tests using `t.run`
 - **Mock Support**: Built-in mocking utilities for isolated unit testing
 - **CI/CD Ready**: GitHub Actions integration for automated testing
+- **Coverage Instrumentation**: Optional host project instrumentation with JSON coverage summaries
 
 ## Quick Start
 
@@ -221,6 +223,79 @@ Function test_with_difference_analysis($t : cs.Testing.Testing)
 - `max_depth_exceeded` - Recursion depth limit reached (increase `$maxDepth` if needed)
 
 ## Output Formats
+- **coverage** (`coverage=enabled`) – produce JSON coverage with host instrumentation (see [Coverage Reporting](#coverage-reporting))
+
+## Coverage Reporting
+
+The testing component can instrument your **host project** at runtime to measure which methods and class functions execute during a test run. Coverage is disabled by default to avoid touching source files unless explicitly requested.
+
+### Enabling Coverage
+
+Run your startup method with `coverage=enabled` in the user-parameter string:
+
+```bash
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "coverage=enabled"
+
+# Combine with other filters or formats
+tool4d --project YourProject.4DProject --startup-method "test" \
+       --user-param "coverage=enabled format=json tags=unit"
+```
+
+When enabled, the framework:
+
+- Uses `METHOD GET CODE` / `METHOD SET CODE` to inject calls into project methods and class functions before they execute
+- Automatically creates a helper method `__TEST_COVERAGE_HIT` to record hits in shared storage
+- Restores every modified method (and removes the helper if needed) as soon as the run finishes
+- Recovers any leftover instrumentation on the next run, even if a previous run crashed before cleanup
+- Writes a detailed report to `test-results/coverage/coverage.json`
+- Appends summary percentages to human-readable output and embeds the full payload under the `coverage` key in JSON output
+
+### Skipping Specific Files
+
+Place one of the following comments near the top of a method or class file to opt out of instrumentation:
+
+```4d
+// #coverage: off
+// #coverage: ignore
+// #coverage: skip
+```
+
+### JSON Report Structure
+
+The generated report (default `test-results/coverage/coverage.json`) contains overall counts plus per-method detail:
+
+```json
+{
+  "enabled": true,
+  "outputPath": "/full/path/test-results/coverage/coverage.json",
+  "totalMethods": 12,
+  "coveredMethods": 9,
+  "totalLines": 248,
+  "coveredLines": 198,
+  "lineCoverage": 79.83,
+  "methodCoverage": 75.0,
+  "methods": [
+    {
+      "id": "InvoiceService::calculateTotals",
+      "totalLines": 12,
+      "coveredLines": 11,
+      "coverage": 91.67,
+      "uncovered": [87],
+      "context": "class",
+      "className": "InvoiceService"
+    }
+  ]
+}
+```
+
+### Safety Notes
+
+- Instrumentation runs only inside the host project (component methods are never modified)
+- Backups of original source are written to `test-results/coverage/backups/` and removed after successful cleanup
+- If a run aborts before cleanup, the next run—coverage-enabled or not—will detect the backups and restore the originals automatically
+- The helper method `__TEST_COVERAGE_HIT` is managed by the component; do not edit it manually
+
+Coverage metrics depend on the host project passing its class store to `Testing_RunTestsWithCs`. This happens automatically when following the integration steps in this guide.
 
 The framework provides terse output by default for cleaner results, with verbose mode available when more detail is needed.
 

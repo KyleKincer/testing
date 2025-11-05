@@ -58,3 +58,4 @@ Pass Rate: 100.0%
 - Tests tagged `no-linux` are excluded by default on Linux (for example, `_TaggingExampleTest.test_file_system_access`).
 - The Linux build runs headlessly and does **not** require Wine or a graphical environment.
 - Previous attempts to run the Windows build via Wine were unstable and are not recommended.
+- Pass `--user-param "coverage=enabled"` to gather coverage data when executing from a host project; the instrumented sources are restored automatically after the run.

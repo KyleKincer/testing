@@ -11,6 +11,7 @@ A comprehensive unit testing framework for the 4D platform with test tagging, fi
 - **CI/CD ready** - Structured JSON output for automated testing
 - **Transaction management** - Automatic test isolation with rollback
 - **Subtests** - Run table-driven tests with `t.run`
+- **Host coverage reporting** - Instrument host project methods to produce JSON coverage summaries
 
 ## Quick Example
 
@@ -70,6 +71,23 @@ tool4d --project YourProject.4DProject --startup-method "test" --user-param "tes
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "tags=unit"
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "tags=unit excludeTags=slow"
 ```
+
+### Collecting Coverage from a Host Project
+
+Enable coverage instrumentation when invoking the component from a host project by passing the `coverage` user parameter:
+
+```bash
+# Instrument the host project and write coverage.json to test-results/coverage/
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "coverage=enabled"
+
+# Combine with other filters or formats
+tool4d --project YourProject.4DProject --startup-method "test" \
+       --user-param "coverage=enabled format=json tags=unit"
+```
+
+When coverage is enabled the framework temporarily rewrites host project methods and class functions, recording each executed line while the suite runs. Code is automatically restored after execution (or on the next run if a failure interrupts execution). A summary is appended to the human-readable output and embedded in JSON results, and a detailed report is saved to `test-results/coverage/coverage.json`.
+
+Add `// #coverage: off` (or `ignore`/`skip`) near the top of a method or class file to exclude it from instrumentation. Use the generated helper method `__TEST_COVERAGE_HIT` only through the framework; it will be created on demand and cleaned up for you.
 
 ## Table-Driven Tests
 

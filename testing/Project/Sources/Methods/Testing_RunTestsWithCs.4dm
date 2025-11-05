@@ -7,8 +7,18 @@ In order to run tests from a host project with this component, you must:
 */
 #DECLARE($cs : 4D:C1709.Object; $hostStorage : 4D:C1709.Object; $userParams : 4D:C1709.Object)
 
+var $coverageManager : cs:C1710.CoverageManager
+$coverageManager:=cs:C1710.CoverageManager.new($cs; $hostStorage; $userParams)
+
+var $coverageEnabled : Boolean
+$coverageEnabled:=$coverageManager.enable()
+
 var $runner : cs:C1710.TestRunner
 // Pass user params to TestRunner (it will initialize trigger control based on params)
 $runner:=cs:C1710.TestRunner.new($cs; $hostStorage; $userParams)
 
 $runner.run()
+
+If ($coverageEnabled)
+	$coverageManager.finalize($runner.getResults())
+End if
