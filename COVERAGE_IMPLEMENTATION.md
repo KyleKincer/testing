@@ -6,7 +6,9 @@ I have successfully implemented a comprehensive code coverage system for the 4D 
 
 ## 📦 Deliverables
 
-### Core Classes (1,103 lines)
+### Core Components (1,125+ lines)
+
+#### Classes (1,103 lines)
 
 1. **CoverageTracker.4dm** (195 lines)
    - Manages coverage data in shared Storage
@@ -37,9 +39,17 @@ I have successfully implemented a comprehensive code coverage system for the 4D 
    - Tests data merging
    - Tests edge cases
 
+#### Project Methods (22 lines)
+
+5. **CoverageRecordLine.4dm** (22 lines)
+   - Shared project method for recording line execution
+   - Wraps Storage access with proper `Use...End use` blocks
+   - Called by instrumented code
+   - Thread-safe for parallel execution
+
 ### Framework Integration
 
-5. **TestRunner.4dm** (Updated, +154 lines)
+6. **TestRunner.4dm** (Updated, +154 lines)
    - Added coverage properties
    - Coverage initialization from user params
    - Pre-test instrumentation
@@ -48,20 +58,20 @@ I have successfully implemented a comprehensive code coverage system for the 4D 
    - Coverage reporting integration
    - Added 7 new functions
 
-6. **Testing_RunTestsWithCs.4dm** (Already supports coverage via hostStorage)
+7. **Testing_RunTestsWithCs.4dm** (Already supports coverage via hostStorage)
    - Passes host Storage for method access
    - Enables coverage from host projects
 
 ### Documentation
 
-7. **README.md** (Updated)
+8. **README.md** (Updated)
    - Added comprehensive Coverage section
    - Usage examples with all formats
    - Parameter reference table
    - CI/CD integration examples
    - Best practices
 
-8. **docs/coverage-guide.md** (New, 500+ lines)
+9. **docs/coverage-guide.md** (New, 500+ lines)
    - Complete coverage guide
    - Detailed explanation of how it works
    - All report format examples
@@ -71,7 +81,7 @@ I have successfully implemented a comprehensive code coverage system for the 4D 
    - Troubleshooting guide
    - Example workflows
 
-9. **COVERAGE.md** (New, 400+ lines)
+10. **COVERAGE.md** (New, 400+ lines)
    - Technical implementation details
    - Architecture documentation
    - Design decisions and rationale
@@ -82,7 +92,7 @@ I have successfully implemented a comprehensive code coverage system for the 4D 
 
 ### Build System
 
-10. **Makefile** (Updated)
+11. **Makefile** (Updated)
     - `make test-coverage` - Basic coverage
     - `make test-coverage-html` - HTML report
     - `make test-coverage-lcov` - LCOV report
@@ -286,14 +296,16 @@ Function validateEmail($email : Text) : Boolean
 **After:**
 ```4d
 Function validateEmail($email : Text) : Boolean
-    Storage.coverage.data["UserService"]["2"]:=Num(...)+1
+    CoverageRecordLine("UserService"; 2)
     If ($email="")
-        Storage.coverage.data["UserService"]["3"]:=Num(...)+1
+        CoverageRecordLine("UserService"; 3)
         return False
     End if
-    Storage.coverage.data["UserService"]["5"]:=Num(...)+1
+    CoverageRecordLine("UserService"; 5)
     return True
 ```
+
+The `CoverageRecordLine` project method wraps Storage access with proper `Use...End use` blocks.
 
 ## 🎓 Design Decisions
 

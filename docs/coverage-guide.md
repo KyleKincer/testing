@@ -105,12 +105,14 @@ If ($user.active)
 End if
 
 // Instrumented code
-Storage.coverage.data["UserService"]["1"]:=Num(Storage.coverage.data["UserService"]["1"])+1
+CoverageRecordLine("UserService"; 1)
 If ($user.active)
-    Storage.coverage.data["UserService"]["2"]:=Num(Storage.coverage.data["UserService"]["2"])+1
+    CoverageRecordLine("UserService"; 2)
     $result:=True
 End if
 ```
+
+The `CoverageRecordLine` project method handles Storage access with proper `Use...End use` blocks for thread safety.
 
 ### 3. Execution Phase
 ```

@@ -49,16 +49,33 @@ The instrumenter identifies executable lines by:
 
 ### Counter Injection
 
-For each executable line, the instrumenter injects:
+For each executable line, the instrumenter injects a call to the shared project method `CoverageRecordLine`:
 ```4d
-Storage.coverage.data["MethodName"]["LineNumber"]:=Num(Storage.coverage.data["MethodName"]["LineNumber"])+1
+CoverageRecordLine("MethodName"; LineNumber)
 ```
 
 This approach:
-- Uses shared storage for thread safety
+- Uses a project method wrapper for proper `Use...End use` handling
+- Shared storage access is properly synchronized
+- Thread-safe for parallel execution
 - Preserves line numbers in original code
 - Accumulates counts for multiply-executed lines
 - Maintains proper indentation
+
+The `CoverageRecordLine` method handles the Storage access:
+```4d
+Use (Storage.coverage.data)
+    If (Storage.coverage.data[$methodName]=Null)
+        Storage.coverage.data[$methodName]:=New shared object
+    End if 
+    
+    Use (Storage.coverage.data[$methodName])
+        var $currentCount : Integer
+        $currentCount:=Num(Storage.coverage.data[$methodName][String($lineNumber)])
+        Storage.coverage.data[$methodName][String($lineNumber)]:=$currentCount+1
+    End use 
+End use 
+```
 
 ### Example
 
@@ -74,12 +91,12 @@ Function validateUser($email : Text) : Boolean
 **Instrumented Code:**
 ```4d
 Function validateUser($email : Text) : Boolean
-    Storage.coverage.data["UserService"]["2"]:=Num(Storage.coverage.data["UserService"]["2"])+1
+    CoverageRecordLine("UserService"; 2)
     If ($email="")
-        Storage.coverage.data["UserService"]["3"]:=Num(Storage.coverage.data["UserService"]["3"])+1
+        CoverageRecordLine("UserService"; 3)
         return False
     End if
-    Storage.coverage.data["UserService"]["5"]:=Num(Storage.coverage.data["UserService"]["5"])+1
+    CoverageRecordLine("UserService"; 5)
     return True
 ```
 
@@ -111,13 +128,15 @@ Function validateUser($email : Text) : Boolean
 
 ## Key Design Decisions
 
-### 1. Shared Storage Usage
+### 1. Shared Storage with Project Method Wrapper
 
-**Decision**: Use `Storage.coverage.data` for counter storage
+**Decision**: Use `Storage.coverage.data` for counter storage, accessed via `CoverageRecordLine` project method
 
 **Rationale**:
-- Thread-safe for parallel execution
-- Accessible from instrumented code
+- Thread-safe for parallel execution (proper `Use...End use` handling)
+- Accessible from instrumented code (shared project method)
+- Avoids injecting complex `Use...End use` blocks in instrumented code
+- Clean, simple instrumentation (single method call)
 - Persists across method calls
 - Easy cleanup after tests
 

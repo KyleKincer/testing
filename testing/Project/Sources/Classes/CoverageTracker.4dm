@@ -14,52 +14,37 @@ Class constructor()
 	
 Function initialize()
 	// Initialize shared storage for coverage tracking
-	Use (Storage)
-		If (Storage.coverage=Null)
-			Storage.coverage:=New shared object("data"; New shared object)
+	Use (Storage:C1525)
+		If (Storage:C1525.coverage=Null:C1517)
+			Storage:C1525.coverage:=New shared object:C1526("data"; New shared object:C1526)
 		Else 
-			Storage.coverage.data:=New shared object
+			Storage:C1525.coverage.data:=New shared object:C1526
 		End if 
 	End use 
-	This.startTime:=Milliseconds
+	This:C1470.startTime:=Milliseconds:C459
 	
 Function recordLine($methodName : Text; $lineNumber : Integer)
 	// Record that a line was executed
-	// This method is called by instrumented code
-	
-	If (Storage.coverage=Null) || (Storage.coverage.data=Null)
-		return 
-	End if 
-	
-	Use (Storage.coverage.data)
-		If (Storage.coverage.data[$methodName]=Null)
-			Storage.coverage.data[$methodName]:=New shared object
-		End if 
-		
-		Use (Storage.coverage.data[$methodName])
-			var $currentCount : Integer
-			$currentCount:=Num(Storage.coverage.data[$methodName][String($lineNumber)])
-			Storage.coverage.data[$methodName][String($lineNumber)]:=$currentCount+1
-		End use 
-	End use 
+	// Delegates to shared project method for proper Storage access
+	CoverageRecordLine($methodName; $lineNumber) 
 	
 Function collectData()
 	// Collect coverage data from shared storage
-	This.endTime:=Milliseconds
+	This:C1470.endTime:=Milliseconds:C459
 	
-	If (Storage.coverage=Null) || (Storage.coverage.data=Null)
+	If (Storage:C1525.coverage=Null:C1517) || (Storage:C1525.coverage.data=Null:C1517)
 		return 
 	End if 
 	
-	Use (Storage.coverage.data)
-		This.coverageData:=OB Copy(Storage.coverage.data; ck shared; This.coverageData)
+	Use (Storage:C1525.coverage.data)
+		This:C1470.coverageData:=OB Copy:C1225(Storage:C1525.coverage.data; ck shared:K85:29; This:C1470.coverageData)
 	End use 
 	
 Function cleanup()
 	// Clean up shared storage
-	Use (Storage)
-		If (Storage.coverage#Null)
-			Storage.coverage.data:=New shared object
+	Use (Storage:C1525)
+		If (Storage:C1525.coverage#Null:C1517)
+			Storage:C1525.coverage.data:=New shared object:C1526
 		End if 
 	End use 
 	

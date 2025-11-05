@@ -129,7 +129,7 @@ Function _instrumentCodeLines($code : Text; $methodPath : Text) : Text
 			$indent:=This._getLineIndentation($line)
 			
 			var $trackingCall : Text
-			$trackingCall:=$indent+"Storage.coverage.data[\""+$methodPath+"\"][\""+String($lineNumber+1)+"\"]:=Num(Storage.coverage.data[\""+$methodPath+"\"][\""+String($lineNumber+1)+"\"])+1"
+			$trackingCall:=$indent+"CoverageRecordLine(\""+$methodPath+"\"; "+String($lineNumber+1)+")"
 			
 			$instrumentedLines.push($trackingCall)
 		End if 
