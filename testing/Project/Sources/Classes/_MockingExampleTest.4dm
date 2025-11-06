@@ -9,7 +9,7 @@ Function test_mock_basic_functionality($t : cs:C1710.Testing)
 	$result:=$t.stats.mock("testFunction"; ["param1"; "param2"]; "mock_result")
 	
 	// Verify the mock was called correctly
-	var $stat : cs:C1710._UnitStatsDetail
+	var $stat : cs:C1710.UnitStatsDetail
 	$stat:=$t.stats.getStat("testFunction")
 	
 	$t.assert.areEqual($t; 1; $stat.getNumberOfCalls(); "Mock should be called once")
@@ -23,7 +23,7 @@ Function test_mock_multiple_calls($t : cs:C1710.Testing)
 	$t.stats.mock("validateUser"; ["guest"]; False:C215)
 	
 	// Verify both calls were tracked
-	var $stat : cs:C1710._UnitStatsDetail
+	var $stat : cs:C1710.UnitStatsDetail
 	$stat:=$t.stats.getStat("validateUser")
 	
 	$t.assert.areEqual($t; 2; $stat.getNumberOfCalls(); "Should be called twice")
@@ -38,7 +38,7 @@ Function test_mock_with_collections($t : cs:C1710.Testing)
 	$t.stats.mock("processCollection"; [$testCollection]; "processed")
 	
 	// Verify collection parameter was captured
-	var $stat : cs:C1710._UnitStatsDetail
+	var $stat : cs:C1710.UnitStatsDetail
 	$stat:=$t.stats.getStat("processCollection")
 	
 	$t.assert.areEqual($t; 1; $stat.getNumberOfCalls(); "Should be called once")
@@ -53,7 +53,7 @@ Function test_mock_statistics_reset($t : cs:C1710.Testing)
 	$t.stats.mock("testMethod"; ["param"]; "result")
 	$t.stats.mock("testMethod"; ["param2"]; "result2")
 	
-	var $stat : cs:C1710._UnitStatsDetail
+	var $stat : cs:C1710.UnitStatsDetail
 	$stat:=$t.stats.getStat("testMethod")
 	$t.assert.areEqual($t; 2; $stat.getNumberOfCalls(); "Should have 2 calls before reset")
 	
@@ -72,7 +72,7 @@ Function test_mock_parameter_details($t : cs:C1710.Testing)
 	$t.stats.mock("apiCall"; $params; New object:C1471("status"; 200; "data"; "success"))
 	
 	// Verify parameter details
-	var $stat : cs:C1710._UnitStatsDetail
+	var $stat : cs:C1710.UnitStatsDetail
 	$stat:=$t.stats.getStat("apiCall")
 	
 	$t.assert.areEqual($t; 1; $stat.getNumberOfCalls(); "Should be called once")
