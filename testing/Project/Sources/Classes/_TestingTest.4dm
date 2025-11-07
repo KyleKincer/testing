@@ -184,7 +184,7 @@ Function test_run_subtest_stats_isolated($t : cs:C1710.Testing)
         $testing.run("second"; Formula($1.assert.areEqual($1; 0; $1.stats.getStat("mocked").getNumberOfCalls(); "Stats should not carry over between subtests")))
 
         // Parent stats should remain unaffected
-        var $parentStat : cs:C1710._UnitStatsDetail
+        var $parentStat : cs:C1710.UnitStatsDetail
         $parentStat:=$testing.stats.getStat("mocked")
         $t.assert.areEqual($t; 0; $parentStat.getNumberOfCalls(); "Parent stats should remain unaffected")
 
