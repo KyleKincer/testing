@@ -4,7 +4,7 @@ property failed : Boolean
 property done : Boolean
 property logMessages : Collection
 property assertions : Collection
-property assert : cs:C1710.Assert
+property assert : cs:C1710.TestAssertion
 property stats : cs:C1710.UnitStatsTracker
 property failureCallChain : Collection
 property classInstance : 4D:C1709.Object
@@ -14,7 +14,7 @@ Class constructor()
 	This:C1470.done:=False:C215
         This:C1470.logMessages:=[]
         This:C1470.assertions:=[]
-        This:C1470.assert:=cs:C1710.Assert.new()
+        This:C1470.assert:=cs:C1710.TestAssertion.new()
         This:C1470.stats:=cs:C1710.UnitStatsTracker.new()
         This:C1470.failureCallChain:=Null
 	

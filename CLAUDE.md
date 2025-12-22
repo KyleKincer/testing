@@ -116,7 +116,7 @@ testing/Project/Sources/Classes/
 ├── TestRunner.4dm       # Main test orchestration
 ├── TestSuite.4dm        # Individual test class management  
 ├── TestFunction.4dm     # Single test execution & tagging
-├── Assert.4dm           # Assertion library
+├── TestAssertion.4dm           # Assertion library
 ├── Testing.4dm          # Test context
 ├── TaggingExampleTest.4dm    # Tagging examples
 ├── TaggingSystemTest.4dm     # Tagging functionality tests
