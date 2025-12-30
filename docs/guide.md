@@ -708,7 +708,7 @@ jobs:
 - **`cs.Testing`**: Test context with built-in assertion and mocking utilities
   - **`$t.assert`**: Built-in assertion library for test validation
   - **`$t.stats`**: Built-in `UnitStatsTracker` instance for function mocking
-- **`cs.TestAssertion`**: Assertion implementation class
+- **`cs.Assert`**: Assertion implementation class
 - **`cs.UnitStatsTracker`**: Mock tracking implementation class with Formula-based mocking
 - **`cs.UnitStatsDetail`**: Detailed call statistics with methods:
   - `.getNumberOfCalls()`: Returns number of times the function was called
