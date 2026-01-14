@@ -10,6 +10,11 @@ property excludeTags : Collection  // Tags to exclude
 property requireAllTags : Collection  // Tags that must all be present (AND logic)
 property userParams : Object  // User parameters passed to the runner
 property disableTriggersByDefault : Boolean  // Whether triggers are disabled by default
+property coverageEnabled : Boolean  // Whether code coverage is enabled
+property coverageTracker : cs:C1710.CoverageTracker  // Coverage data tracker
+property coverageInstrumenter : cs:C1710.CodeInstrumenter  // Code instrumenter
+property coverageReporter : cs:C1710.CoverageReporter  // Coverage reporter
+property coverageMethods : Collection  // Methods to track for coverage
 
 Class constructor($cs : 4D:C1709.Object; $hostStorage : 4D:C1709.Object; $userParams : Object)
 	This:C1470.classStore:=$cs || cs:C1710
@@ -21,14 +26,27 @@ Class constructor($cs : 4D:C1709.Object; $hostStorage : 4D:C1709.Object; $userPa
 	This:C1470._parseTestPatterns()
 	This:C1470._parseTagFilters()
 	This:C1470._determineTriggerDefaultBehavior()
+	This:C1470._initializeCoverage()
 	
 Function run()
 	This:C1470._initializeTriggerControl()
 	This:C1470._prepareErrorHandlingStorage()
 	var $handlerState : Object
 	$handlerState:=This:C1470._installErrorHandler()
+	
+	// Setup coverage if enabled
+	If (This:C1470.coverageEnabled)
+		This:C1470._setupCoverage()
+	End if 
+	
 	This:C1470._runInternal()
 	This:C1470._captureGlobalErrors()
+	
+	// Teardown coverage if enabled
+	If (This:C1470.coverageEnabled)
+		This:C1470._teardownCoverage()
+	End if 
+	
 	This:C1470._restoreErrorHandler($handlerState)
 	
 Function _determineTriggerDefaultBehavior()
@@ -1063,3 +1081,154 @@ Function _formatCallChain($callChain : Collection) : Text
 	End if 
 	
 	return $result
+	
+// ===== Coverage Support =====
+
+Function _initializeCoverage()
+	// Initialize coverage tracking based on user parameters
+	This:C1470.coverageEnabled:=False:C215
+	This:C1470.coverageMethods:=[]
+	
+	var $coverageParam : Text
+	$coverageParam:=This:C1470.userParams.coverage || ""
+	
+	If ($coverageParam="true") || ($coverageParam="enabled")
+		This:C1470.coverageEnabled:=True:C214
+		
+		// Initialize coverage components
+		This:C1470.coverageTracker:=cs:C1710.CoverageTracker.new()
+		This:C1470.coverageInstrumenter:=cs:C1710.CodeInstrumenter.new(This:C1470.hostStorage)
+		
+		// Parse coverage method patterns
+		This:C1470._parseCoverageMethods()
+	End if 
+	
+Function _parseCoverageMethods()
+	// Parse which methods to track for coverage
+	var $methodsParam : Text
+	$methodsParam:=This:C1470.userParams.coverageMethods || ""
+	
+	If ($methodsParam="")
+		// Default: discover all project methods and class methods
+		This:C1470.coverageMethods:=This:C1470._discoverCoverableMethods()
+	Else 
+		// Parse comma-separated list of method patterns
+		This:C1470.coverageMethods:=Split string:C1554($methodsParam; ",")
+	End if 
+	
+Function _discoverCoverableMethods() : Collection
+	// Discover all methods that should be tracked for coverage
+	// This should be implemented to find host project methods
+	var $methods : Collection
+	$methods:=[]
+	
+	// Get all project methods
+	ARRAY TEXT:C222($methodNames; 0)
+	METHOD GET NAMES:C1166($methodNames; *)
+	
+	var $i : Integer
+	For ($i; 1; Size of array:C274($methodNames))
+		var $methodPath : Text
+		$methodPath:=$methodNames{$i}
+		
+		// Skip test methods and framework methods
+		If (This:C1470._shouldTrackMethodForCoverage($methodPath))
+			$methods.push($methodPath)
+		End if 
+	End for 
+	
+	return $methods
+	
+Function _shouldTrackMethodForCoverage($methodPath : Text) : Boolean
+	// Determine if a method should be tracked for coverage
+	
+	// Skip test-related methods
+	If ($methodPath="@Test@") || ($methodPath="Test@")
+		return False:C215
+	End if 
+	
+	// Skip testing framework methods
+	If ($methodPath="Testing_@") || ($methodPath="TestErrorHandler") || ($methodPath="TestGlobalErrorHandler")
+		return False:C215
+	End if 
+	
+	// Skip methods starting with underscore (private/utility methods)
+	If ($methodPath="_@")
+		return False:C215
+	End if 
+	
+	return True:C214
+	
+Function _setupCoverage()
+	// Setup coverage tracking before running tests
+	If (Not:C34(This:C1470.coverageEnabled))
+		return 
+	End if 
+	
+	// Initialize coverage tracker
+	This:C1470.coverageTracker.initialize()
+	
+	// Instrument methods
+	If (This:C1470.coverageMethods.length>0)
+		var $stats : Object
+		$stats:=This:C1470.coverageInstrumenter.instrumentMethods(This:C1470.coverageMethods)
+		
+		If (This:C1470.outputFormat="human")
+			LOG EVENT:C667(Into system standard outputs:K38:9; "Coverage: Instrumented "+String:C10($stats.success)+" methods\r\n"; Information message:K38:1)
+			If ($stats.failed>0)
+				LOG EVENT:C667(Into system standard outputs:K38:9; "Coverage: Failed to instrument "+String:C10($stats.failed)+" methods\r\n"; Warning message:K38:2)
+			End if 
+		End if 
+	End if 
+	
+Function _teardownCoverage()
+	// Teardown coverage tracking after running tests
+	If (Not:C34(This:C1470.coverageEnabled))
+		return 
+	End if 
+	
+	// Collect coverage data
+	This:C1470.coverageTracker.collectData()
+	
+	// Restore original code
+	This:C1470.coverageInstrumenter.restoreOriginalCode()
+	
+	// Generate coverage report
+	This:C1470._generateCoverageReport()
+	
+	// Cleanup
+	This:C1470.coverageTracker.cleanup()
+	
+Function _generateCoverageReport()
+	// Generate coverage report in requested format
+	If (This:C1470.coverageReporter=Null:C1517)
+		This:C1470.coverageReporter:=cs:C1710.CoverageReporter.new(This:C1470.coverageTracker; This:C1470.coverageInstrumenter)
+	End if 
+	
+	var $coverageFormat : Text
+	$coverageFormat:=This:C1470.userParams.coverageFormat || "text"
+	
+	var $coverageOutput : Text
+	$coverageOutput:=This:C1470.userParams.coverageOutput || ""
+	
+	// Generate and display/save report
+	If ($coverageOutput#"")
+		// Write to file
+		This:C1470.coverageReporter.writeReportToFile($coverageFormat; $coverageOutput)
+		
+		If (This:C1470.outputFormat="human")
+			LOG EVENT:C667(Into system standard outputs:K38:9; "Coverage report written to: "+$coverageOutput+"\r\n"; Information message:K38:1)
+		End if 
+	Else 
+		// Display to console
+		var $report : Text
+		$report:=This:C1470.coverageReporter.generateReport($coverageFormat)
+		
+		If (This:C1470.outputFormat="human") || ($coverageFormat="text")
+			LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"+$report+"\r\n"; Information message:K38:1)
+		End if 
+	End if 
+	
+	// Add coverage stats to test results
+	This:C1470.results.coverage:=This:C1470.coverageTracker.getCoverageStats()
+	This:C1470.results.coverageEnabled:=True:C214
