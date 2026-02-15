@@ -64,6 +64,9 @@ tool4d --project YourProject.4DProject --startup-method "test" --user-param "ver
 # JSON output for CI/CD (terse by default)
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json"
 
+# JSON output written to file in project (relative path from project root)
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json outputPath=test-results/report.json"
+
 # Verbose JSON output
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json verbose=true"
 

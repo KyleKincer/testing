@@ -287,7 +287,7 @@ Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
 				This:C1470.results.passed+=1
 				$suiteResult.passed+=1
 				If (This:C1470.outputFormat="human")
-					LOG EVENT:C667(Into system standard outputs:K38:9; "  ✓ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)\r\n"; Information message:K38:1)
+					LOG EVENT:C667(Into system standard outputs:K38:9; "  ? "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)\r\n"; Information message:K38:1)
 				End if 
 			Else 
 				This:C1470.results.failed+=1
@@ -308,7 +308,7 @@ Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
 					If ($testResult.callChain#Null:C1517)
 						$errorDetails:=$errorDetails+"\r\n"+This:C1470._formatCallChain($testResult.callChain)
 					End if 
-					LOG EVENT:C667(Into system standard outputs:K38:9; "  ✗ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)"+$errorDetails+"\r\n"; Error message:K38:3)
+					LOG EVENT:C667(Into system standard outputs:K38:9; "  ? "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)"+$errorDetails+"\r\n"; Error message:K38:3)
 				End if 
 			End if 
 		End if 
@@ -465,11 +465,21 @@ Function _generateJSONReport()
 		$passRate:=0
 	End if 
 	
-	var $jsonReport : Object
+	var $params : Object
+	$params:=This:C1470._parseUserParams()
+
+	// Determine output path - use outputPath parameter if provided
+	var $outputPath : Text
+	$outputPath:=$params.outputPath
 	
+	var $writeJSONToFile : Boolean
+	$writeJSONToFile:=($outputPath#Null:C1517) && ($outputPath#"")
+
+	var $jsonReport : Object
+
 	var $hasFailures : Boolean
 	$hasFailures:=(This:C1470.results.failed>0) || This:C1470.results.hasGlobalErrors
-	
+
 	If (This:C1470.verboseOutput)
 		// Verbose mode: include all details (original format)
 		$jsonReport:=OB Copy:C1225(This:C1470.results)
@@ -528,7 +538,7 @@ Function _generateJSONReport()
 						$terseFailure.reason:=$failedTest.logMessages[0]
 					End if 
 				End if 
-				
+
 				// Include call chain in verbose JSON output
 				If (This:C1470.verboseOutput) && ($failedTest.callChain#Null:C1517)
 					$terseFailure.callChain:=$failedTest.callChain
@@ -557,8 +567,12 @@ Function _generateJSONReport()
 	
 	var $jsonString : Text
 	$jsonString:=JSON Stringify:C1217($jsonReport; *)
-	
-	LOG EVENT:C667(Into system standard outputs:K38:9; $jsonString; Information message:K38:1)
+
+	If ($writeJSONToFile)
+		This:C1470._writeJSONToFile($jsonString; $outputPath)
+	Else 
+		LOG EVENT:C667(Into system standard outputs:K38:9; $jsonString; Information message:K38:1)
+	End if 
 	
 Function _generateJUnitXMLReport()
 	var $params : Object
@@ -752,6 +766,41 @@ Function _writeJUnitXMLToFile($xmlContent : Text; $outputPath : Text)
 		"Summary: "+String:C10(This:C1470.results.totalTests)+" tests, "+String:C10(This:C1470.results.passed)+" passed, "+String:C10(This:C1470.results.failed)+" failed"+Char:C90(13)+Char:C90(10); \
 		Information message:K38:1)
 	
+Function _writeJSONToFile($jsonContent : Text; $outputPath : Text)
+	// Parse the path to determine folder and filename
+	var $pathParts : Collection
+	$pathParts:=Split string:C1554($outputPath; "/")
+
+	// Build output folder path
+	var $outputFolder : 4D:C1709.Folder
+	If ($pathParts.length>1)
+		var $folderPath : Text
+		$folderPath:=$pathParts.slice(0; $pathParts.length-1).join("/")
+		$outputFolder:=Folder:C1567(fk database folder:K87:14; *).folder($folderPath)
+	Else 
+		$outputFolder:=Folder:C1567(fk database folder:K87:14; *)
+	End if 
+
+	// Create output folder if it doesn't exist
+	If (Not:C34($outputFolder.exists))
+		$outputFolder.create()
+	End if 
+
+	// Get filename
+	var $filename : Text
+	$filename:=$pathParts[$pathParts.length-1]
+
+	// Create and write JSON file
+	var $jsonFile : 4D:C1709.File
+	$jsonFile:=$outputFolder.file($filename)
+	$jsonFile.setText($jsonContent; "UTF-8")
+
+	// Log file location for CI visibility
+	LOG EVENT:C667(Into system standard outputs:K38:9; "JSON report written to: "+$jsonFile.platformPath+"\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; \
+		"Summary: "+String:C10(This:C1470.results.totalTests)+" tests, "+String:C10(This:C1470.results.passed)+" passed, "+String:C10(This:C1470.results.failed)+" failed"+Char:C90(13)+Char:C90(10); \
+		Information message:K38:1)
+
 Function _escapeXMLAttribute($text : Text) : Text
 	var $escaped : Text
 	$escaped:=Replace string:C233($text; "&"; "&amp;")
@@ -774,7 +823,7 @@ Function _formatTimestamp($milliseconds : Integer) : Text
 Function _logFooter()
 	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
 	If ((This:C1470.results.failed=0) && Not:C34(This:C1470.results.hasGlobalErrors))
-		LOG EVENT:C667(Into system standard outputs:K38:9; "All tests passed! 🎉\r\n"; Information message:K38:1)
+		LOG EVENT:C667(Into system standard outputs:K38:9; "All tests passed! ??\r\n"; Information message:K38:1)
 	Else 
 		var $summaryMessage : Text
 		$summaryMessage:=""
