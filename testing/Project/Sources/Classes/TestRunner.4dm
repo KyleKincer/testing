@@ -653,13 +653,12 @@ Function _buildJUnitXML() : Text
 	var $totalTime : Real
 	$totalTime:=This:C1470.results.duration/1000  // Convert ms to seconds
 	
-	// Calculate errors and failures separately
+	// JUnit testsuites/@errors counts only TEST errors (failed tests with a runtime
+	// error). External (non-test) runtime errors live in <system-err>; including
+	// them here would inflate @errors and drive @failures negative.
 	var $totalErrors; $totalFailures : Integer
-	var $globalErrorCount : Integer
 	$totalErrors:=This:C1470._countTestsWithRuntimeErrors()
-	$globalErrorCount:=This:C1470.results.globalErrorCount
-	$totalErrors:=$totalErrors+$globalErrorCount
-	$totalFailures:=This:C1470.results.failed-$totalErrors  // Failures are failed tests without runtime errors
+	$totalFailures:=This:C1470.results.failed-$totalErrors  // assertion failures
 	
 	// XML header and root testsuites element
 	$xml:="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
@@ -667,6 +666,7 @@ Function _buildJUnitXML() : Text
 	$xml:=$xml+" tests=\""+String:C10(This:C1470.results.totalTests)+"\""
 	$xml:=$xml+" failures=\""+String:C10($totalFailures)+"\""
 	$xml:=$xml+" errors=\""+String:C10($totalErrors)+"\""
+	$xml:=$xml+" skipped=\""+String:C10(This:C1470.results.skipped)+"\""
 	$xml:=$xml+" time=\""+String:C10($totalTime; "##0.000")+"\""
 	$xml:=$xml+" timestamp=\""+This:C1470._formatTimestamp(This:C1470.results.startTime)+"\">\r\n"
 	
@@ -696,15 +696,17 @@ Function _buildTestSuiteXML($suite : Object) : Text
 	End for each 
 	
 	// Calculate errors and failures for this suite
-	var $suiteErrors; $suiteFailures : Integer
+	var $suiteErrors; $suiteFailures; $suiteSkipped : Integer
 	$suiteErrors:=This:C1470._countSuiteTestsWithRuntimeErrors($suite)
 	$suiteFailures:=$suite.failed-$suiteErrors
+	$suiteSkipped:=Num:C11($suite.skipped)
 	
 	// Build testsuite element
 	$xml:="  <testsuite name=\""+This:C1470._escapeXMLAttribute($suite.name)+"\""
 	$xml:=$xml+" tests=\""+String:C10($suite.tests.length)+"\""
 	$xml:=$xml+" failures=\""+String:C10($suiteFailures)+"\""
 	$xml:=$xml+" errors=\""+String:C10($suiteErrors)+"\""
+	$xml:=$xml+" skipped=\""+String:C10($suiteSkipped)+"\""
 	$xml:=$xml+" time=\""+String:C10($suiteTotalTime; "##0.000")+"\""
 	$xml:=$xml+">\r\n"
 	
@@ -729,14 +731,20 @@ Function _buildTestCaseXML($test : Object) : Text
 	$xml:=$xml+" file=\"testing/Project/Sources/Classes/"+This:C1470._escapeXMLAttribute($test.suite)+".4dm\""
 	$xml:=$xml+" time=\""+String:C10($testTime; "##0.000")+"\""
 	
-	// If test failed, add failure element
-	If ($test.failed)
-		$xml:=$xml+">\r\n"
-		$xml:=$xml+This:C1470._buildFailureXML($test)
-		$xml:=$xml+"    </testcase>\r\n"
-	Else 
-		$xml:=$xml+" />\r\n"
-	End if 
+	Case of 
+		: ($test.failed)
+			$xml:=$xml+">\r\n"
+			$xml:=$xml+This:C1470._buildFailureXML($test)
+			$xml:=$xml+"    </testcase>\r\n"
+		: (Bool:C1537($test.skipped))
+			// JUnit consumers (Jenkins, JUnitXML, etc.) require a <skipped/> child
+			// to recognize a testcase as skipped vs. passed.
+			$xml:=$xml+">\r\n"
+			$xml:=$xml+"      <skipped/>\r\n"
+			$xml:=$xml+"    </testcase>\r\n"
+		Else 
+			$xml:=$xml+" />\r\n"
+	End case 
 	
 	return $xml
 	
@@ -837,13 +845,13 @@ Function _resolveOutputFile($outputPath : Text) : 4D:C1709.File
 	return $baseFolder.file($pathParts[$pathParts.length-1])
 	
 Function _formatTimestamp($milliseconds : Integer) : Text
-	// Convert milliseconds to ISO 8601 timestamp
-	var $date : Date
-	var $time : Time
+	// ISO 8601 local timestamp: YYYY-MM-DDTHH:MM:SS
+	// Note: $milliseconds is a Milliseconds counter (relative to app start), so we
+	// can't reconstruct a wall-clock timestamp from it. Use Current date/time.
+	// String(Current date; ISO date GMT) returns "YYYY-MM-DDT00:00:00Z"; take only
+	// the date prefix and append the local time. (No "Z" — these are local values.)
 	var $timestamp : Text
-	
-	// For now, use current timestamp - could be enhanced to use actual start time
-	$timestamp:=String:C10(Current date:C33; ISO date GMT:K1:10)+"T"+String:C10(Current time:C178; HH MM SS:K7:1)
+	$timestamp:=Substring:C12(String:C10(Current date:C33; ISO date GMT:K1:10); 1; 10)+"T"+String:C10(Current time:C178; HH MM SS:K7:1)
 	return $timestamp
 	
 Function _logFooter()
