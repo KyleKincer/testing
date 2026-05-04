@@ -7,10 +7,12 @@ A comprehensive unit testing framework for the 4D platform with test tagging, fi
 - **Auto test discovery** - Finds test classes ending with "Test"
 - **Test tagging** - Organize tests with `// #tags: unit, integration, slow`
 - **Flexible filtering** - Run specific tests by name, pattern, or tags
-- **Multiple output formats** - Human-readable and JSON output
-- **CI/CD ready** - Structured JSON output for automated testing
+- **Multiple output formats** - Human-readable, JSON, and JUnit XML
+- **CI/CD ready** - Structured JSON / JUnit XML output for automated testing
 - **Transaction management** - Automatic test isolation with rollback
 - **Subtests** - Run table-driven tests with `t.run`
+- **Host runtime-error capture** - When used as a component, captures and reports
+  host-side runtime errors (per-test and global) with stack chains
 
 ## Quick Example
 
@@ -62,6 +64,15 @@ tool4d --project YourProject.4DProject --startup-method "test"
 # Run with JSON output
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json"
 
+# Write JSON to a file (clean output, even with debug logs on stdout)
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json outputPath=test-results/report.json"
+
+# Include call chains on failed tests in terse JSON without going full verbose
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json callchain=true"
+
+# JUnit XML output (CI-friendly: failures, errors, skipped, system-err)
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=junit outputPath=test-results/junit.xml"
+
 # Run specific tests
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "test=UserServiceTest"
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "test=UserServiceTest.test_user_creation"
@@ -99,16 +110,51 @@ Function _checkMathCase($t : cs.Testing; $case : Object)
 2 tests passed
 ```
 
-**JSON format:**
+**JSON format (terse — default with `format=json`):**
 ```json
 {
-  "totalTests": 2,
+  "tests": 2,
   "passed": 2,
   "failed": 0,
-  "passRate": 100,
-  "status": "success"
+  "skipped": 0,
+  "duration": 6,
+  "rate": 100.0,
+  "status": "ok",
+  "globalErrorCount": 0,
+  "globalErrors": [],
+  "testResults": [ /* per-test entries with assertions[] and runtimeErrors[] */ ],
+  "failures": [ /* one entry per failed test, includes callChain when verbose=true or callchain=true */ ]
 }
 ```
+
+External (non-test) runtime errors captured during the run live in
+`globalErrors[]` / `globalErrorCount`. JUnit output reports the same data in a
+`<system-err>` block.
+
+## Capturing Host Runtime Errors
+
+When the testing framework is loaded as a component into a host project, host-side
+code (triggers, workers, methods called by tests) can raise runtime errors that
+the component's own `ON ERR CALL` cannot reach. To capture them:
+
+1. Define `TestErrorHandler` and `TestGlobalErrorHandler` project methods in the
+   host that push `{code, text, method, line, message, processNumber, context,
+   isLocal, callChainJSON, ...}` records onto `Storage.testErrors` (a shared
+   collection).
+2. In the host's test entry point, install both handlers and pass the host's
+   `Storage` to the component:
+
+   ```4d
+   // RunTests.4dm
+   ON ERR CALL("TestErrorHandler")
+   ON ERR CALL("TestGlobalErrorHandler"; 1)
+   Testing_RunTestsWithCs(cs; Storage; $userParams)
+   ```
+
+3. The component drains `Storage.testErrors` per-test (matched by
+   `processNumber`) and globally, and surfaces them in every output format:
+   per-test `runtimeErrors[]` in JSON, top-level `globalErrors[]`, and JUnit
+   `<system-err>`.
 
 ## Documentation
 

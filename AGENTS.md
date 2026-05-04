@@ -9,8 +9,11 @@ This project provides a complete testing framework for 4D applications featuring
 - **Auto test discovery** - Finds test classes ending with "Test"  
 - **Comment-based tagging** - Organize tests with `// #tags: unit, integration, slow`
 - **Flexible filtering** - Run specific test subsets by name, pattern, or tags
-- **Multiple output formats** - Human-readable and JSON output with terse/verbose modes
-- **CI/CD ready** - Structured JSON output for automated testing pipelines
+- **Multiple output formats** - Human-readable, JSON, and JUnit XML with terse/verbose modes
+- **CI/CD ready** - Structured JSON / JUnit XML output for automated testing pipelines
+- **File output** - Write JSON or JUnit reports directly to disk via `outputPath=`
+- **Runtime error capture** - Per-test and global capture of host runtime errors with stack chains
+- **Host project integration** - Captures errors raised in host code when used as a component
 - **Parallel test execution** - Run test suites concurrently for improved performance
 - **Automatic transaction management** - Test isolation with automatic rollback
 - **Manual transaction control** - Full transaction lifecycle management for advanced scenarios
@@ -98,6 +101,12 @@ If you need more control or the Makefile doesn't meet your needs:
 --user-param "format=junit tags=unit"
 --user-param "format=junit outputPath=results/junit.xml"
 
+# JSON / JUnit file output (clean, sidesteps any debug noise on stdout)
+--user-param "format=json outputPath=test-results/report.json"
+
+# Include callChain on failed tests in terse JSON without going full verbose
+--user-param "format=json callchain=true"
+
 # Parallel execution
 --user-param "parallel=true"
 --user-param "parallel=true maxWorkers=4"
@@ -183,13 +192,28 @@ The generated XML includes:
 Example output structure:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="4D Test Results" tests="121" failures="0" errors="0" time="1.234">
-  <testsuite name="_ExampleTest" tests="5" failures="0" errors="0" time="0.156">
+<testsuites name="4D Test Results" tests="121" failures="0" errors="0" skipped="1"
+            time="1.234" timestamp="2026-05-04T16:47:10">
+  <testsuite name="_ExampleTest" tests="5" failures="0" errors="0" skipped="0" time="0.156">
     <testcase classname="_ExampleTest" name="test_areEqual_pass" 
               file="testing/Project/Sources/Classes/_ExampleTest.4dm" time="0.023"/>
+    <testcase classname="_ExampleTest" name="test_skipped_example"
+              file="testing/Project/Sources/Classes/_ExampleTest.4dm" time="0.000">
+      <skipped/>
+    </testcase>
   </testsuite>
+  <system-err><![CDATA[
+External runtime errors detected: 0
+]]></system-err>
 </testsuites>
 ```
+
+**Counting rules** (the framework computes these precisely):
+
+- `failures` = test methods that ended with a failed assertion.
+- `errors` = test methods that hit an `ON ERR CALL` runtime error during execution.
+- External (non-test) runtime errors are reported in `<system-err>`, not folded into `errors` — including them would inflate `errors` and drive `failures` negative when most tests pass.
+- `skipped` is set on `<testsuites>`, on each `<testsuite>`, and emitted as a `<skipped/>` child of the relevant `<testcase>` so JUnit consumers (Jenkins, JUnitXML, GitLab) classify them correctly instead of treating them as passes.
 
 ## Parallel Test Execution
 
@@ -317,3 +341,68 @@ Function test_transactionWrapper($t : cs:C1710.Testing)
 | ------------------------ | ---------------------------------------- |
 | `// #transaction: false` | Disables automatic transactions          |
 | No comment               | Enables automatic transactions (default) |
+
+## Runtime Error Capture
+
+The framework installs an `ON ERR CALL` handler around every test plus a global
+handler for non-test processes, so any 4D runtime error during a test run is
+captured and reported.
+
+### Where captured errors show up
+
+- **Per-test errors** (raised in the test's process during the test method):
+  - `runtimeErrors[]` on the test's entry in JSON output (terse and verbose)
+  - A synthetic failed assertion with `isRuntimeError: true` in the test's `assertions[]`
+  - Marks the test failed and populates `failureCallChain`
+  - JUnit `<failure>` content
+- **Global / external errors** (raised outside any test process — workers, lazy initializers, teardown):
+  - `globalErrors[]` and `globalErrorCount` on the top-level JSON report
+  - "External runtime errors detected" block in human output
+  - JUnit `<system-err>` block — intentionally **not** counted in `<testsuites>/@errors`
+
+### Captured record schema
+
+| Field | Description |
+| --- | --- |
+| `code` | 4D error code (e.g. `54`, `-10701`) |
+| `text` | Source line / `Error method` |
+| `method` | Method or formula name (`Error formula`) |
+| `line` | Line number (`Error line`) |
+| `message` | Human-readable description (`Last errors[0].message`) |
+| `processNumber` | Process where the error fired |
+| `context` | `"local"` or `"global"` |
+| `isLocal` | True for per-test capture, false for global |
+| `callChainJSON` | JSON-serialized `Get call chain` snapshot |
+
+### Host project integration (when loaded as a component)
+
+A component's own `ON ERR CALL` cannot reach errors raised in host code. To
+capture those, the host installs its own handlers and shares
+`Storage.testErrors` (a `New shared collection`) with the component:
+
+```4d
+// RunTests.4dm  (host project)
+Use (Storage)
+    If (Storage.testErrors=Null)
+        Storage.testErrors:=New shared collection
+    Else
+        Storage.testErrors.clear()
+    End if
+End use
+
+ON ERR CALL("TestErrorHandler")
+ON ERR CALL("TestGlobalErrorHandler"; 1)
+
+Testing_RunTestsWithCs(cs; Storage; $userParams)
+```
+
+The component receives `Storage` as `$hostStorage` and drains its `testErrors`
+collection both per-process (matched by `processNumber`) and globally. The host
+must define `TestErrorHandler` and `TestGlobalErrorHandler` project methods that
+push records of the schema above onto `Storage.testErrors`.
+
+If your tests hit preemptive workers and you see
+`Cannot call error handling project method <Name>`, the handler's transitive
+call graph contains methods that are not `preemptive: capable`. Mark them
+`//%attributes = {"preemptive":"capable"}` to satisfy 4D's preemptive scope
+check.
