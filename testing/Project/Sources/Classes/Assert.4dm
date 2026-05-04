@@ -246,9 +246,14 @@ Function areDeepEqual($t : Object; $expected : Variant; $actual : Variant; $mess
 	End if 
 	
 Function _recordAssertion($t : Object; $passed : Boolean; $expected : Variant; $actual : Variant; $message : Text; $callChain : Collection)
-	// Note: Line numbers from 4D's call chain are not reliable for showing source line locations
-	// They reference internal function offsets rather than actual source lines
-	// Therefore, we omit line numbers from assertion records
+	var $line : Integer
+	$line:=This:C1470._findTestLine($t; $callChain)
+	
+	var $functionName : Text
+	$functionName:=""
+	If ($t.testClassName#Null:C1517) && ($t.testClassName#"") && ($t.testFunctionName#Null:C1517) && ($t.testFunctionName#"")
+		$functionName:=$t.testClassName+"."+$t.testFunctionName
+	End if
 	
 	var $assertInfo : Object
 	$assertInfo:=New object:C1471(\
@@ -257,8 +262,36 @@ Function _recordAssertion($t : Object; $passed : Boolean; $expected : Variant; $
 		"actual"; This:C1470._sanitizeValue($actual); \
 		"message"; $message\
 		)
-	$t.assertions.push($assertInfo)
 	
+	If ($line>0)
+		$assertInfo.line:=$line
+	End if
+	If ($functionName#"")
+		$assertInfo.functionName:=$functionName
+	End if
+	
+	$t.assertions.push($assertInfo)
+
+Function _findTestLine($t : Object; $callChain : Collection) : Integer
+	var $chain : Collection
+	If ($callChain#Null:C1517) && ($callChain.length>0)
+		$chain:=$callChain
+	Else
+		$chain:=Get call chain:C1662
+	End if
+	
+	If ($t.testFunctionName=Null:C1517) || ($t.testFunctionName="")
+		return 0
+	End if
+	
+	var $frame : Object
+	For each ($frame; $chain)
+		If ($frame.name=$t.testFunctionName)
+			return $frame.line
+		End if
+	End for each
+	return 0
+
 Function _sanitizeValue($value : Variant) : Variant
 	var $type : Integer
 	$type:=Value type:C1509($value)

@@ -31,6 +31,8 @@ Function run()
 
         // Reset the testing context for this test
         This:C1470.t.resetForNewTest()
+        This:C1470.t.testFunctionName:=This:C1470.functionName
+        This:C1470.t.testClassName:=This:C1470.class.name
 
         var $processNumber : Integer
         $processNumber:=Current process:C322
@@ -57,38 +59,42 @@ Function run()
 
 	// Start transaction if configured to use transactions
 	var $transactionStarted : Boolean
-	$transactionStarted:=False
+	$transactionStarted:=False:C215
 	If (This:C1470.useTransactions)
 		START TRANSACTION:C239
-		$transactionStarted:=True
-	End if 
-	
-        This:C1470.function.apply(This:C1470.classInstance; [This:C1470.t])
-	
-        // Capture any runtime errors that occurred in this process
-        var $processErrors : Collection
-        $processErrors:=This:C1470._collectProcessErrors($processNumber)
+		$transactionStarted:=True:C214
+	End if
 
-        If ($processErrors.length>0)
-                var $error : Object
-                For each ($error; $processErrors)
-                        This:C1470.runtimeErrors.push($error)
-                End for each
+	This:C1470.function.apply(This:C1470.classInstance; [This:C1470.t])
 
-                // Mark test as failed if runtime errors occurred
-                This:C1470.t.fail()
-        End if
-	
-	// Handle transaction cleanup
-	If ($transactionStarted)
-		If (This:C1470.t.failed)
-			// Cancel transaction if test failed
-			CANCEL TRANSACTION:C241
-		Else
-			// Always cancel transaction to ensure test isolation
-			// Tests should not persist data changes by default
-			CANCEL TRANSACTION:C241
+	// Collect errors captured by ON ERR CALL handler in Storage.testErrors
+	var $processErrors : Collection
+	$processErrors:=This:C1470._collectProcessErrors($processNumber)
+
+	If ($processErrors.length>0)
+		var $qualifiedName : Text
+		$qualifiedName:=This:C1470.class.name+"."+This:C1470.functionName
+		
+		var $error : Object
+		For each ($error; $processErrors)
+			$error.functionName:=$qualifiedName
+			$error.formula:=$error.method || ""
+			This:C1470.runtimeErrors.push($error)
+			This:C1470._addRuntimeErrorAsAssertion($error)
+		End for each
+		This:C1470.t.failed:=True:C214
+		
+		If (This:C1470.t.failureCallChain=Null:C1517)
+			var $callChainText : Text
+			$callChainText:=$processErrors[0].callChainJSON || ""
+			If ($callChainText#"")
+				This:C1470.t.failureCallChain:=JSON Parse:C1218($callChainText)
+			End if
 		End if
+	End if
+
+	If ($transactionStarted)
+		CANCEL TRANSACTION:C241
 	End if
 
 	// Restore default trigger behavior after test
@@ -384,6 +390,22 @@ Function _restoreTriggerControl()
 		This:C1470.runner.restoreDefaultTriggerBehavior()
 	End if
 
+Function _addRuntimeErrorAsAssertion($error : Object)
+	var $errorMessage : Text
+	$errorMessage:=$error.message || $error.method || ("Error "+String:C10($error.code))
+	
+	var $assertInfo : Object
+	$assertInfo:=New object:C1471(\
+		"passed"; False:C215; \
+		"expected"; Null:C1517; \
+		"actual"; "["+String:C10($error.code)+"] "+$errorMessage; \
+		"message"; "Runtime error: "+$errorMessage; \
+		"line"; $error.line; \
+		"functionName"; This:C1470.class.name+"."+This:C1470.functionName; \
+		"isRuntimeError"; True:C214\
+		)
+	This:C1470.t.assertions.push($assertInfo)
+
 Function _clearProcessErrors($processNumber : Integer)
         If (Storage:C1525.testErrors#Null:C1517)
                 Use (Storage:C1525.testErrors)
@@ -394,6 +416,21 @@ Function _clearProcessErrors($processNumber : Integer)
 
                                 If (This:C1470._errorBelongsToProcess($error; $processNumber))
                                         Storage:C1525.testErrors.remove($index)
+                                End if
+                        End for
+                End use
+        End if
+
+        // Clear errors from host Storage (when running as a component)
+        var $hostStorage : Object
+        $hostStorage:=This:C1470._getHostStorage()
+        If ($hostStorage#Null:C1517) && ($hostStorage.testErrors#Null:C1517)
+                Use ($hostStorage.testErrors)
+                        For ($index; $hostStorage.testErrors.length-1; 0; -1)
+                                $error:=$hostStorage.testErrors[$index]
+
+                                If (This:C1470._errorBelongsToProcess($error; $processNumber))
+                                        $hostStorage.testErrors.remove($index)
                                 End if
                         End for
                 End use
@@ -418,17 +455,32 @@ Function _collectProcessErrors($processNumber : Integer) : Collection
                 End use
         End if
 
+        // Collect from host Storage (when running as a component)
+        var $hostStorage : Object
+        $hostStorage:=This:C1470._getHostStorage()
+        If ($hostStorage#Null:C1517) && ($hostStorage.testErrors#Null:C1517)
+                Use ($hostStorage.testErrors)
+                        For ($index; $hostStorage.testErrors.length-1; 0; -1)
+                                $error:=$hostStorage.testErrors[$index]
+
+                                If (This:C1470._errorBelongsToProcess($error; $processNumber))
+                                        $processErrors.push(OB Copy:C1225($error))
+                                        $hostStorage.testErrors.remove($index)
+                                End if
+                        End for
+                End use
+        End if
+
         return $processErrors
+
+Function _getHostStorage() : Object
+        If (This:C1470.runner#Null:C1517) && (This:C1470.runner.hostStorage#Null:C1517)
+                return This:C1470.runner.hostStorage
+        End if
+        return Null:C1517
 
 Function _errorBelongsToProcess($error : Object; $processNumber : Integer) : Boolean
         If ($error=Null:C1517)
-                return False:C215
-        End if
-
-        var $context : Text
-        $context:=$error.context || ""
-
-        If ($context="global")
                 return False:C215
         End if
 
@@ -436,5 +488,4 @@ Function _errorBelongsToProcess($error : Object; $processNumber : Integer) : Boo
                 return ($error.processNumber=$processNumber)
         End if
 
-        // Legacy support: assume errors without process information belong to the current process
-        return True:C214
+        return False:C215

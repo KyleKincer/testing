@@ -35,7 +35,7 @@ EXCLUDE_TAGS_COMBINED := $(strip $(DEFAULT_EXCLUDE_TAGS) $(excludeTags))
 BASE_PARAMS := $(if $(EXCLUDE_TAGS_COMBINED),excludeTags=$(subst $(space),$(comma),$(EXCLUDE_TAGS_COMBINED)))
 
 # Build user parameters from make variables
-USER_PARAMS := $(strip $(BASE_PARAMS) $(if $(format),format=$(format)) $(if $(tags),tags=$(tags)) $(if $(test),test=$(test)) $(if $(requireTags),requireTags=$(requireTags)) $(if $(parallel),parallel=$(parallel)) $(if $(maxWorkers),maxWorkers=$(maxWorkers)))
+USER_PARAMS := $(strip $(BASE_PARAMS) $(if $(format),format=$(format)) $(if $(tags),tags=$(tags)) $(if $(test),test=$(test)) $(if $(requireTags),requireTags=$(requireTags)) $(if $(parallel),parallel=$(parallel)) $(if $(maxWorkers),maxWorkers=$(maxWorkers)) $(if $(outputPath),outputPath=$(outputPath)) $(if $(verbose),verbose=$(verbose)) $(if $(callchain),callchain=$(callchain)))
 
 # Ensure tool4d is installed (currently implemented for Linux only)
 $(TOOL4D):
@@ -97,35 +97,35 @@ test-unit-json:
 
 # Run all tests with JUnit XML output
 test-junit:
-	$(TOOL4D) $(BASE_OPTS) --user-param "format=junit"
+	$(MAKE) test format=junit
 
 # Run tests for CI/CD with custom output path
 test-ci:
-	$(TOOL4D) $(BASE_OPTS) --user-param "format=junit outputPath=test-results/junit.xml"
+	$(MAKE) test format=junit outputPath=test-results/junit.xml
 
 # Run unit tests with JUnit XML output
 test-unit-junit:
-	$(TOOL4D) $(BASE_OPTS) --user-param "format=junit tags=unit"
+	$(MAKE) test format=junit tags=unit
 
 # Run integration tests with JUnit XML output
 test-integration-junit:
-	$(TOOL4D) $(BASE_OPTS) --user-param "format=junit tags=integration"
+	$(MAKE) test format=junit tags=integration
 
 # Run tests in parallel mode
 test-parallel:
-	$(TOOL4D) $(BASE_OPTS) --user-param "parallel=true"
+	$(MAKE) test parallel=true
 
 # Run tests in parallel mode with JSON output
 test-parallel-json:
-	$(TOOL4D) $(BASE_OPTS) --user-param "parallel=true format=json"
+	$(MAKE) test parallel=true format=json
 
 # Run unit tests in parallel mode
 test-parallel-unit:
-	$(TOOL4D) $(BASE_OPTS) --user-param "parallel=true tags=unit"
+	$(MAKE) test parallel=true tags=unit
 
 # Run tests in parallel with custom worker count (usage: make test-parallel-workers WORKERS=4)
 test-parallel-workers:
-	$(TOOL4D) $(BASE_OPTS) --user-param "parallel=true maxWorkers=$(WORKERS)"
+	$(MAKE) test parallel=true maxWorkers=$(WORKERS)
 
 # Show help
 help:
