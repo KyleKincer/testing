@@ -6,3 +6,18 @@ testing/Libraries/lib4d-arm64.dylib
 example_Build/*
 testing_Build/*
 actions-runner/*
+Makefile.local
+
+# Local OS / IDE
+.DS_Store
+
+# tool4d-installed components (local dev)
+Components/
+
+# Test run output
+testing/Logs/
+testing/test-results/
+
+# Local 4D data (tool4d / runner)
+testing/*.4DD
+testing/*.Match

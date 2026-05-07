@@ -19,11 +19,33 @@ $processNumber:=Current process:C322
 $context:="global"
 $isLocalProcess:=False:C215
 
+// Get human-readable error description from Last errors
+var $errorMessage : Text
+$errorMessage:=""
+var $lastErrors : Collection
+$lastErrors:=Last errors
+If ($lastErrors#Null:C1517) && ($lastErrors.length>0)
+        $errorMessage:=$lastErrors[0].message
+End if
+
 If (Storage:C1525.testErrors=Null:C1517)
         Use (Storage:C1525)
                 Storage:C1525.testErrors:=New shared collection:C1527
         End use
 End if
+
+var $rawChain : Collection
+$rawChain:=Get call chain:C1662
+var $filteredChain : Collection
+$filteredChain:=New collection:C1472
+var $entry : Object
+For each ($entry; $rawChain)
+	If ($entry.name#"TestGlobalErrorHandler")
+		$filteredChain.push($entry)
+	End if
+End for each
+var $callChainJSON : Text
+$callChainJSON:=JSON Stringify:C1217($filteredChain)
 
 var $errorInfo : Object
 $errorInfo:=New object:C1471(\
@@ -31,10 +53,12 @@ $errorInfo:=New object:C1471(\
 "text"; $errorText; \
 "method"; $errorMethod; \
 "line"; $errorLine; \
+"message"; $errorMessage; \
 "timestamp"; Milliseconds:C459; \
 "processNumber"; $processNumber; \
 "context"; $context; \
-"isLocal"; $isLocalProcess\
+"isLocal"; $isLocalProcess; \
+"callChainJSON"; $callChainJSON\
 )
 
 Use (Storage:C1525.testErrors)

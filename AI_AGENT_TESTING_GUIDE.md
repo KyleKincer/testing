@@ -259,44 +259,87 @@ tool4d --project path/to/project.4DProject --startup-method "test" --user-param 
 // #parallel: false
 ```
 
+### File Output and Call Chains
+```bash
+# Write JSON / JUnit to a file (clean, sidesteps stdout debug noise)
+--user-param "format=json outputPath=test-results/report.json"
+--user-param "format=junit outputPath=test-results/junit.xml"
+
+# Add callChain to terse-JSON failures without going full verbose
+--user-param "format=json callchain=true"
+```
+
 ## Output Formats
 
 ### Human Format (Default)
 - Real-time progress with ✓/✗ indicators
 - Individual test timing
-- Detailed error messages with call stacks
 - Summary with pass rates and totals
+- Call stacks on failure shown only when `verbose=true`
 
 ### JSON Terse (Default JSON)
 ```json
 {
   "tests": 121,
-  "passed": 121, 
+  "passed": 121,
   "failed": 0,
+  "skipped": 0,
   "rate": 100.0,
   "duration": 1234,
-  "status": "ok"
+  "status": "ok",
+  "globalErrorCount": 0,
+  "globalErrors": [],
+  "testResults": [ /* per-test entries with assertions[] and runtimeErrors[] */ ],
+  "failures": [ /* one entry per failed test; .callChain present when verbose=true or callchain=true */ ]
 }
 ```
 
 ### JSON Verbose
-```json
-{
-  "totalTests": 121,
-  "passed": 121,
-  "failed": 0,
-  "suites": [...],
-  "failedTests": [...],
-  "passRate": 100.0,
-  "status": "success"
-}
-```
+Verbose mode emits the full internal `results` structure, plus `passRate` and
+`status: "success" | "failure"`. Call chains and per-assertion details are
+always included.
 
 ### JUnit XML
-Compatible with GitLab CI/CD, Jenkins, and other CI systems:
+Compatible with GitLab CI/CD, Jenkins, and other CI systems. The framework
+emits accurate `tests`/`failures`/`errors`/`skipped` attributes on
+`<testsuites>` and each `<testsuite>`, a `<skipped/>` child element on each
+skipped `<testcase>`, and a `<system-err>` block listing external runtime
+errors that aren't tied to a specific test:
+
 ```bash
 --user-param "format=junit outputPath=custom/path/results.xml"
 ```
+
+### File Output (`outputPath`)
+Both `format=json` and `format=junit` honor `outputPath=path/to/file`. Relative
+paths resolve against the database folder; absolute POSIX (`/...`) and Windows
+(`C:...`) paths are accepted. Writing to a file sidesteps any debug noise that
+may be on stdout — recommended whenever the output is being parsed.
+
+### Including Call Chains in Terse JSON
+By default, terse JSON keeps call chains out of `failures[]` entries to stay
+small. Pass `callchain=true` (or `verbose=true`) to attach the captured stack
+chain to every failed test:
+
+```bash
+--user-param "format=json callchain=true"
+```
+
+## Runtime Error Capture
+
+The framework installs an `ON ERR CALL` handler around each test, plus a global
+handler for non-test processes. Captured errors are reported per-test (in
+`runtimeErrors[]` and as synthetic failed assertions with `isRuntimeError: true`)
+or as `globalErrors[]` / `<system-err>` for errors raised outside any test
+process. Each record carries `code`, `text`, `method`, `line`, `message`,
+`processNumber`, `context`, `isLocal`, and `callChainJSON`.
+
+When the framework is loaded as a component, the host can define its own
+`TestErrorHandler` / `TestGlobalErrorHandler` methods and share
+`Storage.testErrors` to capture errors raised in host code (which a component's
+`ON ERR CALL` cannot reach). Pass the host's `Storage` as the second argument
+to `Testing_RunTestsWithCs` to wire it up. See `docs/guide.md` for the full
+host-side wiring example.
 
 ## Best Practices
 

@@ -10,6 +10,8 @@ A comprehensive unit testing framework for the 4D platform with enhanced reporti
 - [Writing Tests](#writing-tests)
 - [Assertion Library](#assertion-library)
 - [Output Formats](#output-formats)
+- [Runtime Error Capture](#runtime-error-capture)
+- [Host Project Integration](#host-project-integration)
 - [Test Filtering](#test-filtering)
 - [Test Tagging](#test-tagging)
 - [Test Lifecycle Methods](#test-lifecycle-methods)
@@ -28,7 +30,10 @@ A comprehensive unit testing framework for the 4D platform with enhanced reporti
 - **Test Tagging**: Organize and filter tests using comment-based tags
 - **Rich Assertions**: Built-in assertion library with helpful error messages
 - **Enhanced Reporting**: Detailed test results with execution times and pass rates
-- **JSON Output**: Structured output for CI/CD integration and automated processing
+- **JSON / JUnit XML Output**: Structured output for CI/CD integration and automated processing
+- **Runtime Error Capture**: Catches `ON ERR CALL` runtime errors per-test and globally, including stack chains
+- **Host Project Integration**: Captures host-side runtime errors when used as a component
+- **File Output**: Write JSON or JUnit XML directly to disk via `outputPath=`
 - **Subtest Support**: Create table-driven tests using `t.run`
 - **Mock Support**: Built-in mocking utilities for isolated unit testing
 - **CI/CD Ready**: GitHub Actions integration for automated testing
@@ -66,6 +71,15 @@ tool4d --project YourProject.4DProject --startup-method "test" --user-param "for
 
 # Verbose JSON output
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json verbose=true"
+
+# Include call chains on failed tests in terse JSON without going full verbose
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json callchain=true"
+
+# Write JSON to a file (clean output even when stdout has debug logs)
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json outputPath=test-results/report.json"
+
+# JUnit XML output (writes to test-results/junit.xml when outputPath is set)
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=junit outputPath=test-results/junit.xml"
 
 # Run specific tests by pattern
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "test=ExampleTest"
@@ -263,29 +277,50 @@ All tests passed! 🎉
 **Terse (Default with `format=json`):**
 ```json
 {
-  "totalTests": 5,
+  "tests": 5,
   "passed": 5,
   "failed": 0,
+  "skipped": 0,
   "duration": 45,
-  "passRate": 100,
-  "status": "success",
-  "suites": [
+  "rate": 100.0,
+  "status": "ok",
+  "globalErrorCount": 0,
+  "globalErrors": [],
+  "testResults": [
     {
-      "name": "ExampleTest",
-      "passed": 5,
-      "failed": 0,
-      "tests": [
+      "name": "test_areEqual_pass",
+      "suite": "ExampleTest",
+      "passed": true,
+      "failed": false,
+      "skipped": false,
+      "duration": 1,
+      "assertions": [
         {
-          "name": "test_areEqual_pass",
-          "passed": true
+          "passed": true,
+          "expected": 5,
+          "actual": 5,
+          "message": "Should equal",
+          "line": 12,
+          "functionName": "ExampleTest.test_areEqual_pass"
         }
-      ]
+      ],
+      "assertionCount": 1
     }
-  ]
+  ],
+  "failures": []
 }
 ```
 
+When a test fails or a runtime error fires inside a test, the test entry also
+gains a `runtimeErrors` array, and the corresponding `failures[]` entry includes
+a `callChain` collection when `verbose=true` or `callchain=true` is set.
+
 **Verbose (`format=json verbose=true`):**
+
+Verbose mode emits the full internal `results` structure plus `passRate` and
+`status: "success" | "failure"`. Call chains and per-assertion details are
+always included.
+
 ```json
 {
   "totalTests": 5,
@@ -308,6 +343,7 @@ All tests passed! 🎉
           "duration": 1,
           "suite": "ExampleTest",
           "runtimeErrors": [],
+          "assertions": [],
           "logMessages": []
         }
       ],
@@ -315,9 +351,162 @@ All tests passed! 🎉
       "failed": 0
     }
   ],
+  "globalErrors": [],
+  "globalErrorCount": 0,
   "failedTests": []
 }
 ```
+
+### JUnit XML Output
+
+`format=junit` emits a CI-compatible XML report. Counts are computed precisely:
+
+- `<testsuites>` / `<testsuite>` carry `tests`, `failures`, `errors`, `skipped`, `time`, and a valid ISO 8601 `timestamp`.
+- `failures` counts assertion failures; `errors` counts test methods that hit a runtime error. External (non-test) runtime errors are not folded into either count — they live in a `<system-err>` block on the root element.
+- Skipped tests emit a `<skipped/>` child element so JUnit consumers (Jenkins, JUnitXML, GitLab) classify them correctly.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="4D Test Results" tests="5" failures="0" errors="0" skipped="0"
+            time="0.045" timestamp="2026-05-04T16:47:10">
+  <testsuite name="ExampleTest" tests="5" failures="0" errors="0" skipped="0" time="0.045">
+    <testcase classname="ExampleTest" name="test_areEqual_pass"
+              file="testing/Project/Sources/Classes/ExampleTest.4dm" time="0.001" />
+  </testsuite>
+  <system-err><![CDATA[
+External runtime errors detected: 0
+]]></system-err>
+</testsuites>
+```
+
+### File Output (`outputPath`)
+
+Both `format=json` and `format=junit` honor an `outputPath` parameter that
+writes the report to disk instead of (or in addition to) stdout. This is the
+recommended way to consume reports programmatically — it sidesteps any
+interleaved debug logs that may be on stdout. Relative paths resolve against
+the database folder; absolute POSIX (`/...`) and Windows (`C:...`) paths are
+accepted.
+
+```bash
+tool4d --project YourProject.4DProject --startup-method "test" \
+  --user-param "format=json outputPath=test-results/report.json"
+```
+
+## Runtime Error Capture
+
+The framework installs an `ON ERR CALL` handler around each test and a global
+handler for non-test processes. Captured errors are grouped two ways:
+
+- **Per-test runtime errors** — errors raised in the test's process during the
+  test method execution. They appear as:
+  - `runtimeErrors[]` on the test (terse and verbose JSON)
+  - A synthetic failed assertion with `isRuntimeError: true` in the test's
+    `assertions[]`
+  - A `<failure>` (or `<error>`) entry in JUnit
+  - `failureCallChain` populated from the error's `callChainJSON`
+- **Global runtime errors** — errors raised outside a test process (for example
+  in background workers, lazy initializers, or tear-down). They appear as:
+  - `globalErrors[]` and `globalErrorCount` on the top-level report
+  - The "External runtime errors detected" block in human output
+  - `<system-err>` content in JUnit XML
+
+Each captured error record carries:
+
+| Field | Description |
+|---|---|
+| `code` | 4D error code (e.g. `54`, `-10701`) |
+| `text` | Source line that triggered the error |
+| `method` | Method/formula name from `Error formula` |
+| `line` | Line number from `Error line` |
+| `message` | Human-readable description (`Last errors[0].message`) |
+| `processNumber` | The 4D process where the error fired |
+| `context` | `"local"` or `"global"` |
+| `isLocal` | True for per-test errors, false for global |
+| `callChainJSON` | JSON-serialized stack chain at the moment the error fired |
+
+## Host Project Integration
+
+When the framework is loaded as a component into a host project, runtime errors
+in **host code** are not visible to the component's `ON ERR CALL` (4D scopes
+each handler to the database that registered it). To capture host-side errors,
+the host installs its own handlers and shares a `Storage.testErrors` collection
+that the component drains.
+
+### Required host-side wiring
+
+1. **Add two project methods to the host** that mirror the schema above and
+   push records onto `Storage.testErrors`:
+
+   ```4d
+   // TestErrorHandler.4dm  (host project, local handler)
+   //%attributes = {}
+   var $errorInfo : Object
+   $errorInfo:=New object(\
+     "code"; Error; \
+     "text"; Error method; \
+     "method"; Error formula; \
+     "line"; Error line; \
+     "message"; (Last errors.length>0 ? Last errors[0].message : ""); \
+     "timestamp"; Milliseconds; \
+     "processNumber"; Current process; \
+     "context"; "local"; \
+     "isLocal"; True)
+
+   If (Storage.testErrors=Null)
+     Use (Storage)
+       Storage.testErrors:=New shared collection
+     End use
+   End if
+   Use (Storage.testErrors)
+     Storage.testErrors.push(OB Copy($errorInfo; ck shared))
+   End use
+   ```
+
+   `TestGlobalErrorHandler.4dm` is the same shape but with
+   `context: "global"` and `isLocal: False`.
+
+2. **Install both handlers and pass host Storage to the component** in the
+   host's startup method:
+
+   ```4d
+   // RunTests.4dm  (host project)
+   //%attributes = {}
+   // Initialize the shared collection so handlers and the component agree on a single instance
+   Use (Storage)
+     If (Storage.testErrors=Null)
+       Storage.testErrors:=New shared collection
+     Else
+       Storage.testErrors.clear()
+     End if
+   End use
+
+   // Install host-side handlers BEFORE invoking the component
+   ON ERR CALL("TestErrorHandler")
+   ON ERR CALL("TestGlobalErrorHandler"; 1)
+
+   Testing_RunTestsWithCs(cs; Storage; Null)
+   ```
+
+3. **Ensure handler-chain methods are preemptive-safe** if your tests hit
+   preemptive workers. 4D refuses to install an `ON ERR CALL` handler from a
+   preemptive context if the handler's transitive call graph contains methods
+   that are not `preemptive: capable`. If you see
+   `Cannot call error handling project method <name>`, audit the handler's
+   callees and mark them `//%attributes = {"preemptive":"capable"}`.
+
+### What the component does
+
+`Testing_RunTestsWithCs($cs; $hostStorage; $userParams)` stores `$hostStorage`
+on the runner. During the run:
+
+- `_TestFunction._collectProcessErrors($processNumber)` drains both
+  `Storage.testErrors` (component-side) and `$hostStorage.testErrors`
+  (host-side), filtering by `processNumber` so each error is attributed to the
+  test that raised it.
+- `TestRunner._drainGlobalErrorsFromStorage()` collects `context = "global"`
+  entries from both sources for the report's `globalErrors[]`.
+- Reports surface the captured errors in every output format.
 
 ## Test Filtering
 
@@ -373,12 +562,17 @@ The framework uses a standardized key=value parameter format:
 ```
 
 ### Available Parameters
-- **`format`**: Output format (`json` or `human`)
+- **`format`**: Output format (`human` (default), `json`, or `junit`)
+- **`outputPath`**: Write JSON/JUnit report to a file instead of stdout (relative to the database folder, or absolute POSIX/Windows path)
+- **`verbose`**: Enable verbose output (`true` or `1`) — full assertion/error detail in human and JSON
+- **`callchain`**: Include `callChain` on failed tests in terse JSON (`true` or `1`); implied by `verbose=true`
 - **`test`**: Test filtering patterns
-- **`verbose`**: Enable verbose output (`true` or `1`)
 - **`tags`**: Include tests with any of these tags (comma-separated)
 - **`excludeTags`**: Exclude tests with any of these tags (comma-separated)
 - **`requireTags`**: Include only tests with ALL of these tags (comma-separated)
+- **`parallel`**: Enable parallel suite execution (`true` or `1`)
+- **`maxWorkers`**: Cap on concurrent workers (default: CPU core count, max: 8)
+- **`triggers`**: Default trigger behavior (`enabled` or `disabled`; default: disabled)
 
 
 ### Pattern Matching Rules
