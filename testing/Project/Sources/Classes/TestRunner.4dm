@@ -442,19 +442,15 @@ Function _generateHumanReport()
 		$passRate:=0
 	End if 
 	
-	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "=== Test Results Summary ===\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Total Tests: "+String:C10(This:C1470.results.totalTests)+"\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Passed: "+String:C10(This:C1470.results.passed)+"\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Failed: "+String:C10(This:C1470.results.failed)+"\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Skipped: "+String:C10(This:C1470.results.skipped)+"\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Assertions: "+String:C10(This:C1470.results.assertions)+"\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Pass Rate: "+String:C10($passRate; "##0.0")+"%\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Duration: "+String:C10(This:C1470.results.duration)+"ms\r\n"; Information message:K38:1)
-	
-	var $externalMessageType : Integer
-	$externalMessageType:=Choose:C955(This:C1470.results.globalErrorCount>0; Error message:K38:3; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "External Errors: "+String:C10(This:C1470.results.globalErrorCount)+"\r\n"; $externalMessageType)
+	If (This:C1470.results.hasGlobalErrors)
+		LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
+		LOG EVENT:C667(Into system standard outputs:K38:9; "=== Runtime Errors Outside Test Processes ===\r\n"; Error message:K38:3)
+		
+		var $globalError : Object
+		For each ($globalError; This:C1470.results.globalErrors)
+			LOG EVENT:C667(Into system standard outputs:K38:9; This:C1470._formatGlobalErrorForLog($globalError)+"\r\n"; Error message:K38:3)
+		End for each 
+	End if 
 	
 	If (This:C1470.results.failed>0)
 		LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
@@ -481,15 +477,19 @@ Function _generateHumanReport()
 		End for each 
 	End if 
 	
-	If (This:C1470.results.hasGlobalErrors)
-		LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
-		LOG EVENT:C667(Into system standard outputs:K38:9; "=== Runtime Errors Outside Test Processes ===\r\n"; Error message:K38:3)
-		
-		var $globalError : Object
-		For each ($globalError; This:C1470.results.globalErrors)
-			LOG EVENT:C667(Into system standard outputs:K38:9; This:C1470._formatGlobalErrorForLog($globalError)+"\r\n"; Error message:K38:3)
-		End for each 
-	End if 
+	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "=== Test Results Summary ===\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "Total Tests: "+String:C10(This:C1470.results.totalTests)+"\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "Passed: "+String:C10(This:C1470.results.passed)+"\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "Failed: "+String:C10(This:C1470.results.failed)+"\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "Skipped: "+String:C10(This:C1470.results.skipped)+"\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "Assertions: "+String:C10(This:C1470.results.assertions)+"\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "Pass Rate: "+String:C10($passRate; "##0.0")+"%\r\n"; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "Duration: "+String:C10(This:C1470.results.duration)+"ms\r\n"; Information message:K38:1)
+	
+	var $externalMessageType : Integer
+	$externalMessageType:=Choose:C955(This:C1470.results.globalErrorCount>0; Error message:K38:3; Information message:K38:1)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "External Errors: "+String:C10(This:C1470.results.globalErrorCount)+"\r\n"; $externalMessageType)
 	
 	This:C1470._logFooter()
 	
