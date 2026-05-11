@@ -58,6 +58,9 @@ make test-parallel-json     # Run tests in parallel with JSON output
 make test-parallel-unit     # Run unit tests in parallel
 make test-parallel-workers WORKERS=4  # Run with custom worker count
 
+# Debugging tool4d output (stderr is suppressed by default)
+make test debug=true        # Show tool4d diagnostic stderr
+
 # Show all available commands
 make help
 ```
@@ -95,7 +98,7 @@ If you need more control or the Makefile doesn't meet your needs:
 --user-param "format=junit tags=unit"
 --user-param "format=junit outputPath=results/junit.xml"
 
-# JSON / JUnit file output (clean, sidesteps any debug noise on stdout)
+# JSON / JUnit file output (writes report to disk)
 --user-param "format=json outputPath=test-results/report.json"
 
 # Include callChain on failed tests in terse JSON without going full verbose

@@ -28,13 +28,9 @@ Function run()
 	This:C1470._prepareErrorHandlingStorage()
 	var $handlerState : Object
 	$handlerState:=This:C1470._installErrorHandler()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] run: before _runInternal\r\n"; Information message:K38:1)
 	This:C1470._runInternal()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] run: after _runInternal\r\n"; Information message:K38:1)
 	This:C1470._captureGlobalErrors()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] run: after _captureGlobalErrors\r\n"; Information message:K38:1)
 	This:C1470._generateReport()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] run: after _generateReport\r\n"; Information message:K38:1)
 	This:C1470._restoreErrorHandler($handlerState)
 	
 Function _determineTriggerDefaultBehavior()
@@ -139,15 +135,10 @@ Function _runSuitesSequentially()
 	End if 
 	
 	var $testSuite : cs:C1710._TestSuite
-	var $suiteIndex : Integer
-	$suiteIndex:=0
 	For each ($testSuite; This:C1470.testSuites)
-		$suiteIndex+=1
-		LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] suite "+String:C10($suiteIndex)+"/"+String:C10(This:C1470.testSuites.length)+": "+$testSuite.class.name+" ("+String:C10($testSuite.testFunctions.length)+" tests)\r\n"; Information message:K38:1)
 		$testSuite.run()
 		This:C1470._collectSuiteResults($testSuite)
 	End for each 
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _runSuitesSequentially: all suites done\r\n"; Information message:K38:1)
 	
 	This:C1470.results.endTime:=Milliseconds:C459
 	This:C1470.results.duration:=This:C1470.results.endTime-This:C1470.results.startTime
@@ -329,7 +320,7 @@ Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
 				If (This:C1470.verboseOutput) && ($testResult.callChain#Null:C1517)
 					$errorDetails:=$errorDetails+"\r\n"+This:C1470._formatCallChain($testResult.callChain)
 				End if 
-				LOG EVENT:C667(Into system standard outputs:K38:9; "  ✗ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)"+$errorDetails+"\r\n"; Error message:K38:3)
+				LOG EVENT:C667(Into system standard outputs:K38:9; "  ✗ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)"+$errorDetails+"\r\n"; Information message:K38:1)
 				End if 
 			End if 
 		End if 
@@ -416,8 +407,27 @@ Function _formatGlobalErrorForLog($error : Object) : Text
 	
 	return $message
 	
+Function _groupGlobalErrors() : Object
+	var $grouped : Object
+	$grouped:=New object:C1471
+	
+	var $error : Object
+	For each ($error; This:C1470.results.globalErrors)
+		var $key : Text
+		$key:=String:C10($error.code || 0)+"_"+($error.text || "")+"_"+String:C10($error.line || 0)
+		
+		If ($grouped[$key]=Null:C1517)
+			$grouped[$key]:=New object:C1471(\
+				"message"; This:C1470._formatGlobalErrorForLog($error); \
+				"count"; 1)
+		Else 
+			$grouped[$key].count+=1
+		End if 
+	End for each 
+	
+	return $grouped
+	
 Function _generateReport()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateReport: format="+This:C1470.outputFormat+"\r\n"; Information message:K38:1)
 	If (This:C1470.outputFormat="json")
 		This:C1470._generateJSONReport()
 	Else 
@@ -429,10 +439,8 @@ Function _generateReport()
 			End if 
 		End if 
 	End if 
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateReport: done\r\n"; Information message:K38:1)
 	
 Function _generateHumanReport()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateHumanReport: start\r\n"; Information message:K38:1)
 	var $passRate : Real
 	var $effectiveTotal : Integer
 	$effectiveTotal:=This:C1470.results.totalTests-This:C1470.results.skipped
@@ -444,17 +452,23 @@ Function _generateHumanReport()
 	
 	If (This:C1470.results.hasGlobalErrors)
 		LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
-		LOG EVENT:C667(Into system standard outputs:K38:9; "=== Runtime Errors Outside Test Processes ===\r\n"; Error message:K38:3)
+		LOG EVENT:C667(Into system standard outputs:K38:9; "=== Runtime Errors Outside Test Processes ===\r\n"; Information message:K38:1)
 		
-		var $globalError : Object
-		For each ($globalError; This:C1470.results.globalErrors)
-			LOG EVENT:C667(Into system standard outputs:K38:9; This:C1470._formatGlobalErrorForLog($globalError)+"\r\n"; Error message:K38:3)
+		var $grouped : Object
+		$grouped:=This:C1470._groupGlobalErrors()
+		var $key : Text
+		var $entry : Object
+		For each ($key; $grouped)
+			$entry:=$grouped[$key]
+			var $countSuffix : Text
+			$countSuffix:=($entry.count>1) ? " (x"+String:C10($entry.count)+")" : ""
+			LOG EVENT:C667(Into system standard outputs:K38:9; $entry.message+$countSuffix+"\r\n"; Information message:K38:1)
 		End for each 
 	End if 
 	
 	If (This:C1470.results.failed>0)
 		LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
-		LOG EVENT:C667(Into system standard outputs:K38:9; "=== Failed Tests ===\r\n"; Error message:K38:3)
+		LOG EVENT:C667(Into system standard outputs:K38:9; "=== Failed Tests ===\r\n"; Information message:K38:1)
 		
 		var $failedTest : Object
 		For each ($failedTest; This:C1470.results.failedTests)
@@ -469,10 +483,10 @@ Function _generateHumanReport()
 				End if 
 			End if 
 			
-			LOG EVENT:C667(Into system standard outputs:K38:9; "- "+$failedTest.name+$failureReason+"\r\n"; Error message:K38:3)
+			LOG EVENT:C667(Into system standard outputs:K38:9; "- "+$failedTest.name+$failureReason+"\r\n"; Information message:K38:1)
 			
 			If (This:C1470.verboseOutput) && ($failedTest.callChain#Null:C1517)
-				LOG EVENT:C667(Into system standard outputs:K38:9; This:C1470._formatCallChain($failedTest.callChain)+"\r\n"; Error message:K38:3)
+				LOG EVENT:C667(Into system standard outputs:K38:9; This:C1470._formatCallChain($failedTest.callChain)+"\r\n"; Information message:K38:1)
 			End if 
 		End for each 
 	End if 
@@ -487,14 +501,11 @@ Function _generateHumanReport()
 	LOG EVENT:C667(Into system standard outputs:K38:9; "Pass Rate: "+String:C10($passRate; "##0.0")+"%\r\n"; Information message:K38:1)
 	LOG EVENT:C667(Into system standard outputs:K38:9; "Duration: "+String:C10(This:C1470.results.duration)+"ms\r\n"; Information message:K38:1)
 	
-	var $externalMessageType : Integer
-	$externalMessageType:=Choose:C955(This:C1470.results.globalErrorCount>0; Error message:K38:3; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "External Errors: "+String:C10(This:C1470.results.globalErrorCount)+"\r\n"; $externalMessageType)
+	LOG EVENT:C667(Into system standard outputs:K38:9; "External Errors: "+String:C10(This:C1470.results.globalErrorCount)+"\r\n"; Information message:K38:1)
 	
 	This:C1470._logFooter()
 	
 Function _generateJSONReport()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateJSONReport: start, totalTests="+String:C10(This:C1470.results.totalTests)+"\r\n"; Information message:K38:1)
 	var $passRate : Real
 	var $effectiveTotal : Integer
 	$effectiveTotal:=This:C1470.results.totalTests-This:C1470.results.skipped
@@ -511,12 +522,10 @@ Function _generateJSONReport()
 	
 	If (This:C1470.verboseOutput)
 		// Verbose mode: include all details (original format)
-		LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateJSONReport: verbose OB Copy\r\n"; Information message:K38:1)
 		$jsonReport:=OB Copy:C1225(This:C1470.results)
 		$jsonReport.passRate:=$passRate
 		$jsonReport.status:=$hasFailures ? "failure" : "success"
 	Else 
-		LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateJSONReport: terse mode\r\n"; Information message:K38:1)
 		// Terse mode: minimal information
 		$jsonReport:=New object:C1471(\
 			"tests"; This:C1470.results.totalTests; \
@@ -604,14 +613,11 @@ Function _generateJSONReport()
 		End if 
 	End if 
 	
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateJSONReport: before JSON Stringify\r\n"; Information message:K38:1)
 	var $jsonString : Text
 	$jsonString:=JSON Stringify:C1217($jsonReport; *)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateJSONReport: after JSON Stringify, length="+String:C10(Length:C16($jsonString))+"\r\n"; Information message:K38:1)
 	
 	var $outputPath : Text
 	$outputPath:=This:C1470.userParams.outputPath || ""
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateJSONReport: outputPath='"+$outputPath+"'\r\n"; Information message:K38:1)
 	
 	If ($outputPath#"")
 		This:C1470._writeJSONToFile($jsonString; $outputPath)
@@ -789,9 +795,15 @@ Function _buildGlobalErrorsSystemErr() : Text
 	$xml:="  <system-err><![CDATA[\n"
 	$xml:=$xml+"External runtime errors detected: "+String:C10(This:C1470.results.globalErrorCount)+"\n"
 	
-	var $error : Object
-	For each ($error; This:C1470.results.globalErrors)
-		$xml:=$xml+This:C1470._formatGlobalErrorForLog($error)+"\n"
+	var $grouped : Object
+	$grouped:=This:C1470._groupGlobalErrors()
+	var $key : Text
+	var $entry : Object
+	For each ($key; $grouped)
+		$entry:=$grouped[$key]
+		var $countSuffix : Text
+		$countSuffix:=($entry.count>1) ? " (x"+String:C10($entry.count)+")" : ""
+		$xml:=$xml+$entry.message+$countSuffix+"\n"
 	End for each 
 	
 	$xml:=$xml+"]]></system-err>\r\n"
@@ -873,7 +885,7 @@ Function _logFooter()
 			$summaryMessage:=$summaryMessage+String:C10(This:C1470.results.globalErrorCount)+" external runtime error(s)"
 		End if 
 		
-		LOG EVENT:C667(Into system standard outputs:K38:9; $summaryMessage+"\r\n"; Error message:K38:3)
+		LOG EVENT:C667(Into system standard outputs:K38:9; $summaryMessage+"\r\n"; Information message:K38:1)
 	End if 
 	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
 	
