@@ -189,7 +189,7 @@ Function _waitForCompletionAndCollectResults()
 			
 			If ((Milliseconds:C459-$startWait)>$timeout)
 				// Timeout - log error and break
-				LOG EVENT:C667(Into system standard outputs:K38:9; "Parallel test execution timeout after 5 minutes\r\n"; Error message:K38:3)
+				LOG EVENT:C667(Into system standard outputs:K38:9; "Parallel test execution timeout after 5 minutes\r\n"; Information message:K38:1)
 				break
 			End if
 			
@@ -269,7 +269,7 @@ Function _processWorkerResults($suiteResults : Object)
                                                         End if
                                                 End if
 
-                                                LOG EVENT:C667(Into system standard outputs:K38:9; "  ✗ "+$test.name+" ("+String:C10($test.duration)+"ms)"+$errorDetails+"\r\n"; Error message:K38:3)
+                                                LOG EVENT:C667(Into system standard outputs:K38:9; "  ✗ "+$test.name+" ("+String:C10($test.duration)+"ms)"+$errorDetails+"\r\n"; Information message:K38:1)
                                         End if
                                 End if
                         End if

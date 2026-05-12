@@ -696,6 +696,17 @@
 		}
 	},
 	"TestRunner": {
+		"hasFailed()": {
+			"Syntax": "**.hasFailed**() : Boolean",
+			"Params": [
+				[
+					"",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
 		"getResults()": {
 			"Syntax": "**.getResults**() : Object",
 			"Params": [

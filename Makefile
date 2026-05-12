@@ -1,4 +1,5 @@
 # 4D Unit Testing Framework Makefile
+SHELL := /bin/bash
 
 # Get current user's home directory
 HOME_DIR := $(shell echo $$HOME)
@@ -19,6 +20,8 @@ TOOL4D_URL_LINUX := https://resources-download.4d.com/release/20%20Rx/latest/lat
 
 # Project path relative to current directory
 PROJECT_PATH := $(PWD)/testing/Project/testing.4DProject
+PROJECT_DIR := $(PWD)/testing/Project
+ERROR_FILE := $(PROJECT_DIR)/error
 
 # Base command options
 BASE_OPTS := --project $(PROJECT_PATH) --skip-onstartup --dataless --startup-method "test"
@@ -35,7 +38,14 @@ EXCLUDE_TAGS_COMBINED := $(strip $(DEFAULT_EXCLUDE_TAGS) $(excludeTags))
 BASE_PARAMS := $(if $(EXCLUDE_TAGS_COMBINED),excludeTags=$(subst $(space),$(comma),$(EXCLUDE_TAGS_COMBINED)))
 
 # Build user parameters from make variables
-USER_PARAMS := $(strip $(BASE_PARAMS) $(if $(format),format=$(format)) $(if $(tags),tags=$(tags)) $(if $(test),test=$(test)) $(if $(requireTags),requireTags=$(requireTags)) $(if $(parallel),parallel=$(parallel)) $(if $(maxWorkers),maxWorkers=$(maxWorkers)) $(if $(outputPath),outputPath=$(outputPath)) $(if $(verbose),verbose=$(verbose)) $(if $(callchain),callchain=$(callchain)))
+USER_PARAMS := $(strip $(BASE_PARAMS) $(if $(format),format=$(format)) $(if $(tags),tags=$(tags)) $(if $(test),test=$(test)) $(if $(requireTags),requireTags=$(requireTags)) $(if $(parallel),parallel=$(parallel)) $(if $(maxWorkers),maxWorkers=$(maxWorkers)) $(if $(outputPath),outputPath=$(outputPath)) $(if $(verbose),verbose=$(verbose)) $(if $(callchain),callchain=$(callchain)) $(if $(triggers),triggers=$(triggers)))
+
+# Output filtering: suppress tool4d diagnostic noise by default.
+# - stderr redirected to /dev/null (tool4d.4DRT errors)
+# - stdout cooperative-yield warnings stripped via FIFO + grep
+# Pass debug=true to disable stderr suppression.
+STDERR_REDIRECT := $(if $(debug),,2>/dev/null)
+YIELD_FILTER := grep --line-buffered -v '^tool4d\.APPL Cooperative process doesn.t yield enough'
 
 # Ensure tool4d is installed (currently implemented for Linux only)
 $(TOOL4D):
@@ -57,15 +67,24 @@ $(TOOL4D):
 # Usage: make test [key=value key2=value2 ...]
 # Example: make test format=json tags=unit
 test: $(TOOL4D)
-	@if [ -n "$(USER_PARAMS)" ]; then \
-	        $(TOOL4D) $(BASE_OPTS) --user-param "$(USER_PARAMS)"; \
+	@fifo=$$(mktemp -u).fifo; mkfifo $$fifo; \
+	$(YIELD_FILTER) < $$fifo & filter_pid=$$!; \
+	if [ -n "$(USER_PARAMS)" ]; then \
+	        $(TOOL4D) $(BASE_OPTS) --user-param "$(USER_PARAMS)" $(STDERR_REDIRECT) > $$fifo & \
 	else \
-	        $(TOOL4D) $(BASE_OPTS); \
-	fi
+	        $(TOOL4D) $(BASE_OPTS) $(STDERR_REDIRECT) > $$fifo & \
+	fi; \
+	pid=$$!; \
+	trap 'disown $$pid $$filter_pid 2>/dev/null; kill -KILL $$pid $$filter_pid 2>/dev/null; rm -f $$fifo; exit 130' INT TERM; \
+	wait $$pid; ret=$$?; \
+	kill $$filter_pid 2>/dev/null; wait $$filter_pid 2>/dev/null; \
+	rm -f $$fifo; \
+	if [ -f "$(ERROR_FILE)" ]; then rm -f "$(ERROR_FILE)"; exit 1; fi; \
+	exit $$ret
 
 # Run all tests with JSON output
 test-json:
-	$(MAKE) test format=json
+	$(MAKE) test format=json outputPath=test-results/report.json
 
 # Run specific test class (usage: make test-class CLASS=ExampleTest)
 test-class:
@@ -93,11 +112,11 @@ test-integration:
 
 # Run tests with JSON output and unit tag
 test-unit-json:
-	$(MAKE) test format=json tags=unit
+	$(MAKE) test format=json outputPath=test-results/report.json tags=unit
 
 # Run all tests with JUnit XML output
 test-junit:
-	$(MAKE) test format=junit
+	$(MAKE) test format=junit outputPath=test-results/junit.xml
 
 # Run tests for CI/CD with custom output path
 test-ci:
@@ -105,11 +124,11 @@ test-ci:
 
 # Run unit tests with JUnit XML output
 test-unit-junit:
-	$(MAKE) test format=junit tags=unit
+	$(MAKE) test format=junit outputPath=test-results/junit.xml tags=unit
 
 # Run integration tests with JUnit XML output
 test-integration-junit:
-	$(MAKE) test format=junit tags=integration
+	$(MAKE) test format=junit outputPath=test-results/junit.xml tags=integration
 
 # Run tests in parallel mode
 test-parallel:
@@ -117,7 +136,7 @@ test-parallel:
 
 # Run tests in parallel mode with JSON output
 test-parallel-json:
-	$(MAKE) test parallel=true format=json
+	$(MAKE) test parallel=true format=json outputPath=test-results/report.json
 
 # Run unit tests in parallel mode
 test-parallel-unit:
@@ -150,6 +169,9 @@ help:
 	@echo "  test-parallel-workers - Run tests in parallel with custom worker count"
 	@echo "  help                - Show this help message"
 	@echo ""
+	@echo "Options:"
+	@echo "  debug=true          - Show tool4d diagnostic stderr (suppressed by default)"
+	@echo ""
 	@echo "Examples:"
 	@echo "  make test"
 	@echo "  make test format=json"
@@ -167,6 +189,7 @@ help:
 	@echo "  make test-parallel-json"
 	@echo "  make test-parallel-workers WORKERS=4"
 	@echo "  make test parallel=true maxWorkers=6"
+	@echo "  make test debug=true              # Show tool4d stderr output"
 
 tool4d: $(TOOL4D)
 	@echo "tool4d ready at $(TOOL4D)"
