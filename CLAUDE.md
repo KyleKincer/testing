@@ -28,9 +28,9 @@ This project provides a complete testing framework for 4D applications featuring
 make test
 
 # Pass parameters directly to test command
-make test format=json
+make test format=json outputPath=test-results/report.json
 make test tags=unit
-make test format=json tags=unit excludeTags=slow
+make test format=json outputPath=test-results/report.json tags=unit excludeTags=slow
 make test test=ExampleTest
 
 # Alternative named commands
@@ -73,11 +73,11 @@ If you need more control or the Makefile doesn't meet your needs:
 # Run all tests with human output
 /Applications/tool4d.app/Contents/MacOS/tool4d --project $(PWD)/testing/Project/testing.4DProject --skip-onstartup --dataless --startup-method "test"
 
-# Run all tests with JSON output  
-/Applications/tool4d.app/Contents/MacOS/tool4d --project $(PWD)/testing/Project/testing.4DProject --skip-onstartup --dataless --startup-method "test" --user-param "format=json"
+# Run all tests with JSON output (outputPath required)
+/Applications/tool4d.app/Contents/MacOS/tool4d --project $(PWD)/testing/Project/testing.4DProject --skip-onstartup --dataless --startup-method "test" --user-param "format=json outputPath=test-results/report.json"
 
-# Run all tests with JUnit XML output (saves to test-results/junit.xml)
-/Applications/tool4d.app/Contents/MacOS/tool4d --project $(PWD)/testing/Project/testing.4DProject --skip-onstartup --dataless --startup-method "test" --user-param "format=junit"
+# Run all tests with JUnit XML output (outputPath required, defaults to test-results/junit.xml)
+/Applications/tool4d.app/Contents/MacOS/tool4d --project $(PWD)/testing/Project/testing.4DProject --skip-onstartup --dataless --startup-method "test" --user-param "format=junit outputPath=test-results/junit.xml"
 ```
 
 ### Test Filtering Parameters
@@ -94,26 +94,34 @@ If you need more control or the Makefile doesn't meet your needs:
 
 # Combined filtering
 --user-param "tags=unit excludeTags=slow"
---user-param "format=json tags=integration"
---user-param "format=junit tags=unit"
---user-param "format=junit outputPath=results/junit.xml"
+--user-param "format=json outputPath=test-results/report.json tags=integration"
+--user-param "format=junit outputPath=results/junit.xml tags=unit"
 
-# JSON / JUnit file output (writes report to disk)
+# JSON / JUnit file output (outputPath is REQUIRED for format=json and format=junit)
+# Human-readable output always streams to stdout regardless of format
 --user-param "format=json outputPath=test-results/report.json"
+--user-param "format=junit outputPath=test-results/junit.xml"
 
 # Include callChain on failed tests in terse JSON without going full verbose
---user-param "format=json callchain=true"
+--user-param "format=json outputPath=test-results/report.json callchain=true"
 
 # Parallel execution
 --user-param "parallel=true"
 --user-param "parallel=true maxWorkers=4"
---user-param "parallel=true format=json tags=unit"
+--user-param "parallel=true format=json outputPath=test-results/report.json tags=unit"
 
 # Trigger control
 --user-param "triggers=enabled"   # Enable triggers for all tests
 --user-param "triggers=disabled"  # Disable triggers (default)
 --user-param "triggers=enabled tags=integration"  # Enable triggers for integration tests
 ```
+
+### Output Behavior
+
+- **Human-readable output always streams to stdout** regardless of format parameter
+- **format=json and format=junit require `outputPath`** -- these write to file only, never stdout
+- If `format=json` or `format=junit` is specified without `outputPath`, the framework prints an error and falls back to human-only output
+- **Exit code**: `make test` exits non-zero (exit 1) when any tests fail OR external runtime errors are detected. The framework writes an `error` file that the Makefile checks.
 
 ### Current Test Status
 
