@@ -11,7 +11,9 @@ property excludeTags : Collection  // Tags to exclude
 property requireAllTags : Collection  // Tags that must all be present (AND logic)
 property userParams : Object  // User parameters passed to the runner
 property disableTriggersByDefault : Boolean  // Whether triggers are disabled by default
-
+property consoleReport : Boolean  // Live progress + human report on stdout (human and junit formats)
+property quietOutput : Boolean  // quiet=true: one line per test class instead of one per test
+property debugOutput : Boolean  // debug=true: emit [DEBUG] trace lines
 Class constructor($cs : 4D:C1709.Object; $hostStorage : 4D:C1709.Object; $userParams : Object)
 	This:C1470.classStore:=$cs || cs:C1710
 	This:C1470.hostStorage:=$hostStorage  // Can be Null for component-only testing
@@ -28,14 +30,41 @@ Function run()
 	This:C1470._prepareErrorHandlingStorage()
 	var $handlerState : Object
 	$handlerState:=This:C1470._installErrorHandler()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] run: before _runInternal\r\n"; Information message:K38:1)
+	This:C1470._debugLog("run: before _runInternal")
 	This:C1470._runInternal()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] run: after _runInternal\r\n"; Information message:K38:1)
+	This:C1470._debugLog("run: after _runInternal")
 	This:C1470._captureGlobalErrors()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] run: after _captureGlobalErrors\r\n"; Information message:K38:1)
+	This:C1470._debugLog("run: after _captureGlobalErrors")
 	This:C1470._generateReport()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] run: after _generateReport\r\n"; Information message:K38:1)
+	This:C1470._debugLog("run: after _generateReport")
 	This:C1470._restoreErrorHandler($handlerState)
+	
+Function _logLine($text : Text; $messageType : Integer)
+	// LOG EVENT treats stdout text as a printf format string, so "%" must be doubled
+	var $type : Integer
+	$type:=(Count parameters:C259>=2) ? $messageType : Information message:K38:1
+	LOG EVENT:C667(Into system standard outputs:K38:9; Replace string:C233($text; "%"; "%%")+"\r\n"; $type)
+	
+Function _debugLog($text : Text)
+	If (This:C1470.debugOutput)
+		This:C1470._logLine("[DEBUG] "+$text)
+	End if 
+	
+Function _isConsoleOutput() : Boolean
+	// outputFormat may be overridden to "none" after construction (nested runners in tests)
+	return This:C1470.consoleReport && ((This:C1470.outputFormat="human") || (This:C1470.outputFormat="junit"))
+	
+Function _effectiveParams() : Object
+	// Command-line params overlaid with params passed to the constructor
+	var $params : Object
+	$params:=This:C1470._parseUserParams()
+	If (This:C1470.userParams#Null:C1517)
+		var $key : Text
+		For each ($key; This:C1470.userParams)
+			$params[$key]:=This:C1470.userParams[$key]
+		End for each 
+	End if 
+	return $params
 	
 Function _determineTriggerDefaultBehavior()
 	// Determine the default trigger behavior based on user parameters
@@ -134,7 +163,7 @@ Function _prepareSuites()
 Function _runSuitesSequentially()
 	This:C1470.results.startTime:=Milliseconds:C459
 	
-	If (This:C1470.outputFormat="human")
+	If (This:C1470._isConsoleOutput())
 		This:C1470._logHeader()
 	End if 
 	
@@ -143,11 +172,11 @@ Function _runSuitesSequentially()
 	$suiteIndex:=0
 	For each ($testSuite; This:C1470.testSuites)
 		$suiteIndex+=1
-		LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] suite "+String:C10($suiteIndex)+"/"+String:C10(This:C1470.testSuites.length)+": "+$testSuite.class.name+" ("+String:C10($testSuite.testFunctions.length)+" tests)\r\n"; Information message:K38:1)
+		This:C1470._debugLog("suite "+String:C10($suiteIndex)+"/"+String:C10(This:C1470.testSuites.length)+": "+$testSuite.class.name+" ("+String:C10($testSuite.testFunctions.length)+" tests)")
 		$testSuite.run()
 		This:C1470._collectSuiteResults($testSuite)
 	End for each 
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _runSuitesSequentially: all suites done\r\n"; Information message:K38:1)
+	This:C1470._debugLog("_runSuitesSequentially: all suites done")
 	
 	This:C1470.results.endTime:=Milliseconds:C459
 	This:C1470.results.duration:=This:C1470.results.endTime-This:C1470.results.startTime
@@ -270,16 +299,125 @@ Function _initializeResults()
 		)
 	
 Function _logHeader()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "=== 4D Unit Testing Framework ===\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Running tests...\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
+	This:C1470._logLine("")
+	This:C1470._logLine("=== 4D Unit Testing Framework ===")
+	This:C1470._logLine("Running tests...")
+	This:C1470._logLine("")
+	
+Function _logSuiteHeader($suiteName : Text)
+	If (This:C1470._isConsoleOutput()) && Not:C34(This:C1470.quietOutput)
+		This:C1470._logLine($suiteName)
+	End if 
+	
+Function _logLiveResult($testResult : Object)
+	If (Not:C34(This:C1470._isConsoleOutput())) || (This:C1470.quietOutput)
+		return 
+	End if 
+	
+	Case of 
+		: (Bool:C1537($testResult.skipped))
+			If (Not:C34(This:C1470.quietOutput))
+				This:C1470._logLine("  - "+$testResult.name+" (skipped)")
+			End if 
+		: (Bool:C1537($testResult.passed))
+			If (Not:C34(This:C1470.quietOutput))
+				This:C1470._logLine("  ✓ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)")
+			End if 
+		Else 
+			var $lines : Collection
+			$lines:=This:C1470._buildLiveFailureLines($testResult)
+			var $line : Text
+			For each ($line; $lines)
+				This:C1470._logLine($line; Error message:K38:3)
+			End for each 
+	End case 
+	
+// quiet=true: one line per class, then the failed tests of a failing class
+Function _logSuiteResult($suiteName : Text; $tests : Collection)
+	If (Not:C34(This:C1470._isConsoleOutput())) || Not:C34(This:C1470.quietOutput)
+		return 
+	End if 
+	
+	var $line : Text
+	For each ($line; This:C1470._buildQuietSuiteLines($suiteName; $tests))
+		This:C1470._logLine($line)
+	End for each 
+	
+Function _buildQuietSuiteLines($suiteName : Text; $tests : Collection) : Collection
+	var $failed : Collection
+	var $passed; $skipped : Integer
+	$failed:=[]
+	
+	var $test : Object
+	For each ($test; ($tests#Null:C1517) ? $tests : [])
+		Case of 
+			: (Bool:C1537($test.skipped))
+				$skipped+=1
+			: (Bool:C1537($test.passed))
+				$passed+=1
+			Else 
+				$failed.push($test)
+		End case 
+	End for each 
+	
+	var $counts : Text
+	$counts:=String:C10($passed)+" passed"
+	If ($failed.length>0)
+		$counts:=String:C10($failed.length)+" failed, "+$counts
+	End if 
+	If ($skipped>0)
+		$counts+=", "+String:C10($skipped)+" skipped"
+	End if 
+	
+	var $lines : Collection
+	$lines:=[(($failed.length>0) ? "✗ " : "✓ ")+$suiteName+" ("+$counts+")"]
+	For each ($test; $failed)
+		$lines.combine(This:C1470._buildLiveFailureLines($test))
+	End for each 
+	return $lines
+	
+Function _buildLiveFailureLines($testResult : Object) : Collection
+	var $lines : Collection
+	$lines:=[]
+	$lines.push("  ✗ "+This:C1470._qualifiedTestName($testResult)+" ("+String:C10($testResult.duration)+"ms)")
+	
+	var $reason : Text
+	For each ($reason; This:C1470._describeFailure($testResult))
+		$lines.push("      "+$reason)
+	End for each 
+	
+	If (This:C1470.verboseOutput) && ($testResult.callChain#Null:C1517)
+		$lines.combine(This:C1470._indentLines(This:C1470._formatCallChain($testResult.callChain); "      "))
+	End if 
+	
+	return $lines
+	
+Function _qualifiedTestName($test : Object) : Text
+	var $suite : Text
+	$suite:=String:C10($test.suite)
+	return ($suite#"") ? ($suite+"."+String:C10($test.name)) : String:C10($test.name)
+	
+Function _indentLines($text : Text; $indent : Text) : Collection
+	var $lines : Collection
+	$lines:=[]
+	var $normalized : Text
+	$normalized:=Replace string:C233($text; "\r\n"; "\n")
+	$normalized:=Replace string:C233($normalized; "\r"; "\n")
+	var $line : Text
+	For each ($line; Split string:C1554($normalized; "\n"))
+		If ($line#"")
+			$lines.push($indent+$line)
+		End if 
+	End for each 
+	return $lines
 	
 Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
 	// Skip suites with no tests
 	If ($testSuite.testFunctions.length=0)
 		return 
 	End if 
+	
+	This:C1470._logSuiteHeader($testSuite.class.name)
 	
 	var $suiteResult : Object
 	$suiteResult:=New object:C1471(\
@@ -301,44 +439,24 @@ Function _collectSuiteResults($testSuite : cs:C1710._TestSuite)
 		If ($testResult.skipped)
 			This:C1470.results.skipped+=1
 			$suiteResult.skipped+=1
-			If (This:C1470.outputFormat="human")
-				LOG EVENT:C667(Into system standard outputs:K38:9; "  - "+$testResult.name+" (skipped)\r\n"; Information message:K38:1)
-			End if 
 		Else 
 			If ($testResult.passed)
 				This:C1470.results.passed+=1
 				$suiteResult.passed+=1
-				If (This:C1470.outputFormat="human")
-					LOG EVENT:C667(Into system standard outputs:K38:9; "  ✓ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)\r\n"; Information message:K38:1)
-				End if 
 			Else 
 				This:C1470.results.failed+=1
 				$suiteResult.failed+=1
 				This:C1470.results.failedTests.push($testResult)
-				If (This:C1470.outputFormat="human")
-					var $errorDetails : Text
-					$errorDetails:=""
-					If ($testResult.runtimeErrors.length>0)
-						$errorDetails:=" [Runtime Error: "+$testResult.runtimeErrors[0].text+"]"
-					Else 
-						If ($testResult.logMessages.length>0)
-							$errorDetails:=" ["+$testResult.logMessages[0]+"]"
-						End if 
-					End if 
-					
-				If (This:C1470.verboseOutput) && ($testResult.callChain#Null:C1517)
-					$errorDetails:=$errorDetails+"\r\n"+This:C1470._formatCallChain($testResult.callChain)
-				End if 
-				LOG EVENT:C667(Into system standard outputs:K38:9; "  ✗ "+$testResult.name+" ("+String:C10($testResult.duration)+"ms)"+$errorDetails+"\r\n"; Error message:K38:3)
-				End if 
 			End if 
 		End if 
+		This:C1470._logLiveResult($testResult)
 		
 		$suiteResult.tests.push($testResult)
 		This:C1470.results.assertions+=($testResult.assertionCount)
 		$suiteResult.assertions+=($testResult.assertionCount)
 	End for each 
 	
+	This:C1470._logSuiteResult($suiteResult.name; $suiteResult.tests)
 	This:C1470.results.suites.push($suiteResult)
 	
 Function _captureGlobalErrors()
@@ -389,112 +507,359 @@ Function _drainGlobalErrorsFromStorage() : Collection
 	return $globalErrors
 	
 Function _formatGlobalErrorForLog($error : Object) : Text
-	var $codeText : Text
 	var $processText : Text
-	var $methodText : Text
-	var $lineText : Text
-	var $formulaText : Text
-	var $message : Text
+	$processText:=($error.processNumber#Null) ? String($error.processNumber) : "?"
+	return "- Process "+$processText+": "+This._formatRuntimeError($error)
 	
-	$codeText:=($error.code#Null:C1517) ? String:C10($error.code) : "?"
-	$processText:=($error.processNumber#Null:C1517) ? String:C10($error.processNumber) : "?"
-	$methodText:=$error.text || "Unknown location"
+Function _errorCodeText($error : Object) : Text
+	If ($error.code=Null) || (Num($error.code)=0)
+		return "?"
+	End if 
+	return String($error.code)
 	
-	If ($error.line#Null:C1517)
-		$lineText:=" line "+String:C10($error.line)
-	Else 
-		$lineText:=""
+Function _errorTextField($error : Object; $field : Text) : Text
+	If ($error[$field]=Null)
+		return ""
+	End if 
+	return String($error[$field])
+	
+Function _formatRuntimeError($error : Object) : Text
+	// Field mapping from TestErrorHandler: code=Error, text=Error method,
+	// method=Error formula, line=Error line, message=Last errors[0].message
+	var $result; $message; $methodName; $formula : Text
+	$message:=This._errorTextField($error; "message")
+	$methodName:=This._errorTextField($error; "text")
+	$formula:=This._errorTextField($error; "method")
+	
+	$result:="Runtime error ["+This._errorCodeText($error)+"]"
+	If ($message#"")
+		$result:=$result+" "+$message
 	End if 
 	
-	$formulaText:=$error.method || ""
-	
-	$message:="- ["+$codeText+"] Process "+$processText+": "+$methodText+$lineText
-	
-	If ($formulaText#"")
-		$message:=$message+"\r\n      "+$formulaText
-	End if 
-	
-	return $message
-	
-Function _generateReport()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateReport: format="+This:C1470.outputFormat+"\r\n"; Information message:K38:1)
-	If (This:C1470.outputFormat="json")
-		This:C1470._generateJSONReport()
-	Else 
-		If (This:C1470.outputFormat="junit")
-			This:C1470._generateJUnitXMLReport()
-		Else 
-			If (This:C1470.outputFormat#"none")
-				This:C1470._generateHumanReport()
+	Case of 
+		: ($methodName#"")
+			$result:=$result+" — in "+$methodName
+			If (Num($error.line)>0)
+				$result:=$result+" line "+String($error.line)
 			End if 
+		: (Num($error.line)>0)
+			$result:=$result+" — at line "+String($error.line)
+	End case 
+	
+	If ($formula#"") && ($formula#$methodName)
+		$result:=$result+" (formula: "+$formula+")"
+	End if 
+	
+	return $result
+	
+Function _runtimeErrorSummary($error : Object) : Text
+	// Compact form for the JUnit message attribute: [code] message (method:line)
+	var $result; $message; $methodName : Text
+	$message:=This._errorTextField($error; "message")
+	$methodName:=This._errorTextField($error; "text")
+	
+	$result:="["+This._errorCodeText($error)+"]"
+	If ($message#"")
+		$result:=$result+" "+$message
+	End if 
+	If ($methodName#"")
+		$result:=$result+" ("+$methodName
+		If (Num($error.line)>0)
+			$result:=$result+":"+String($error.line)
+		End if 
+		$result:=$result+")"
+	End if 
+	return $result
+	
+Function _formatAssertionFailure($assertion : Object) : Text
+	var $result; $message : Text
+	$result:="Assertion failed"
+	If (Num($assertion.line)>0)
+		$result:=$result+" at line "+String($assertion.line)
+	End if 
+	
+	$message:=This._errorTextField($assertion; "message")
+	If (Position("Assertion failed: "; $message; *)=1)
+		$message:=Substring($message; 19)
+	End if 
+	If ($message#"")
+		$result:=$result+": "+$message
+	End if 
+	
+	If ($assertion.expected#Null) || ($assertion.actual#Null)
+		$result:=$result+" (expected: "+This._formatValue($assertion.expected)+", actual: "+This._formatValue($assertion.actual)+")"
+	End if 
+	
+	return $result
+	
+Function _formatValue($value : Variant) : Text
+	var $type : Integer
+	$type:=Value type($value)
+	Case of 
+		: ($type=Is null) || ($type=Is undefined)
+			return "Null"
+		: ($type=Is text)
+			return "\""+$value+"\""
+		: ($type=Is boolean)
+			return $value ? "True" : "False"
+		: ($type=Is object) || ($type=Is collection)
+			return JSON Stringify($value)
+		Else 
+			return String($value)
+	End case 
+	
+Function _describeFailure($test : Object) : Collection
+	// Ordered reason lines: runtime errors first, then failed (non-synthetic) assertions
+	var $reasons : Collection
+	$reasons:=[]
+	
+	var $error : Object
+	If ($test.runtimeErrors#Null)
+		For each ($error; $test.runtimeErrors)
+			$reasons.push(This._formatRuntimeError($error))
+		End for each 
+	End if 
+	
+	var $assertion : Object
+	If ($test.assertions#Null)
+		For each ($assertion; $test.assertions)
+			If (Not(Bool($assertion.passed))) && (Not(Bool($assertion.isRuntimeError)))
+				$reasons.push(This._formatAssertionFailure($assertion))
+			End if 
+		End for each 
+	End if 
+	
+	If ($reasons.length=0)
+		If ($test.logMessages#Null) && ($test.logMessages.length>0)
+			$reasons.push(String($test.logMessages[0]))
+		Else 
+			$reasons.push("Test failed")
 		End if 
 	End if 
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateReport: done\r\n"; Information message:K38:1)
+	
+	return $reasons
+	
+Function _errorCallChain($error : Object; $test : Object) : Collection
+	// Prefer the per-error snapshot from the error handler, else the test's failure chain
+	var $json : Text
+	$json:=This._errorTextField($error; "callChainJSON")
+	If (Substring($json; 1; 1)="[")
+		var $parsed : Variant
+		$parsed:=JSON Parse($json)
+		If (Value type($parsed)=Is collection)
+			return $parsed
+		End if 
+	End if 
+	If ($test#Null) && (Value type($test.callChain)=Is collection)
+		return $test.callChain
+	End if 
+	return Null
+	
+Function _padRight($text : Text; $width : Integer) : Text
+	var $result : Text
+	$result:=$text
+	While (Length($result)<$width)
+		$result:=$result+" "
+	End while 
+	return $result
+	
+Function _generateReport()
+	This._debugLog("_generateReport: format="+This.outputFormat)
+	Case of 
+		: (This.outputFormat="json")
+			This._generateJSONReport()
+		: (This.outputFormat="junit")
+			This._generateJUnitXMLReport()
+			This._generateHumanReport()
+		: (This.outputFormat#"none")
+			This._generateHumanReport()
+	End case 
+	This._debugLog("_generateReport: done")
 	
 Function _generateHumanReport()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateHumanReport: start\r\n"; Information message:K38:1)
+	This._debugLog("_generateHumanReport: start")
+	var $line : Text
+	For each ($line; This._buildHumanReportLines())
+		This._logLine($line)
+	End for each 
+	
+Function _buildHumanReportLines() : Collection
+	var $lines : Collection
+	$lines:=[]
+	$lines.combine(This._buildFailedTestsLines())
+	$lines.combine(This._buildRuntimeErrorLines())
+	$lines.combine(This._buildGlobalErrorLines())
+	$lines.combine(This._buildSummaryLines())
+	$lines.combine(This._buildFinalResultLines())
+	return $lines
+	
+Function _buildSummaryLines() : Collection
 	var $passRate : Real
 	var $effectiveTotal : Integer
-	$effectiveTotal:=This:C1470.results.totalTests-This:C1470.results.skipped
+	$effectiveTotal:=This.results.totalTests-This.results.skipped
 	If ($effectiveTotal>0)
-		$passRate:=(This:C1470.results.passed/$effectiveTotal)*100
+		$passRate:=(This.results.passed/$effectiveTotal)*100
 	Else 
 		$passRate:=0
 	End if 
 	
-	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "=== Test Results Summary ===\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Total Tests: "+String:C10(This:C1470.results.totalTests)+"\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Passed: "+String:C10(This:C1470.results.passed)+"\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Failed: "+String:C10(This:C1470.results.failed)+"\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Skipped: "+String:C10(This:C1470.results.skipped)+"\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Assertions: "+String:C10(This:C1470.results.assertions)+"\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Pass Rate: "+String:C10($passRate; "##0.0")+"%\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "Duration: "+String:C10(This:C1470.results.duration)+"ms\r\n"; Information message:K38:1)
+	return [\
+		""; \
+		"=== Test Results Summary ==="; \
+		"Total Tests: "+String(This.results.totalTests); \
+		"Passed: "+String(This.results.passed); \
+		"Failed: "+String(This.results.failed); \
+		"Skipped: "+String(This.results.skipped); \
+		"Assertions: "+String(This.results.assertions); \
+		"Pass Rate: "+String($passRate; "##0.0")+"%"; \
+		"Duration: "+String(This.results.duration)+"ms"; \
+		"External Errors: "+String(This.results.globalErrorCount)\
+		]
 	
-	var $externalMessageType : Integer
-	$externalMessageType:=Choose:C955(This:C1470.results.globalErrorCount>0; Error message:K38:3; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "External Errors: "+String:C10(This:C1470.results.globalErrorCount)+"\r\n"; $externalMessageType)
+Function _buildFailedTestsLines() : Collection
+	var $lines : Collection
+	$lines:=[]
+	If (This.results.failedTests.length=0)
+		return $lines
+	End if 
 	
-	If (This:C1470.results.failed>0)
-		LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
-		LOG EVENT:C667(Into system standard outputs:K38:9; "=== Failed Tests ===\r\n"; Error message:K38:3)
-		
-		var $failedTest : Object
-		For each ($failedTest; This:C1470.results.failedTests)
-			var $failureReason : Text
-			$failureReason:=""
-			
-			If ($failedTest.runtimeErrors.length>0)
-				$failureReason:=" (Runtime Error: "+$failedTest.runtimeErrors[0].text+")"
-			Else 
-				If ($failedTest.logMessages.length>0)
-					$failureReason:=" ("+$failedTest.logMessages[0]+")"
+	$lines.push("")
+	$lines.push("=== Failed Tests ===")
+	
+	var $failedTest : Object
+	var $reason : Text
+	For each ($failedTest; This.results.failedTests)
+		$lines.push("✗ "+This._qualifiedTestName($failedTest))
+		For each ($reason; This._describeFailure($failedTest))
+			$lines.push("    "+$reason)
+		End for each 
+		If (This.verboseOutput) && ($failedTest.callChain#Null)
+			$lines.combine(This._indentLines(This._formatCallChain($failedTest.callChain); "    "))
+		End if 
+	End for each 
+	
+	return $lines
+	
+Function _buildRuntimeErrorLines() : Collection
+	var $lines : Collection
+	$lines:=[]
+	
+	var $failedTest; $error : Object
+	var $errorCount : Integer
+	For each ($failedTest; This.results.failedTests)
+		If ($failedTest.runtimeErrors#Null)
+			$errorCount+=$failedTest.runtimeErrors.length
+		End if 
+	End for each 
+	
+	If ($errorCount=0)
+		return $lines
+	End if 
+	
+	$lines.push("")
+	$lines.push("=== Runtime Errors ("+String($errorCount)+") ===")
+	
+	var $callChain : Collection
+	For each ($failedTest; This.results.failedTests)
+		If ($failedTest.runtimeErrors#Null)
+			For each ($error; $failedTest.runtimeErrors)
+				$lines.push("✗ "+This._qualifiedTestName($failedTest))
+				$lines.push("    "+This._formatRuntimeError($error))
+				$callChain:=This._errorCallChain($error; $failedTest)
+				If ($callChain#Null)
+					$lines.combine(This._indentLines(This._formatCallChain($callChain); "    "))
 				End if 
-			End if 
-			
-			LOG EVENT:C667(Into system standard outputs:K38:9; "- "+$failedTest.name+$failureReason+"\r\n"; Error message:K38:3)
-			
-			If (This:C1470.verboseOutput) && ($failedTest.callChain#Null:C1517)
-				LOG EVENT:C667(Into system standard outputs:K38:9; This:C1470._formatCallChain($failedTest.callChain)+"\r\n"; Error message:K38:3)
-			End if 
+			End for each 
+		End if 
+	End for each 
+	
+	return $lines
+	
+Function _buildGlobalErrorLines() : Collection
+	var $lines : Collection
+	$lines:=[]
+	If (Not(This.results.hasGlobalErrors))
+		return $lines
+	End if 
+	
+	$lines.push("")
+	$lines.push("=== Runtime Errors Outside Test Processes ("+String(This.results.globalErrorCount)+") ===")
+	
+	var $globalError : Object
+	var $callChain : Collection
+	For each ($globalError; This.results.globalErrors)
+		$lines.push(This._formatGlobalErrorForLog($globalError))
+		$callChain:=This._errorCallChain($globalError; Null)
+		If ($callChain#Null)
+			$lines.combine(This._indentLines(This._formatCallChain($callChain); "    "))
+		End if 
+	End for each 
+	
+	return $lines
+	
+Function _buildFinalResultLines() : Collection
+	// Failed vs Errors uses the same split as JUnit: errors = tests with a runtime error
+	var $errors; $failures; $external : Integer
+	$errors:=This._countTestsWithRuntimeErrors()
+	$failures:=This.results.failed-$errors
+	$external:=Num(This.results.globalErrorCount)
+	
+	var $lines : Collection
+	$lines:=[\
+		""; \
+		"=== Final Result ==="; \
+		"Tests:     "+String(This.results.totalTests); \
+		"Passed:    "+String(This.results.passed); \
+		"Failed:    "+This._padRight(String($failures); 6)+"(assertion failures)"; \
+		"Errors:    "+This._padRight(String($errors); 6)+"(runtime errors in tests)"; \
+		"Skipped:   "+String(This.results.skipped); \
+		"External:  "+This._padRight(String($external); 6)+"(runtime errors outside test processes)"; \
+		"Duration:  "+String(This.results.duration/1000; "#####0.0")+"s"\
+		]
+	
+	If (This.results.failedTests.length>0)
+		$lines.push("")
+		$lines.push("Failed / errored tests:")
+		var $failedTest : Object
+		var $hasError : Boolean
+		For each ($failedTest; This.results.failedTests)
+			$hasError:=($failedTest.runtimeErrors#Null) && ($failedTest.runtimeErrors.length>0)
+			$lines.push("  "+($hasError ? "ERROR  " : "FAIL   ")+This._qualifiedTestName($failedTest))
+			$lines.push("         "+This._describeFailure($failedTest)[0])
 		End for each 
 	End if 
 	
-	If (This:C1470.results.hasGlobalErrors)
-		LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
-		LOG EVENT:C667(Into system standard outputs:K38:9; "=== Runtime Errors Outside Test Processes ===\r\n"; Error message:K38:3)
-		
-		var $globalError : Object
-		For each ($globalError; This:C1470.results.globalErrors)
-			LOG EVENT:C667(Into system standard outputs:K38:9; This:C1470._formatGlobalErrorForLog($globalError)+"\r\n"; Error message:K38:3)
-		End for each 
+	$lines.push("")
+	If (This.results.failed=0) && ($external=0)
+		$lines.push("RESULT: PASS ("+String(This.results.passed)+" passed, "+String(This.results.skipped)+" skipped)")
+	Else 
+		$lines.push("RESULT: FAIL ("+String($failures)+" failed, "+String($errors)+" error"+(($errors=1) ? "" : "s")+", "+String($external)+" external)")
+	End if 
+	$lines.push(This._buildVerdictLine($failures; $errors; $external))
+	
+	return $lines
+	
+// Last line of the report; people scan for it
+Function _buildVerdictLine($failures : Integer; $errors : Integer; $external : Integer) : Text
+	If ($failures=0) && ($errors=0) && ($external=0)
+		return "All tests passed! 🎉"
 	End if 
 	
-	This:C1470._logFooter()
+	var $parts : Collection
+	$parts:=[]
+	If ($failures>0)
+		$parts.push("❌ "+String($failures)+" test"+(($failures=1) ? "" : "s")+" failed")
+	End if 
+	If ($errors>0)
+		$parts.push("⚠️ "+String($errors)+" error"+(($errors=1) ? "" : "s"))
+	End if 
+	If ($external>0)
+		$parts.push("⚠️ "+String($external)+" external error"+(($external=1) ? "" : "s"))
+	End if 
+	return $parts.join(", ")
 	
 Function _generateJSONReport()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateJSONReport: start, totalTests="+String:C10(This:C1470.results.totalTests)+"\r\n"; Information message:K38:1)
+	This:C1470._debugLog("_generateJSONReport: start, totalTests="+String:C10(This:C1470.results.totalTests))
 	var $passRate : Real
 	var $effectiveTotal : Integer
 	$effectiveTotal:=This:C1470.results.totalTests-This:C1470.results.skipped
@@ -511,12 +876,12 @@ Function _generateJSONReport()
 	
 	If (This:C1470.verboseOutput)
 		// Verbose mode: include all details (original format)
-		LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateJSONReport: verbose OB Copy\r\n"; Information message:K38:1)
+		This:C1470._debugLog("_generateJSONReport: verbose OB Copy")
 		$jsonReport:=OB Copy:C1225(This:C1470.results)
 		$jsonReport.passRate:=$passRate
 		$jsonReport.status:=$hasFailures ? "failure" : "success"
 	Else 
-		LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateJSONReport: terse mode\r\n"; Information message:K38:1)
+		This:C1470._debugLog("_generateJSONReport: terse mode")
 		// Terse mode: minimal information
 		$jsonReport:=New object:C1471(\
 			"tests"; This:C1470.results.totalTests; \
@@ -567,22 +932,7 @@ Function _generateJSONReport()
 			$failedTests:=[]
 			var $failedTest : Object
 			For each ($failedTest; This:C1470.results.failedTests)
-				var $terseFailure : Object
-				$terseFailure:=New object:C1471("test"; $failedTest.name; "suite"; $failedTest.suite)
-				// Only include error details if they exist and are different
-				If ($failedTest.runtimeErrors.length>0)
-					$terseFailure.error:=$failedTest.runtimeErrors[0].text
-				Else 
-					If ($failedTest.logMessages.length>0)
-						$terseFailure.reason:=$failedTest.logMessages[0]
-					End if 
-				End if 
-				
-				// Terse JSON: callChain when verbose or callchain=true (see _determineOutputFormat)
-				If (This:C1470.callChainOutput) && ($failedTest.callChain#Null:C1517)
-					$terseFailure.callChain:=$failedTest.callChain
-				End if 
-				$failedTests.push($terseFailure)
+				$failedTests.push(This:C1470._buildTerseFailure($failedTest))
 			End for each 
 			$jsonReport.failures:=$failedTests
 		End if 
@@ -604,20 +954,42 @@ Function _generateJSONReport()
 		End if 
 	End if 
 	
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateJSONReport: before JSON Stringify\r\n"; Information message:K38:1)
+	This:C1470._debugLog("_generateJSONReport: before JSON Stringify")
 	var $jsonString : Text
 	$jsonString:=JSON Stringify:C1217($jsonReport; *)
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateJSONReport: after JSON Stringify, length="+String:C10(Length:C16($jsonString))+"\r\n"; Information message:K38:1)
+	This:C1470._debugLog("_generateJSONReport: after JSON Stringify, length="+String:C10(Length:C16($jsonString)))
 	
 	var $outputPath : Text
 	$outputPath:=This:C1470.userParams.outputPath || ""
-	LOG EVENT:C667(Into system standard outputs:K38:9; "[DEBUG] _generateJSONReport: outputPath='"+$outputPath+"'\r\n"; Information message:K38:1)
+	This:C1470._debugLog("_generateJSONReport: outputPath='"+$outputPath+"'")
 	
 	If ($outputPath#"")
 		This:C1470._writeJSONToFile($jsonString; $outputPath)
 	Else 
-		LOG EVENT:C667(Into system standard outputs:K38:9; $jsonString; Information message:K38:1)
+		This:C1470._logLine($jsonString)
 	End if 
+	
+Function _buildTerseFailure($failedTest : Object) : Object
+	var $terseFailure : Object
+	$terseFailure:=New object:C1471("test"; $failedTest.name; "suite"; $failedTest.suite)
+	If ($failedTest.runtimeErrors#Null:C1517) && ($failedTest.runtimeErrors.length>0)
+		var $firstError : Object
+		$firstError:=$failedTest.runtimeErrors[0]
+		$terseFailure.error:=This:C1470._formatRuntimeError($firstError)
+		$terseFailure.errorCode:=$firstError.code
+		$terseFailure.errorMethod:=$firstError.text
+		$terseFailure.errorLine:=$firstError.line
+	Else 
+		If ($failedTest.logMessages#Null:C1517) && ($failedTest.logMessages.length>0)
+			$terseFailure.reason:=$failedTest.logMessages[0]
+		End if 
+	End if 
+	
+	// Terse JSON: callChain when verbose or callchain=true (see _determineOutputFormat)
+	If (This:C1470.callChainOutput) && ($failedTest.callChain#Null:C1517)
+		$terseFailure.callChain:=$failedTest.callChain
+	End if 
+	return $terseFailure
 	
 Function _writeJSONToFile($jsonContent : Text; $outputPath : Text)
 	var $jsonFile : 4D:C1709.File
@@ -631,7 +1003,7 @@ Function _writeJSONToFile($jsonContent : Text; $outputPath : Text)
 	
 	$jsonFile.setText($jsonContent; "UTF-8")
 	
-	LOG EVENT:C667(Into system standard outputs:K38:9; "JSON results written to: "+$jsonFile.platformPath+"\r\n"; Information message:K38:1)
+	This:C1470._logLine("JSON results written to: "+$jsonFile.platformPath)
 	
 Function _generateJUnitXMLReport()
 	var $params : Object
@@ -749,39 +1121,85 @@ Function _buildTestCaseXML($test : Object) : Text
 	return $xml
 	
 Function _buildFailureXML($test : Object) : Text
-	var $xml : Text
-	var $failureMessage : Text
-	var $failureDetails : Text
-	var $elementType : Text
+	var $elementType; $errorType; $message : Text
+	var $hasRuntimeErrors : Boolean
+	var $reasons; $details; $callChain : Collection
+	var $error : Object
 	
-	// Extract failure message and details, determine element type
-	If ($test.runtimeErrors.length>0)
-		$failureMessage:=($test.runtimeErrors[0].text#Null:C1517) ? $test.runtimeErrors[0].text : "Runtime Error"
-		$failureDetails:=$failureMessage
+	$hasRuntimeErrors:=($test.runtimeErrors#Null) && ($test.runtimeErrors.length>0)
+	$reasons:=This._describeFailure($test)
+	$details:=$reasons.copy()
+	
+	If ($hasRuntimeErrors)
 		$elementType:="error"
-	Else 
-		If ($test.logMessages.length>0)
-			$failureMessage:=$test.logMessages[0]
-			$failureDetails:=$test.logMessages.join("\n")
-		Else 
-			$failureMessage:="Test failed"
-			$failureDetails:="Test failed without specific error message"
+		$errorType:="RuntimeError"
+		$message:=This._runtimeErrorSummary($test.runtimeErrors[0])
+		If ($test.runtimeErrors.length>1)
+			$message:=$message+" (+"+String($test.runtimeErrors.length-1)+" more)"
 		End if 
+	Else 
 		$elementType:="failure"
+		$errorType:="AssertionFailure"
+		$message:=$reasons[0]
+		
+		// Log messages that aren't already the text of a failed assertion
+		var $assertionMessages; $extraLogs : Collection
+		$assertionMessages:=[]
+		var $assertion : Object
+		If ($test.assertions#Null)
+			For each ($assertion; $test.assertions)
+				If (Not(Bool($assertion.passed)))
+					$assertionMessages.push(This._errorTextField($assertion; "message"))
+				End if 
+			End for each 
+		End if 
+		$extraLogs:=[]
+		var $logMessage : Text
+		If ($test.logMessages#Null)
+			For each ($logMessage; $test.logMessages)
+				If ($assertionMessages.indexOf($logMessage)<0) && ($reasons.indexOf($logMessage)<0)
+					$extraLogs.push("  "+$logMessage)
+				End if 
+			End for each 
+		End if 
+		If ($extraLogs.length>0)
+			$details.push("")
+			$details.push("Log:")
+			$details.combine($extraLogs)
+		End if 
 	End if 
 	
-	$xml:="      <"+$elementType+" message=\""+This:C1470._escapeXMLAttribute($failureMessage)+"\">"
-	$xml:=$xml+"<![CDATA[\n"+$failureDetails+"\nLocation: "+$test.suite+"."+$test.name
+	$details.push("")
+	$details.push("Test: "+This._qualifiedTestName($test))
 	
-	// Include call chain in JUnit XML if available
-	If ($test.callChain#Null:C1517)
-		$xml:=$xml+"\n\n"+This:C1470._formatCallChain($test.callChain)
+	var $addedChain : Boolean
+	If ($hasRuntimeErrors)
+		For each ($error; $test.runtimeErrors)
+			$callChain:=This._errorCallChain($error; Null)
+			If ($callChain#Null)
+				$details.push("")
+				If ($test.runtimeErrors.length>1)
+					$details.push("Error "+This._runtimeErrorSummary($error)+":")
+				End if 
+				$details.combine(This._indentLines(This._formatCallChain($callChain); ""))
+				$addedChain:=True
+			End if 
+		End for each 
+	End if 
+	If (Not($addedChain)) && (Value type($test.callChain)=Is collection)
+		$details.push("")
+		$details.combine(This._indentLines(This._formatCallChain($test.callChain); ""))
 	End if 
 	
-	$xml:=$xml+"\n]]>"
+	var $xml : Text
+	$xml:="      <"+$elementType+" type=\""+$errorType+"\" message=\""+This._escapeXMLAttribute($message)+"\">"
+	$xml:=$xml+"<![CDATA[\n"+This._escapeCDATA($details.join("\n"))+"\n]]>"
 	$xml:=$xml+"</"+$elementType+">\r\n"
 	
 	return $xml
+	
+Function _escapeCDATA($text : Text) : Text
+	return Replace string($text; "]]>"; "]]]]><![CDATA[>")
 	
 Function _buildGlobalErrorsSystemErr() : Text
 	var $xml : Text
@@ -811,10 +1229,7 @@ Function _writeJUnitXMLToFile($xmlContent : Text; $outputPath : Text)
 	$xmlFile.setText($xmlContent; "UTF-8")
 	
 	// Log file location for CI visibility
-	LOG EVENT:C667(Into system standard outputs:K38:9; "JUnit XML written to: "+$xmlFile.platformPath+"\r\n"; Information message:K38:1)
-	LOG EVENT:C667(Into system standard outputs:K38:9; \
-		"Summary: "+String:C10(This:C1470.results.totalTests)+" tests, "+String:C10(This:C1470.results.passed)+" passed, "+String:C10(This:C1470.results.failed)+" failed"+Char:C90(13)+Char:C90(10); \
-		Information message:K38:1)
+	This:C1470._logLine("JUnit XML written to: "+$xmlFile.platformPath)
 	
 Function _escapeXMLAttribute($text : Text) : Text
 	var $escaped : Text
@@ -854,35 +1269,12 @@ Function _formatTimestamp($milliseconds : Integer) : Text
 	$timestamp:=Substring:C12(String:C10(Current date:C33; ISO date GMT:K1:10); 1; 10)+"T"+String:C10(Current time:C178; HH MM SS:K7:1)
 	return $timestamp
 	
-Function _logFooter()
-	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
-	If ((This:C1470.results.failed=0) && Not:C34(This:C1470.results.hasGlobalErrors))
-		LOG EVENT:C667(Into system standard outputs:K38:9; "All tests passed! 🎉\r\n"; Information message:K38:1)
-	Else 
-		var $summaryMessage : Text
-		$summaryMessage:=""
-		
-		If (This:C1470.results.failed>0)
-			$summaryMessage:=String:C10(This:C1470.results.failed)+" test(s) failed"
-		End if 
-		
-		If (This:C1470.results.hasGlobalErrors)
-			If ($summaryMessage#"")
-				$summaryMessage:=$summaryMessage+"; "
-			End if 
-			$summaryMessage:=$summaryMessage+String:C10(This:C1470.results.globalErrorCount)+" external runtime error(s)"
-		End if 
-		
-		LOG EVENT:C667(Into system standard outputs:K38:9; $summaryMessage+"\r\n"; Error message:K38:3)
-	End if 
-	LOG EVENT:C667(Into system standard outputs:K38:9; "\r\n"; Information message:K38:1)
-	
 Function getResults() : Object
 	return This:C1470.results
 	
 Function _determineOutputFormat()
 	var $params : Object
-	$params:=This:C1470._parseUserParams()
+	$params:=This:C1470._effectiveParams()
 	
 	If ($params.format="json")
 		This:C1470.outputFormat:="json"
@@ -897,6 +1289,10 @@ Function _determineOutputFormat()
 	// Terse JSON: call chains only when verbose or explicit callchain=true
 	This:C1470.verboseOutput:=($params.verbose="true")
 	This:C1470.callChainOutput:=This:C1470.verboseOutput || ($params.callchain="true")
+	
+	This:C1470.consoleReport:=(This:C1470.outputFormat="human") || (This:C1470.outputFormat="junit")
+	This:C1470.quietOutput:=($params.quiet="true")
+	This:C1470.debugOutput:=($params.debug="true")
 	
 Function _parseTestPatterns()
 	var $params : Object
@@ -1074,7 +1470,7 @@ Function _countSuiteTestsWithRuntimeErrors($suite : Object) : Integer
 	
 	var $test : Object
 	For each ($test; $suite.tests)
-		If ($test.runtimeErrors.length>0)
+		If ($test.runtimeErrors#Null:C1517) && ($test.runtimeErrors.length>0)
 			$errorCount:=$errorCount+1
 		End if 
 	End for each 

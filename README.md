@@ -71,7 +71,14 @@ tool4d --project YourProject.4DProject --startup-method "test" --user-param "for
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=json callchain=true"
 
 # JUnit XML output (CI-friendly: failures, errors, skipped, system-err)
+# Writes the XML, then prints the same human report as the default format
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=junit outputPath=test-results/junit.xml"
+
+# Hide live passed/skipped lines (failures and the report still print)
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "format=junit quiet=true"
+
+# Show the framework's internal [DEBUG] trace lines
+tool4d --project YourProject.4DProject --startup-method "test" --user-param "debug=true"
 
 # Run specific tests
 tool4d --project YourProject.4DProject --startup-method "test" --user-param "test=UserServiceTest"
@@ -102,13 +109,40 @@ Function _checkMathCase($t : cs.Testing; $case : Object)
 
 ## Output
 
-**Human format:**
+**Human format** (also printed by `format=junit`):
 ```
+UserServiceTest
   ✓ test_user_creation (1ms)
-  ✓ test_user_persistence (5ms)
+  ✗ UserServiceTest.test_user_persistence (5ms)
+      Assertion failed at line 4: saved name (expected: "Ann", actual: "")
 
-2 tests passed
+=== Failed Tests ===
+✗ UserServiceTest.test_user_persistence
+    Assertion failed at line 4: saved name (expected: "Ann", actual: "")
+
+=== Test Results Summary ===
+...
+
+=== Final Result ===
+Tests:     2
+Passed:    1
+Failed:    1     (assertion failures)
+Errors:    0     (runtime errors in tests)
+Skipped:   0
+External:  0     (runtime errors outside test processes)
+Duration:  0.0s
+
+Failed / errored tests:
+  FAIL   UserServiceTest.test_user_persistence
+         Assertion failed at line 4: saved name (expected: "Ann", actual: "")
+
+RESULT: FAIL (1 failed, 0 errors, 0 external)
+❌ 1 test failed
 ```
+
+Runtime errors are reported as `Runtime error [<code>] <message> — in <method> line <line>`
+in a `=== Runtime Errors (N) ===` section with their call stacks, and as
+`<error type="RuntimeError">` in JUnit. See [docs/guide.md](docs/guide.md#output-formats) for every section and format.
 
 **JSON format (terse — default with `format=json`):**
 ```json

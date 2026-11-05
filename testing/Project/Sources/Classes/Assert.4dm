@@ -284,9 +284,13 @@ Function _findTestLine($t : Object; $callChain : Collection) : Integer
 		return 0
 	End if
 	
+	// Class function frames are named "<Class>.<function>"
+	var $qualifiedName : Text
+	$qualifiedName:=String:C10($t.testClassName)+"."+$t.testFunctionName
+	
 	var $frame : Object
 	For each ($frame; $chain)
-		If ($frame.name=$t.testFunctionName)
+		If ($frame.name=$t.testFunctionName) || ($frame.name=$qualifiedName)
 			return $frame.line
 		End if
 	End for each

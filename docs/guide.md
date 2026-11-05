@@ -240,37 +240,77 @@ The framework provides terse output by default for cleaner results, with verbose
 
 ### Human-Readable Output
 
-**Terse (Default):**
-```
-  ✓ test_areEqual_pass
-  ✓ test_isTrue_pass
-  ✓ test_isFalse_pass
-  ✓ test_isNull_pass
-  ✓ test_isNotNull_pass
+The human report is printed for `format=human` (the default) **and** for
+`format=junit`, so a CI job log shows the same report as a local `make test`.
 
-5 tests passed
-```
+Live progress prints one line per test, grouped under the suite name. Failed
+tests are always printed with their suite and the reason on the next line:
 
-**Verbose (`verbose=true`):**
 ```
 === 4D Unit Testing Framework ===
 Running tests...
 
+ExampleTest
   ✓ test_areEqual_pass (1ms)
-  ✓ test_isTrue_pass (0ms)
-  ✓ test_isFalse_pass (1ms)
-  ✓ test_isNull_pass (0ms)
-  ✓ test_isNotNull_pass (1ms)
-
-=== Test Results Summary ===
-Total Tests: 5
-Passed: 5
-Failed: 0
-Pass Rate: 100.0%
-Duration: 45ms
-
-All tests passed! 🎉
+  ✗ ExampleTest.test_dateBoundary (0ms)
+      Assertion failed at line 3: crosses the date boundary (expected: 2, actual: 1)
+  ✗ ExampleTest.test_save (1ms)
+      Runtime error [-10701] Undefined Object. — in ExampleTest.test_save line 2 (formula: $o.value:=1)
+  - test_later (skipped)
 ```
+
+After the run, the report prints these sections in order:
+
+1. `=== Failed Tests ===`: each failed test as `✗ <Suite>.<test>` with every reason
+   (runtime errors first, then failed assertions).
+2. `=== Runtime Errors (N) ===`: every runtime error captured inside a test,
+   with its call stack (from the error's `callChainJSON`, else the test's call chain).
+3. `=== Runtime Errors Outside Test Processes (N) ===`: errors from workers,
+   initializers or teardown.
+4. `=== Test Results Summary ===`: counts, pass rate and duration.
+5. `=== Final Result ===`: always the last framework output, on green and red runs:
+
+```
+=== Final Result ===
+Tests:     4694
+Passed:    4690
+Failed:    2     (assertion failures)
+Errors:    1     (runtime errors in tests)
+Skipped:   1
+External:  0     (runtime errors outside test processes)
+Duration:  33.9s
+
+Failed / errored tests:
+  ERROR  OrderTest.test_lockedRecord
+         Runtime error [-10503] Record locked — in W_Audit_Insert line 12
+  FAIL   InvoiceTest.test_elapsedSeconds
+         Assertion failed at line 42: crosses the date boundary (expected: 2, actual: 1)
+
+RESULT: FAIL (2 failed, 1 error, 0 external)
+❌ 2 tests failed, ⚠️ 1 error
+```
+
+A green run shows the same counts, no list, `RESULT: PASS (4693 passed, 1 skipped)`,
+and ends with `All tests passed! 🎉`. The last line is always this verdict:
+❌ for assertion failures, ⚠️ for runtime errors in tests and errors outside test processes.
+`Failed` and `Errors` use the same split as JUnit: a test with any runtime error
+counts as an error, every other failed test as a failure.
+
+Failure reason formats:
+
+- Runtime error: `Runtime error [<code>] <message> — in <method> line <line> (formula: <formula>)`.
+  Missing fields are omitted; a missing code shows as `[?]`.
+- Assertion failure: `Assertion failed at line <line>: <message> (expected: <x>, actual: <y>)`.
+  Text values are quoted, `Null` is shown as `Null`. Line numbers for class
+  functions are relative to the function, as reported by 4D's call chain.
+
+Options:
+
+- `verbose=true` adds the call stack under each failed test.
+- `quiet=true` prints one line per test class (`✓ <Class> (N passed)`) instead of one per test.
+  A failing class (`✗ <Class> (N failed, M passed)`) lists its failed tests and reasons underneath.
+  Failed tests and every report section still print. Useful for very large suites in CI.
+- `debug=true` prints the framework's internal `[DEBUG]` trace lines (off by default).
 
 ### JSON Output
 
@@ -314,6 +354,11 @@ All tests passed! 🎉
 When a test fails or a runtime error fires inside a test, the test entry also
 gains a `runtimeErrors` array, and the corresponding `failures[]` entry includes
 a `callChain` collection when `verbose=true` or `callchain=true` is set.
+
+For a runtime-error failure, `failures[].error` holds the formatted error
+(`Runtime error [-10701] Undefined Object. — in MyTest.test_x line 2 ...`) and
+`errorCode`, `errorMethod` and `errorLine` hold the raw fields. Assertion
+failures carry `reason` (the first log message) as before.
 
 **Verbose (`format=json verbose=true`):**
 
@@ -364,18 +409,37 @@ always included.
 - `<testsuites>` / `<testsuite>` carry `tests`, `failures`, `errors`, `skipped`, `time`, and a valid ISO 8601 `timestamp`.
 - `failures` counts assertion failures; `errors` counts test methods that hit a runtime error. External (non-test) runtime errors are not folded into either count — they live in a `<system-err>` block on the root element.
 - Skipped tests emit a `<skipped/>` child element so JUnit consumers (Jenkins, JUnitXML, GitLab) classify them correctly.
+- A test with a runtime error emits `<error type="RuntimeError" message="[<code>] <message> (<method>:<line>)">`.
+  The body lists every runtime error (and any failed assertions), then `Test: <Suite>.<test>`,
+  then each error's call stack.
+- An assertion failure emits `<failure type="AssertionFailure" message="<first failed assertion>">`.
+  The body lists every failed assertion with line and expected/actual, any extra log
+  messages, `Test: <Suite>.<test>`, and the call stack.
+
+The XML is written to `outputPath` (default `test-results/junit.xml`) and the
+full human report (above) is then printed to stdout, ending with the Final
+Result block.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="4D Test Results" tests="5" failures="0" errors="0" skipped="0"
+<testsuites name="4D Test Results" tests="5" failures="1" errors="1" skipped="0"
             time="0.045" timestamp="2026-05-04T16:47:10">
-  <testsuite name="ExampleTest" tests="5" failures="0" errors="0" skipped="0" time="0.045">
+  <testsuite name="ExampleTest" tests="5" failures="1" errors="1" skipped="0" time="0.045">
     <testcase classname="ExampleTest" name="test_areEqual_pass"
               file="testing/Project/Sources/Classes/ExampleTest.4dm" time="0.001" />
+    <testcase classname="ExampleTest" name="test_save"
+              file="testing/Project/Sources/Classes/ExampleTest.4dm" time="0.001">
+      <error type="RuntimeError" message="[-10701] Undefined Object. (ExampleTest.test_save:2)"><![CDATA[
+Runtime error [-10701] Undefined Object. — in ExampleTest.test_save line 2 (formula: $o.value:=1)
+
+Test: ExampleTest.test_save
+
+Call Stack:
+  1. ExampleTest.test_save (classFunction) at line 2 in testing
+  ...
+]]></error>
+    </testcase>
   </testsuite>
-  <system-err><![CDATA[
-External runtime errors detected: 0
-]]></system-err>
 </testsuites>
 ```
 
@@ -408,7 +472,7 @@ handler for non-test processes. Captured errors are grouped two ways:
 - **Global runtime errors** — errors raised outside a test process (for example
   in background workers, lazy initializers, or tear-down). They appear as:
   - `globalErrors[]` and `globalErrorCount` on the top-level report
-  - The "External runtime errors detected" block in human output
+  - The `=== Runtime Errors Outside Test Processes (N) ===` section of the human report and the `External:` count in the Final Result block
   - `<system-err>` content in JUnit XML
 
 Each captured error record carries:
@@ -507,6 +571,10 @@ on the runner. During the run:
 - `TestRunner._drainGlobalErrorsFromStorage()` collects `context = "global"`
   entries from both sources for the report's `globalErrors[]`.
 - Reports surface the captured errors in every output format.
+- Call stacks for host-code errors come from the `callChainJSON` field, so the
+  host's handlers should store `JSON Stringify(Get call chain)` (minus the
+  handler's own frame) as this repo's `TestErrorHandler` does. Without it, a
+  host-code error is reported with the test's call chain only.
 
 ## Test Filtering
 
@@ -566,6 +634,8 @@ The framework uses a standardized key=value parameter format:
 - **`outputPath`**: Write JSON/JUnit report to a file instead of stdout (relative to the database folder, or absolute POSIX/Windows path)
 - **`verbose`**: Enable verbose output (`true` or `1`) — full assertion/error detail in human and JSON
 - **`callchain`**: Include `callChain` on failed tests in terse JSON (`true` or `1`); implied by `verbose=true`
+- **`quiet`**: `true` prints one line per test class in human and junit console output; failed classes list their failed tests, and the report still prints
+- **`debug`**: `true` prints the framework's internal `[DEBUG]` trace lines
 - **`test`**: Test filtering patterns
 - **`tags`**: Include tests with any of these tags (comma-separated)
 - **`excludeTags`**: Exclude tests with any of these tags (comma-separated)

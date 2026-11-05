@@ -101,6 +101,10 @@ If you need more control or the Makefile doesn't meet your needs:
 # Include callChain on failed tests in terse JSON without going full verbose
 --user-param "format=json callchain=true"
 
+# Console output (human and junit formats)
+--user-param "format=junit quiet=true"  # One line per test class; failed classes list their failed tests
+--user-param "debug=true"               # Print the framework's internal [DEBUG] trace lines
+
 # Parallel execution
 --user-param "parallel=true"
 --user-param "parallel=true maxWorkers=4"
@@ -114,9 +118,9 @@ If you need more control or the Makefile doesn't meet your needs:
 
 ### Current Test Status
 
-- **Total Tests**: 165 tests across 16 test suites
-- **Pass Rate**: 100% (164 passed, 1 skipped)
-- **Key Test Classes**: TaggingSystemTest, TriggerControlTest, TestRunnerTest, TransactionExampleTest
+- **Total Tests**: 244 tests across 24 test suites
+- **Pass Rate**: 100% (243 passed, 1 skipped)
+- **Key Test Classes**: TaggingSystemTest, TriggerControlTest, TestRunnerTest, TransactionExampleTest, ReportFormattingTest
 
 ## Project Structure
 
@@ -213,6 +217,29 @@ External runtime errors detected: 0
 - `errors` = test methods that hit an `ON ERR CALL` runtime error during execution.
 - External (non-test) runtime errors are reported in `<system-err>`, not folded into `errors` — including them would inflate `errors` and drive `failures` negative when most tests pass.
 - `skipped` is set on `<testsuites>`, on each `<testsuite>`, and emitted as a `<skipped/>` child of the relevant `<testcase>` so JUnit consumers (Jenkins, JUnitXML, GitLab) classify them correctly instead of treating them as passes.
+
+**Failure content:**
+
+- Runtime error: `<error type="RuntimeError" message="[<code>] <message> (<method>:<line>)">`. The body lists every runtime error as `Runtime error [<code>] <message> — in <method> line <line> (formula: ...)`, then `Test: <Suite>.<test>`, then each error's call stack.
+- Assertion failure: `<failure type="AssertionFailure" message="Assertion failed at line <n>: <message> (expected: <x>, actual: <y>)">`. The body lists every failed assertion, extra log messages, `Test: <Suite>.<test>`, and the call stack.
+
+**Console output in junit mode:** after writing the XML (`JUnit XML written to: ...`), the framework prints the same human report as `format=human`: Failed Tests (`✗ <Suite>.<test>` and reasons), `Runtime Errors (N)` with call stacks, `Runtime Errors Outside Test Processes (N)`, the Summary, and a final block that is always the last framework output:
+
+```
+=== Final Result ===
+Tests:     244
+Passed:    243
+Failed:    0     (assertion failures)
+Errors:    0     (runtime errors in tests)
+Skipped:   1
+External:  0     (runtime errors outside test processes)
+Duration:  0.9s
+
+RESULT: PASS (243 passed, 1 skipped)
+All tests passed! 🎉
+```
+
+On a red run the block also lists each failed test with one reason line (`FAIL` for assertion failures, `ERROR` for runtime errors) then `RESULT: FAIL (<failed> failed, <errors> errors, <external> external)`. The very last line is always a verdict people can scan for: `All tests passed! 🎉` on a green run, otherwise e.g. `❌ 2 tests failed, ⚠️ 4 errors` (❌ for assertion failures, ⚠️ for runtime and external errors). `Failed`/`Errors` use the same split as the JUnit counts. Use `quiet=true` to print one line per test class instead of one per test (failed classes still list their failed tests) and `debug=true` to see the framework's `[DEBUG]` trace.
 
 ## Parallel Test Execution
 
@@ -353,10 +380,12 @@ captured and surfaced in the report.
   - `runtimeErrors[]` on the test's entry in JSON output (terse and verbose)
   - A synthetic failed assertion with `isRuntimeError: true` in the test's `assertions[]`
   - Marks the test failed and populates `failureCallChain`
-  - JUnit `<failure>` content
+  - JUnit `<error type="RuntimeError">` content
+  - Console report: the test's reason lines, the `=== Runtime Errors (N) ===` section with call stacks, and an `ERROR` entry in the Final Result list
+  - Terse JSON `failures[]`: formatted `error` plus `errorCode`, `errorMethod`, `errorLine`
 - **Global / external errors** (raised outside any test process — workers, lazy initializers, teardown):
   - `globalErrors[]` and `globalErrorCount` on the top-level JSON report
-  - "External runtime errors detected" block in human output
+  - `=== Runtime Errors Outside Test Processes (N) ===` section and the `External:` count in the console report
   - JUnit `<system-err>` block — intentionally **not** counted in `<testsuites>/@errors`
 
 ### Captured record schema
