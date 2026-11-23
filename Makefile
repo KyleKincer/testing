@@ -35,7 +35,7 @@ EXCLUDE_TAGS_COMBINED := $(strip $(DEFAULT_EXCLUDE_TAGS) $(excludeTags))
 BASE_PARAMS := $(if $(EXCLUDE_TAGS_COMBINED),excludeTags=$(subst $(space),$(comma),$(EXCLUDE_TAGS_COMBINED)))
 
 # Build user parameters from make variables
-USER_PARAMS := $(strip $(BASE_PARAMS) $(if $(format),format=$(format)) $(if $(tags),tags=$(tags)) $(if $(test),test=$(test)) $(if $(requireTags),requireTags=$(requireTags)) $(if $(parallel),parallel=$(parallel)) $(if $(maxWorkers),maxWorkers=$(maxWorkers)) $(if $(outputPath),outputPath=$(outputPath)) $(if $(verbose),verbose=$(verbose)) $(if $(callchain),callchain=$(callchain)))
+USER_PARAMS := $(strip $(BASE_PARAMS) $(if $(format),format=$(format)) $(if $(tags),tags=$(tags)) $(if $(test),test=$(test)) $(if $(requireTags),requireTags=$(requireTags)) $(if $(parallel),parallel=$(parallel)) $(if $(maxWorkers),maxWorkers=$(maxWorkers)) $(if $(outputPath),outputPath=$(outputPath)) $(if $(verbose),verbose=$(verbose)) $(if $(callchain),callchain=$(callchain)) $(if $(quiet),quiet=$(quiet)) $(if $(debug),debug=$(debug)))
 
 # Ensure tool4d is installed (currently implemented for Linux only)
 $(TOOL4D):
@@ -157,6 +157,8 @@ help:
 	@echo "  make test tags=unit"
 	@echo "  make test format=json tags=unit excludeTags=slow"
 	@echo "  make test format=junit outputPath=results/junit.xml"
+	@echo "  make test format=junit quiet=true"
+	@echo "  make test debug=true"
 	@echo "  make test test=ExampleTest"
 	@echo "  make test-class CLASS=TaggingSystemTest"
 	@echo "  make test-tags TAGS=unit,fast"
